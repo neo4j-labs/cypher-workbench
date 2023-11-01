@@ -1,0 +1,24 @@
+
+export var DEFAULT_CONSTANTS = {
+
+    DEFAULT_FONT_SIZE: 14,
+
+    DEFAULT_RELATIONSHIP_DISPLAY: "fill-me-in",
+    
+    MARKER_WIDTH: 4,
+    MARKER_HEIGHT: 4,
+    LINE_GAP: 5,
+
+    MAX_ZOOM_IN: 2.0,
+    MAX_ZOOM_OUT: 0.2,
+
+    REL_RIBBON_BUTTON_WIDTH: 24,
+    REL_RIBBON_BUTTON_HEIGHT: 24,
+
+    HOVER_CIRCLE_RADIUS_INCREASE: 20,
+
+    NODE_ANNOTATION_OFFSET: 5,
+    ANNOTATION_X_OFFSET_DEFAULT: 2,     // for relationships
+    ANNOTATION_Y_OFFSET_DEFAULT: 2      // for relationships
+}
+

@@ -1,0 +1,49 @@
+#!/bin/sh
+doExit () {
+    echo >&2 "$@"
+    exit 1
+}
+
+[ "$#" -eq 1 ] || doExit "Usage: workbench (start | stop | status | unpack)"
+if [ "$1" = "start" ]
+then
+    echo "Backing up envConfig.sh to file envConfig.sh.bak"
+    cp envConfig.sh envConfig.sh.bak
+    echo "Backing up docker-compose.yml to file docker-compose.yml.bak"
+    cp docker-compose.yml docker-compose.yml.bak
+    echo "Backing up ./sw-config/sw-ui/env-config.js to file ./sw-config/sw-ui/env-config.js.bak"
+    cp ./sw-config/sw-ui/env-config.js ./sw-config/sw-ui/env-config.js
+    echo "Backing up ./sw-config/sw-ui-nginx/nginx.conf to file ./sw-config/sw-ui-nginx/nginx.conf.bak"
+    cp ./sw-config/sw-ui-nginx/nginx.conf ./sw-config/sw-ui-nginx/nginx.conf.bak
+    echo "Starting Solutions Workbench services"
+    source ./envConfig.sh
+    source ./makeEnv.sh
+    ./makeEnvConfig.sh
+    ./makeNginxConf.sh
+    docker-compose --project-name solutions-workbench up -d --remove-orphans
+    echo "Solutions Workbench should be available at $WORKBENCH_PROTOCOL://$WORKBENCH_HOST:$WORKBENCH_PORT_EXTERNAL in a few minutes"
+elif [ "$1" = "stop" ]
+then
+    echo "Stopping Solutions Workbench services"
+    docker-compose --project-name solutions-workbench stop
+elif [ "$1" = "status" ]
+then
+    echo "Solutions Workbench status"
+    docker ps | grep solutions-workbench
+elif [ "$1" = "unpack" ]
+then
+    if [ -d "./sw-config" ]
+    then
+        echo "*** Config folder exists. Skipping unpacking of config ***"
+    else
+        echo ""
+        echo "*** Unpacking config ***"
+        echo ""
+        tar xvfz sw-config.tar.gz
+    fi
+    echo ""
+    echo "*** Unpacking docker images ***"
+    echo ""
+    docker load < workbenchDocker.tar.gz
+    echo ""
+fi

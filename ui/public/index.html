@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Solutions Workbench - a tool for Neo4j graph modeling and more"
+    />
+    <link rel="apple-touch-icon" href="logo192.png" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+    />
+    <!--from https://fonts.google.com/ a selection of San Serif fonts -->
+    <!-- load time moderate -->
+    <!--link href="https://fonts.googleapis.com/css?family=Alata|Average+Sans|Noto+Sans+SC|Roboto:300,300i,400,400i,500,500i,700,700i&display=swap" rel="stylesheet"> -->
+    <!-- load time slow -->
+    <link
+      href="https://fonts.googleapis.com/css?family=ABeeZee|Alata|Average+Sans|Hind|Josefin+Sans|Metrophobic|Niramit|Noto+Sans+SC|Nunito|Roboto:300,300i,400,400i,500,500i,700,700i|Roboto+Condensed|Sarabun|Sarala&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!--
+
+    <script src="https://unpkg.com/neo4j-driver@4.2.1/lib/browser/neo4j-web.js"></script>
+    <script>
+      initializeBoltWrapper = () => {
+        var currentUrl = new URL(window.location.href);
+        var boltWrapperUrl = `http://${currentUrl.host}/boltWrapper.html`;
+        console.log('boltWrapperUrl: ', boltWrapperUrl);
+        var boltWrapperEl = document.getElementById('boltWrapper');
+        boltWrapperEl.onload = () => {
+          window.boltProxy = boltWrapperEl.contentWindow.boltProxy;
+          /*
+          boltWrapperEl.contentWindow.boltProxy.connectToNeo((results) => {
+            console.log('boltWrapperEl results: ', results);
+          }, (error) => {
+            console.log('boltWrapperEl error: ', error);
+          });
+          */
+        }
+        boltWrapperEl.src = boltWrapperUrl;
+      }
+    </script>
+    <iframe id="boltWrapper" width="0" height="0" 
+      frameborder="0" scrolling="no" 
+      vspace="0" hspace="0" 
+      marginheight="0" marginwidth="0" src=""></iframe>
+    -->
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Solutions Workbench</title>
+    <script src="%PUBLIC_URL%/config/env-config.js"></script>    
+    <script>
+      !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on","addSourceMiddleware","addIntegrationMiddleware","setAnonymousId","addDestinationMiddleware"];analytics.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);analytics.push(t);return analytics}};for(var e=0;e<analytics.methods.length;e++){var key=analytics.methods[e];analytics[key]=analytics.factory(key)}analytics.load=function(key,e){var t=document.createElement("script");t.type="text/javascript";t.async=!0;t.src="https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(t,n);analytics._loadOptions=e};analytics._writeKey="YOUR_API_KEY";;analytics.SNIPPET_VERSION="4.15.3";
+        analytics.load("%REACT_APP_SEGMENT_API_KEY%");
+        analytics.page();
+      // analytics.identify()
+      }}();
+    </script>    
+
+  </head>
+  <!--body onload="initializeBoltWrapper()"-->
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>

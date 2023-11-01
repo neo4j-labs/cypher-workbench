@@ -1,0 +1,20 @@
+
+window._dynamicEnv_ = {
+  // should match ${WORKBENCH_PROTOCOL}://${WORKBENCH_HOST}:${WORKBENCH_PORT}/graphql
+  REACT_APP_GRAPHQL_URI: "${WORKBENCH_PROTOCOL}://${WORKBENCH_HOST}:${WORKBENCH_PORT}/graphql",
+
+  // should match ${WORKBENCH_PROTOCOL}://${WORKBENCH_HOST}:${WORKBENCH_PORT}
+  REACT_APP_BASE_URL: "${WORKBENCH_PROTOCOL}://${WORKBENCH_HOST}:${WORKBENCH_PORT}",
+
+  // set this to the same value as docker-compose.yml AUTH_METHOD
+  REACT_APP_AUTH_METHOD: "local",
+
+  REACT_APP_EULA: "none",
+  // set this to the same value as docker-compose.yml ENCRYPTION_KEY
+  REACT_APP_ENCRYPTION_KEY: "workbenchEncryptionKey",
+
+  REACT_APP_HELP_URL: "https://help.neo4j.solutions/neo4j-solutions/solutions-workbench/",
+
+  REACT_APP_SHOW_CUSTOMERS_IN_SAVE_FORM: false  
+}
+

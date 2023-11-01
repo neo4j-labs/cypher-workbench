@@ -1,0 +1,86 @@
+{
+  "name": "cypher_workbench",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "3.5.9",
+    "@material-ui/core": "^4.11.0",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.39",
+    "@material/textfield": "^12.0.0",
+    "@neo4j-cypher/react-codemirror": "^1.0.2",
+    "antlr4": "4.10.1",
+    "auth0-js": "^9.16.4",
+    "await-to-js": "^2.1.1",
+    "axios": "^0.21.4",
+    "bootstrap": "^5.1.2",
+    "caniuse-lite": "^1.0.30001374",
+    "chroma-js": "^2.1.0",
+    "clipboard": "^2.0.6",
+    "crypto-js": "^3.1.9-1",
+    "d3": "^7.6.1",
+    "dagre": "^0.8.4",
+    "emotion": "^10.0.27",
+    "fuse.js": "^6.6.2",
+    "graphql": "16.3.0",
+    "graphql-tag": "2.12.6",
+    "jquery": "^3.5.1",
+    "lodash": "^4.17.21",
+    "lodash.find": "^4.6.0",
+    "lodash.flowright": "^3.5.0",
+    "lodash.includes": "^4.3.0",
+    "marked": "^4.1.0",
+    "neo4j-driver": "^4.1.1",
+    "papaparse": "^5.3.0",
+    "prismjs": "^1.25.0",
+    "react": "^16.9.0",
+    "react-autosize-textarea": "^4.0.0",
+    "react-color": "^2.19.3",
+    "react-dom": "^16.9.0",
+    "react-grid-layout": "^1.2.0",
+    "react-resizable": "^1.11.0",
+    "react-router-dom": "^5.1.2",
+    "slate": "^0.66.5",
+    "slate-history": "^0.66.0",
+    "slate-react": "^0.66.5",
+    "styled-components": "^5.3.5",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
+    "typescript": "^3.6.2",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "compile": "rm -rf .compiled && babel src --out-dir .compiled/src --source-maps",
+    "start": "react-scripts start --no-cache",
+    "build": "react-scripts build",
+    "test": "react-scripts test --no-cache -i",
+    "eject": "react-scripts eject",
+    "antlrGenerate": "java -jar src/common/parse/antlr/antlr-4.10.1-complete.jar -Dlanguage=JavaScript src/common/parse/antlr/Cypher.g4"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.[t|j]s?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!@antlr4)/"
+    ]
+  }
+}
