@@ -1,4 +1,5 @@
 # Solutions Workbench API
+The GraphQL and Cypher API code for Solutions Workbench.
 
 ## Install Dependencies 
 
