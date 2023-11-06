@@ -23,7 +23,9 @@ You will need to setup an Aura instance or a Neo4j database to use as the backen
 * If you are running Aura or Neo4j Community, you will use the default database `neo4j`.
 * If you are running Neo4j Enterprise Edition, you can:
   * Use the default database `neo4j`
-  * Create a new database. See this https://neo4j.com/docs/cypher-manual/current/administration/databases/#administration-databases-create-database[link] for instructions on how to create a Neo4j database.
+  * Create a new database. See this [link](https://neo4j.com/docs/cypher-manual/current/administration/databases/#administration-databases-create-database) for instructions on how to create a Neo4j database.
+* For Neo4j Community or Enterprise Edition, you will also need to install APOC Core. For instructions on how to do this, please follow this [link](https://neo4j.com/docs/apoc/current/installation/). 
+  * Aura users will already have this installed.
 
 ### Cypher initialization scripts
 Within the folder `docker/sw-config/sw-config/sw-db-setup/` you will find a few Cypher scripts:
