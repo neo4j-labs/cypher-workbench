@@ -1,6 +1,6 @@
 
-# Solutions Workbench UI
-The React UI code for Solutions Workbench.
+# Cypher Workbench UI
+The React UI code for Cypher Workbench.
 
 ## Install Dependencies 
 
@@ -50,8 +50,8 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-## Using Solutions Workbench
-Once you have run `npm start`, navigate to http://localhost:3000 to bring up the Solutions Workbench UI. You should be directed to the login page where you can login using the User credentials you created in the parent README file.
+## Using Cypher Workbench
+Once you have run `npm start`, navigate to http://localhost:3000 to bring up the Cypher Workbench UI. You should be directed to the login page where you can login using the User credentials you created in the parent README file.
 
 ## Notes
 

@@ -680,6 +680,11 @@ class Homepage extends Component {
         this.setState({
           currentUser: (currentUserResult.user) ? currentUserResult.user : {}
         });
+    } else {
+        alert("Could not get current user, logging out...");
+        setTimeout(() => {
+            getAuth().logout();
+        }, 2000)        
     }
 
     var urlParams = this.getUrlParams();

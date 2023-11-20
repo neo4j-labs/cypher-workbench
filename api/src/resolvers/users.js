@@ -55,13 +55,13 @@ import {
       createUserSignUp: async (root, { input }, context, info) => {
         /*
         if (isBasicLicense()) {
-          throw new Error("Creating users is not available in Solutions Workbench Basic");
+          throw new Error("Creating users is not available in Cypher Workbench Basic");
         }
         */
         /*
         var licenseExpirationInfo = getLicenseExpirationInfo();
         if (licenseExpirationInfo.licenseExpired) {
-          throw new Error("Solutions Workbench license expired");
+          throw new Error("Cypher Workbench license expired");
         }
         */
         //console.log("createUserSignUp context: ", context);

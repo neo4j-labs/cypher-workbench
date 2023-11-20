@@ -1,10 +1,10 @@
 
-## Solutions Workbench (Cypher Workbench)
-Solutions Workbench (also known as Cypher Workbench) is a cloud based tool that assists Neo4j developers in creating and maintaining solutions built on top of Neo4j. Solutions Workbench provides support throughout the entire solution development lifecycle from project inception through testing. Additionally, with its reverse engineering, validation, and debugging capabilities, it can be used to introspect existing Neo4j deployments to assist with maintenance, documentation, or troubleshooting.
+## Cypher Workbench
+Cypher Workbench (also known as Solutions Workbench) is a cloud based tool that assists Neo4j developers in creating and maintaining solutions built on top of Neo4j. Cypher Workbench provides support throughout the entire solution development lifecycle from project inception through testing. Additionally, with its reverse engineering, validation, and debugging capabilities, it can be used to introspect existing Neo4j deployments to assist with maintenance, documentation, or troubleshooting.
 
-Online help for Solutions Workbench can be found here: https://help.neo4j.solutions/neo4j-solutions/solutions-workbench/.
+Online help for Cypher Workbench can be found here: https://help.neo4j.solutions/neo4j-solutions/cypher-workbench/.
 
-Neo4j runs Solutions Workbench as a SaaS offering for select Customers and Partners, and has been used by over one hundred customers to build thousands of data models. Neo4j elected to move the Solutions Workbench project to Neo4j labs, and to open source the code.
+Neo4j runs Cypher Workbench as a SaaS offering for select Customers and Partners, and has been used by over one hundred customers to build thousands of data models. Neo4j elected to move the Cypher Workbench project to Neo4j labs, and to open source the code.
 
 ## Project Structure
 The project is divided into 3 main folders:
@@ -18,7 +18,7 @@ To run the code locally, you will need to do 3 things:
 * Build and configure the *ui*
 
 ### Setup a Neo4j database
-You will need to setup an Aura instance or a Neo4j database to use as the backend storage for Solutions Workbench. 
+You will need to setup an Aura instance or a Neo4j database to use as the backend storage for Cypher Workbench. 
 
 * If you are running Aura or Neo4j Community, you will use the default database `neo4j`.
 * If you are running Neo4j Enterprise Edition, you can:
@@ -63,7 +63,7 @@ If you build the docker images and you have changed the key, please change the e
 These settings can also be changed after doing a docker deployment.
 
 ### Creating the first user
-You will need to create at least one user to use Solutions Workbench. In the *api* project, after you have setup the database and installed the code, run:
+You will need to create at least one user to use Cypher Workbench. In the *api* project, after you have setup the database and installed the code, run:
 
 ```
 npm run createUser Neo4j <username> <password> "Full Name" ""
@@ -85,6 +85,6 @@ npm run createUser Neo4j new.user@yourorg.com password "First Last" admin.user@y
 Follow the instructions in the *ui* README file to build and run the UI.
 
 ## License File
-Solutions Workbench was built with different licensing options in mind. Tools can be turned off or on depending on the license. The license that comes with the code is a Labs license, and only turns on the Modeler and the Database tools. 
+Cypher Workbench was built with different licensing options in mind. Tools can be turned off or on depending on the license. The license that comes with the code is a Labs license, and only turns on the Modeler and the Database tools. 
 
 You can dive into the license code to turn on the other tools, or if you are working with an existing team at Neo4j, request an upgraded license file.

@@ -68,7 +68,8 @@ const defaultOptions = {
   },
   query: {
     fetchPolicy: 'no-cache',
-  }
+    errorPolicy: 'all'
+  },  
 }
 
 var client;
@@ -1229,7 +1230,7 @@ export async function getLicenseInfo () {
                 }
             })
             .catch((error) => {
-                //console.log('resolving error');
+                console.log('getLicenseInfo: resolving error', error);
                 resolve({ success: false, error: error })
             });
         });
