@@ -82,27 +82,6 @@ export const FEATURES = {
     }
 }
 
-export const LABS_FEATURES = [
-    FEATURES.MODEL.ExportModel,
-    FEATURES.MODEL.ExportCypher,
-    FEATURES.MODEL.ExportConstraints,
-    FEATURES.MODEL.ExportMarkdown,
-    FEATURES.MODEL.ExportHtml,
-    FEATURES.MODEL.ExportSVG,
-    FEATURES.MODEL.ImportModel,
-    FEATURES.MODEL.ImportModelFromApoc,
-    FEATURES.MODEL.ImportModelFromArrows,
-    FEATURES.MODEL.ImportModelFromDatabase,
-    FEATURES.MODEL.ForceLayout,
-    FEATURES.MODEL.LeftToRightLayout,
-    FEATURES.MODEL.TopToBottomLayout,
-    FEATURES.MODEL.ParseCypher,
-    FEATURES.MODEL.PropertyConstraints,
-    FEATURES.MODEL.RelationshipCardinality,
-    FEATURES.DATABASES.View,
-    FEATURES.DATABASES.New
-];
-
 export const BASIC_FEATURES = [
     FEATURES.MODEL.ExportModel,
     FEATURES.MODEL.ExportCypher,
@@ -130,6 +109,10 @@ export const BASIC_FEATURES = [
     FEATURES.DATA_MAPPING.View,
     FEATURES.CYPHER_SUITE.View
 ];
+
+export const LABS_FEATURES = Object.values(FEATURES)
+    .map(featureObjects => Object.values(featureObjects))
+    .reduce((allFeatures, currentFeatures) => allFeatures.concat(currentFeatures))
 
 export const ENTERPRISE_FEATURES = Object.values(FEATURES)
     .map(featureObjects => Object.values(featureObjects))

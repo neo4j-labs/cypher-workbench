@@ -6,7 +6,7 @@ Online help for Cypher Workbench can be found here: https://help.neo4j.solutions
 
 Neo4j runs Cypher Workbench as a SaaS offering for select Customers and Partners, and has been used by over one hundred customers to build thousands of data models. Neo4j elected to move the Cypher Workbench project to Neo4j labs, and to open source the code.
 
-## Project Structure
+## Running Cypher Workbench
 The project is divided into 3 main folders:
 * *api*: contains the GraphQL and Cypher server code
 * *ui*: contains the React UI
@@ -48,12 +48,25 @@ Your database is now ready to be used.
 ### Build and run the API
 Follow the instructions in the *api* README file to build and run the API.
 
+### Build and run the UI
+Follow the instructions in the *ui* README file to build and run the UI.
+
+### Login
+Assuming you installed this locally, use your web browser to navigate to http://localhost:3000. You will be presented with a login screen. 
+
+Enter `admin` for email and `neo4j` for password and hit `<Enter>` or click the `Continue` button. You should now be logged in.
+
+## Advanced topics
+These sections describe further optional configuration.
+
 ### Updating the encryption key
 When using the default `local` authentication scheme, there is a simple encryption process for encrypting a user's password. The encryption key used is set both at the UI and API layers. It is not required to modify this key, but it is recommended before creating any users. Once you have created users, do not modify it again.
 * *api/.env*: ENCRYPTION_KEY=workbenchEncryptionKey
 * *ui/.env*: REACT_APP_ENCRYPTION_KEY=workbenchEncryptionKey
 
-Pick a new value, and make sure the new value is set in both files.
+Pick a new value, and make sure the new value is set in both files. You will need to restart the api and ui projects if they are running.
+
+Additionally, the default `admin` user will no longer work. See *Creating Users* below on how to fix this.
 
 #### Docker Notes
 If you build the docker images and you have changed the key, please change the encyption key value in:
@@ -62,29 +75,23 @@ If you build the docker images and you have changed the key, please change the e
 
 These settings can also be changed after doing a docker deployment.
 
-### Creating the first user
-You will need to create at least one user to use Cypher Workbench. In the *api* project, after you have setup the database and installed the code, run:
+### Creating users
+The `cypher_init_data.cypher` created the default `admin` user. If you want to create additional users, in the *api* project, after you have setup the database and installed the code, run:
 
 ```
-npm run createUser Neo4j <username> <password> "Full Name" ""
+npm run createUser Neo4j <username> <password> "Full Name" "admin"
 ```
 
 Example:
 ```
-npm run createUser Neo4j admin.user@yourorg.com password "First Last" ""
+npm run createUser Neo4j first.last@yourorg.com password "First Last" "admin"
 ```
 
-Upon success, this will create a node in the database with the :User and :Admin label. To create additional users, you can run the same command, but in the last argument specify the `:Admin` user email, which is the first email address you created.
+Upon success, this will create a node in the database with the :User.
 
-Example: 
+#### Updating admin user password after encryption key change
+If you changed the encryption key, the default `admin` user's password can no longer be decrypted. To fix this run the following:
 ```
-npm run createUser Neo4j new.user@yourorg.com password "First Last" admin.user@yourorg.com
+npm run createUser Neo4j admin neo4j "Workspace Admin" "admin"
 ```
-
-### Build and run the UI
-Follow the instructions in the *ui* README file to build and run the UI.
-
-## License File
-Cypher Workbench was built with different licensing options in mind. Tools can be turned off or on depending on the license. The license that comes with the code is a Labs license, and only turns on the Modeler and the Database tools. 
-
-You can dive into the license code to turn on the other tools, or if you are working with an existing team at Neo4j, request an upgraded license file.
+This will update the `neo4j` password to use the new encryption key. You can also change the default `neo4j` password to something else using this technique.

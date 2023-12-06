@@ -478,6 +478,15 @@ class Homepage extends Component {
                 }
               })
           }
+
+          if (window.licenseInfo && window.licenseInfo.type === LICENSE_TYPES.Labs) {
+              if (getDynamicConfigValue("REACT_APP_ENABLE_DATASCIENCE") !== 'true') {
+                // unless ENABLE_DATASCIENCE explicitly set to true, remove the Data Science tools
+                var dsTools = new Set([TOOL_NAMES.DATA_MAPPING, TOOL_NAMES.DATA_SCIENCE_DASHBOARD]);
+                this.licensedTools = this.licensedTools.filter(tool => !dsTools.has(tool.name));
+              }
+          }
+
           return this.licensedTools
       } else {
           return [];
@@ -1077,7 +1086,8 @@ class Homepage extends Component {
       ? brandingInfo
       : {
           logourl:
-            "https://storage.googleapis.com/neo4j-solutions-public/neo4j/Neo4j-logo_white.png",
+            //"https://storage.googleapis.com/neo4j-solutions-public/neo4j/Neo4j-logo_white.png",
+            `${process.env.PUBLIC_URL}/neo4j-logo-white-RGB-transBG.png`,
           logoheight: 36,
         };
       const navBarStyle = { background: COLORS.primary }

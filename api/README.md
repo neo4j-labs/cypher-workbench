@@ -19,7 +19,7 @@ Create a `.env` file by copying the `.env.example` file to `.env`. For the Neo4j
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=password
-NEO4J_DATABASE=workbenchlabs
+NEO4J_DATABASE=neo4j
 ```
 
 ## Start the API

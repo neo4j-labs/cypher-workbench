@@ -1,7 +1,7 @@
 //  https://cloud.google.com/bigquery/docs/reference/libraries
 
 let BigQuery = null;
-console.log("Loading bigquery.ms");
+//console.log("Loading bigquery.ms");
 
 const loadBigQueryModule = () => {
   if (!BigQuery) {

@@ -263,3 +263,35 @@ MERGE (enterprise:SoftwareEdition {name: 'Enterprise'})
 MERGE (s:SecurityOrganization {name:'Neo4j'})
 MERGE (s)-[:LICENSED_FOR]->(enterprise);
 
+// create default Admin user
+WITH {
+	email: 'admin',
+	picture: '',
+	name: 'Workbench Admin',
+	password: 'neo4j',  // only used for success message
+	// encrypted value of 'neo4j' if using the default value for ENCRYPTION_KEY
+	encryptedPassword: 'U2FsdGVkX1/A9El6UfB82rn7o3KlVIimB6RawU/j41I=',
+	securityOrganization: 'Neo4j'
+} as params
+MERGE (u:User {email: params.email})
+// set very first user as admin
+SET u:Admin
+SET u.encryptedPassword = params.encryptedPassword, 
+	u.picture = params.picture, 
+	u.name = params.name,
+	u.primaryOrganization = params.securityOrganization
+// set organization
+WITH params, u
+CALL apoc.create.addLabels([u], [params.securityOrganization]) YIELD node
+WITH params, u
+MATCH (org:SecurityOrganization {name: params.securityOrganization})
+MERGE (u)-[:MEMBER]->(org)
+MERGE (settings:UserSettings {email: params.email})
+MERGE (u)-[:HAS_USER_SETTINGS]->(settings)
+// set organization for UserSettings
+WITH params, settings
+CALL apoc.create.addLabels([settings], [params.securityOrganization]) YIELD node
+RETURN "Data initialized and admin user '" + params.email + "' with password '" + params.password + "' created" as message;
+
+
+
