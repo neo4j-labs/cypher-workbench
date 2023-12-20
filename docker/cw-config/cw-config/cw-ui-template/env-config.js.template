@@ -13,7 +13,7 @@ window._dynamicEnv_ = {
   // set this to the same value as docker-compose.yml ENCRYPTION_KEY
   REACT_APP_ENCRYPTION_KEY: "workbenchEncryptionKey",
 
-  REACT_APP_HELP_URL: "https://help.neo4j.solutions/neo4j-solutions/solutions-workbench/",
+  REACT_APP_HELP_URL: "https://help.neo4j.solutions/neo4j-solutions/cypher-workbench/",
 
   REACT_APP_SHOW_CUSTOMERS_IN_SAVE_FORM: false  
 }

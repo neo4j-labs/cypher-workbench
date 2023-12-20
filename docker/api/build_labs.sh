@@ -9,7 +9,7 @@ rm ./.env.development*
 rm ./.env.my.development*
 rm ./.env.test*
 rm ./.env.production*
-echo ">>> Doing Solutions Workbench Labs build"
+echo ">>> Doing Cypher Workbench Labs build"
 #Commenting out so the enterprise files remain
 if [ "$1" = "-skipNpmInstall" ]
 then
@@ -24,4 +24,4 @@ npm run build
 cd ..
 cp ./api.env ./api/dist/.env
 echo ">>> Doing docker build"
-docker build -f Dockerfile.api ./api -t solutions-workbench-api:${WORKBENCH_VERSION}_labs
+docker build -f Dockerfile.api ./api -t cypher-workbench-api:${WORKBENCH_VERSION}_labs

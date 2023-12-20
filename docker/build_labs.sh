@@ -38,16 +38,16 @@ cd ..
 echo ""
 echo "*** Packaging docker images ***"
 echo ""
-docker save solutions-workbench-ui:${WORKBENCH_VERSION}_labs solutions-workbench-api:${WORKBENCH_VERSION}_labs | gzip > workbenchDocker.tar.gz
+docker save cypher-workbench-ui:${WORKBENCH_VERSION}_labs cypher-workbench-api:${WORKBENCH_VERSION}_labs | gzip > workbenchDocker.tar.gz
 mv workbenchDocker.tar.gz ./build
 ### Packaging Config
 echo ""
 echo "*** Packaging config ***"
 echo ""
 # copy license file
-rm ./sw-config/sw-config/sw-api/license.li*
-cp ../api/license.lic.labs ./sw-config/sw-config/sw-api/license.lic
-cd sw-config
+rm ./cw-config/cw-config/cw-api/license.li*
+cp ../api/license.lic.labs ./cw-config/cw-config/cw-api/license.lic
+cd cw-config
 # copy create-user scripts
 mkdir scripts
 cd scripts
@@ -55,8 +55,8 @@ cp ../../../api/scripts/create-user.sh .
 cp ../../../api/scripts/make-credential-file.sh .
 cd ..
 # compress all config sub-directories into tar file
-tar cvfz sw-config.tar.gz *
-mv sw-config.tar.gz ../build
+tar cvfz cw-config.tar.gz *
+mv cw-config.tar.gz ../build
 cd ..
 ### Creating docker-compose file
 sed 's|${WORKBENCH_VERSION}|'$WORKBENCH_VERSION'|g' ./workbench_labs_files/docker-compose-labs.yml > ./build/docker-compose.yml
@@ -71,6 +71,6 @@ echo ""
 echo "*** Packaging everything ***"
 echo ""
 cd ./build
-tar cvf solutionsWorkbenchLabs.tar *
+tar cvf cypherWorkbenchLabs.tar *
 cd ..
 echo "*** Done ***"

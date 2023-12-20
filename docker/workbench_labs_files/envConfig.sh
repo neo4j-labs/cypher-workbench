@@ -9,7 +9,7 @@ WORKBENCH_PORT_INTERNAL=80
 # for accessing graphql via react-ui-hostname/graphql via configured nginx proxy
 #   use the internal docker-compose networking names and ports
 GRAPHQL_PROTOCOL=http
-GRAPHQL_HOST=solutions-workbench-api
+GRAPHQL_HOST=cypher-workbench-api
 GRAPHQL_PORT=4000
 
 export WORKBENCH_PROTOCOL

@@ -10,7 +10,7 @@ rm ./.env.my.development*
 rm ./.env.test*
 rm ./.env.production*
 rmdir ./public/config
-echo ">>> Doing Solutions Workbench Labs build"
+echo ">>> Doing Cypher Workbench Labs build"
 #Commenting out so the enterprise files remain
 #node build_basic.js
 if [ "$1" = "-skipNpmInstall" ]
@@ -31,4 +31,4 @@ mv ./build docker_context
 cp nginx.conf docker_context
 cd ..
 echo ">>> Doing docker build"
-docker build -f Dockerfile.ui ./ui/docker_context -t solutions-workbench-ui:${WORKBENCH_VERSION}_labs
+docker build -f Dockerfile.ui ./ui/docker_context -t cypher-workbench-ui:${WORKBENCH_VERSION}_labs

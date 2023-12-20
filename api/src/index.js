@@ -129,7 +129,7 @@ const reportTrackedAction = (email, action, actionCount) => {
 }
 
 var driverConfig = {
-  userAgent: `neo4j-solutions-workbench-api/v${VERSION}`
+  userAgent: `neo4j-cypher-workbench-api/v${VERSION}`
 };
 
 const uri = process.env.NEO4J_URI || "bolt://localhost:7687";
@@ -501,7 +501,7 @@ function startServer() {
           if (process.env.AUTH_METHOD=="auth0") {
             const id_token = stripToken(token);
             if (process.env.AUTH0_API_KEY_AUDIENCE) {
-                const solutionsWorkbenchEmail = req.headers['solutions-workbench-email'];
+                const solutionsWorkbenchEmail = req.headers['solutions-workbench-email'] || req.headers['cypher-workbench-email'];
                 logAuth('solutionsWorkbenchEmail: ', solutionsWorkbenchEmail);
                 const response = await verifyApiKeyToken(id_token, solutionsWorkbenchEmail);
                 // responses with jwtVerifyError should be fine, they are just regular users coming through
