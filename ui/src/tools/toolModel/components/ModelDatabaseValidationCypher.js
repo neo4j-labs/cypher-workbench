@@ -1,13 +1,20 @@
 
+// export const GetConstraintsDescription = `
+// CALL db.constraints() YIELD description
+// RETURN description
+// `;
 export const GetConstraintsDescription = `
-CALL db.constraints() YIELD description
-RETURN description
-`;
+SHOW CONSTRAINTS YIELD labelsOrTypes, properties
+`
 
 // different versions of Neo4j respond with different columns, so we will need to figure stuff out during results processing
+// export const GetIndexes = `
+// CALL db.indexes()
+// `
 export const GetIndexes = `
-CALL db.indexes()
+SHOW INDEXES YIELD labelsOrTypes, properties
 `
+
 
 export const CountNodesByLabel = `
 WITH {

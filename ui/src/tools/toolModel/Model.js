@@ -1391,7 +1391,8 @@ export default class Model extends Component {
             var { modelMetadata, dataModel } = this.getImportDataModel(jsonSchema, cypherFunction, connectionInfo);
 
             // enhance imported model with calls to db.constraints() and db.indexes()
-            await enhanceDataModelWithConstraintsAndIndexes(dataModel, this.setStatus);
+            // TODO: fix this for Neo4j 5 syntax
+            // await enhanceDataModelWithConstraintsAndIndexes(dataModel, this.setStatus);
             // TODO: make optional!!
             //runSecondaryNodeLabelPostProcessing(dataModel);
 
