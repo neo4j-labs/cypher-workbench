@@ -693,7 +693,8 @@ class Homepage extends Component {
         alert("Could not get current user, logging out...");
         setTimeout(() => {
             getAuth().logout();
-        }, 2000)        
+        }, 2000)    
+        return;    
     }
 
     var urlParams = this.getUrlParams();
