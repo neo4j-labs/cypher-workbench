@@ -29,6 +29,8 @@ CALL apoc.cypher.run(countQuery, {}) YIELD value
 RETURN value.nodeLabel as nodeLabel, value.numNodes as numNodes
 `;
 
+// for Neo4j 5 replacing with count { ... } in getOutboundRelationshipCount
+// RETURN size((n)-[:\`$relType\`]->()) as numRels
 export const CountRelationshipTypesSpecifyDataModel = `
 /* Specify data model and estimate relationships */
 WITH $dataModel as dataModel, {
@@ -42,7 +44,7 @@ WITH $dataModel as dataModel, {
 		LIMIT toInteger($limit)
 	",
 	getOutboundRelationshipCount: "
-	    RETURN size((n)-[:\`$relType\`]->()) as numRels
+	    RETURN count { (n)-[:\`$relType\`]->() } as numRels
 	",
 	checkForAnyRelationships: "
 		MATCH (n:\`$nodeType\`)-[:\`$relType\`]->()
@@ -98,6 +100,8 @@ WITH nodeLabel, apoc.map.fromPairs(collect([relationshipType,estimatedRelationsh
 RETURN nodeLabel, estimatedRelCounts
 `;
 
+// for Neo4j 5 replacing with count { ... } in getOutboundRelationshipCount
+// RETURN size((n)-[:\`$relType\`]->()) as numRels
 export const CountRelationshipTypesUseApocMetaSchema = `
 /* Estimate relationship counts via relationship types using apoc.meta.schema */
 WITH {
@@ -111,7 +115,7 @@ WITH {
 		LIMIT toInteger($limit)
 	",
 	getOutboundRelationshipCount: "
-	    RETURN size((n)-[:\`$relType\`]->()) as numRels
+	    RETURN count { ((n)-[:\`$relType\`]->() } as numRels
 	"
 } as cypherQueries, $limit as limit
 
