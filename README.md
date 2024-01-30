@@ -56,6 +56,14 @@ Assuming you installed this locally, use your web browser to navigate to http://
 
 Enter `admin` for email and `neo4j` for password and hit `<Enter>` or click the `Continue` button. You should now be logged in.
 
+#### Login troubleshooting
+Here are some things to double-check if you are having trouble logging in:
+* Ensure that you are typing in the Workbench username and password in the Workbench login screen, not the Neo4j database username and password. Unless you changed it, it should be `admin` for email and `neo4j` for password.
+* Ensure that the `NEO4J_USER` and `NEO4J_PASSWORD` in the `/api` `.env` file are set correctly. These are the credentials to connect to the Neo4j database and can be confirmed by opening up Neo4j browser (http://localhost:7474), typing `:server disconnect`, and re-logging in.
+* Ensure that the database name you ran the initialization scripts is set in `NEO4J_DATABASE` in the `/api` `.env` file. 
+
+If you change any `.env` settings you will need to restart the API by stopping it and running `npm start`.
+
 ## Advanced topics
 These sections describe further optional configuration.
 
