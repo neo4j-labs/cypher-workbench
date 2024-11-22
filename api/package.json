@@ -11,6 +11,7 @@
     "testReadCsv": "./node_modules/.bin/babel-node src/analyze/readCsv.js",
     "createUser": "./node_modules/.bin/babel-node src/users/createUser.js",
     "encryptV1": "./node_modules/.bin/babel-node src/users/encryptV1.js",
+    "decryptV1": "./node_modules/.bin/babel-node src/users/decryptV1.js",
     "build": "babel src -d dist; cp .env dist",
     "serve": "node dist/index.js"
   },

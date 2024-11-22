@@ -70,10 +70,21 @@ export const isNode = (value) => value && typeof(value === 'object')
 
 // duck-typing because remote connections don't create a 'Relationship' javascript object, 
 //  only driver connections in the browser do, and we need to handle both
+
+export const isSerializedInteger = (value) => {
+    if (value && value.low !== undefined && value.high !== undefined
+            && typeof(value.low) === 'number'
+            && typeof(value.high) === 'number') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 export const isRelationship = (value) => 
         value && typeof(value === 'object') 
-              && (value.start instanceof Integer || typeof(value.start) === 'number')
-              && (value.start instanceof Integer || typeof(value.end) === 'number');
+              && (value.start instanceof Integer || typeof(value.start) === 'number' || isSerializedInteger(value.start))
+              && (value.end instanceof Integer || typeof(value.end) === 'number' || isSerializedInteger(value.end));
 
 export const isPath = (value) => value && typeof(value === 'object') 
     && value.start && value.end && Array.isArray(value.segments);
