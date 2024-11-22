@@ -37,7 +37,7 @@ export const generateTokenForUser = (email) => {
     }
     const entry = {
         token,
-        expires: new Date().getTime() + localTokenValidDuration
+        expires: `${new Date().getTime() + localTokenValidDuration}`
     }
     //console.log(`pushing entry for email ${email}`, entry);
     userTokenList.push(entry);
@@ -68,7 +68,7 @@ export const validateTokenExistsAndIsNotExpired = (email, token) => {
         }
         //console.log('8.4')
         const now = new Date().getTime();
-        isValid = userTokenList.some(x => x.token === token && x.expires > now);
+        isValid = userTokenList.some(x => x.token === token && parseInt(x.expires) > now);
         return isValid;
     } 
 }
@@ -77,7 +77,7 @@ export const expireLocalSessions = () => {
     const now = new Date().getTime();
     Object.keys(userLocalSessions).map(key => {
         var userTokenList = userLocalSessions[key];
-        userTokenList = userTokenList.filter(x => x.expires > now);
+        userTokenList = userTokenList.filter(x => parseInt(x.expires) > now);
         userLocalSessions[key] = userTokenList;
         if (userTokenList.length === 0) {
             delete userLocalSessions[key];

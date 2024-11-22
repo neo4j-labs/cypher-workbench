@@ -33,6 +33,66 @@ test('makeRandomString', () => {
     expect(str.length).toBe(6);
 });
 
+test('base64 encode just dbConnection id', () => {
+    const dbConnection = { 
+        id: '28fb61f5-7261-43c5-bbb7-2fa5852c971e'
+    }
+    const encodedObj = encodeObject(dbConnection);
+    //console.log('dbconnection id: ' + encodedObj);
+});
+
+test('base64 encode dbConnection', () => {
+    const dbConnection = { 
+        name: 'Keymaker Test DB',
+        url: 'bolt://localhost:7687',
+        username: 'neo4j',
+        encrypted: false,
+        databaseName: ''
+    }
+    const encodedObj = encodeObject(dbConnection);
+    //console.log('keymaker test db: ' + encodedObj);
+});
+
+test('base64 encode metadata', () => {
+    const metadata = { 
+        title: 'Engine Step 1',
+        description: 'Engine Step 1 description',
+        notes: ''
+    }
+    const encodedObj = encodeObject(metadata);
+    //console.log('metadata: ' + encodedObj);
+});
+
+test('base64 encode keymaker', () => {
+    const keymakerInfo = { 
+        phaseId: 'f3919ca7-76f6-4ac3-995b-4ab327c6109d',
+        cypherQuery: '',
+        notifyPort: 3001
+    }
+    const encodedObj = encodeObject(keymakerInfo);
+    //console.log('keymakerInfo: ' + encodedObj);
+});
+
+test('base64 encode/decode', () => {
+
+    const dbConnection = { 
+        url: 'bolt://localhost:7687', 
+        username: 'neo4j', 
+        encrypted: false, 
+        databaseName: ''
+    }
+
+    const encodedObj = encodeObject(dbConnection);
+    //console.log('encodedObj: ' + encodedObj);
+    const decodedObj = decodeObject(encodedObj);
+
+    expect(decodedObj.url).toBe(dbConnection.url);
+    expect(decodedObj.encrypted).toBe(dbConnection.encrypted);
+    expect(decodedObj.username).toBe(dbConnection.username);
+    expect(decodedObj.databaseName).toBe(dbConnection.databaseName);
+
+});
+
 test ('encrypt v2 symmetric', () => {
     var dataToEncrypt = { password: 'something_secret' };
     var symmetricKey = generateSymmetricKey();

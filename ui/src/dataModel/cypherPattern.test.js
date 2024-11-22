@@ -22,7 +22,7 @@ const cy = new CypherStatementBuilder({
 
 const buildPattern = () => {
     var path = cy.path()
-    .node('person', ['Person'], { name: 'Keanu'})
+    .node('person', ['Person'], { name: '"Keanu"'})
     .link(
         cy.link()
             .rel('acted_in', ['ACTED_IN'])
@@ -72,7 +72,7 @@ const makeTestPathPattern = () => {
         variable: 'person',
         nodeLabels: ['Person'],
         propertyMap: {
-            name: 'Keanu'
+            name: '"Keanu"'
         }
     });
 
@@ -89,7 +89,7 @@ const makeTestPathPattern = () => {
 const makeTestPattern = () => {
 
     var patternPart = new PatternPart({
-        pathPattern: makeTestPathPattern() 
+        pathPatterns: [makeTestPathPattern()]
     })
 
     var pattern = new Pattern({
@@ -133,7 +133,7 @@ const makeMoviePathPattern = () => {
 const makeMovieTestPatternPart = () => {
 
     var patternPart = new PatternPart({
-        pathPattern: makeMoviePathPattern()
+        pathPatterns: [makeMoviePathPattern()]
     })
 
     return patternPart;
@@ -148,16 +148,16 @@ test('make simple movie pattern', () => {
     var pattern = makeTestPattern();
 
     expect(pattern.patternParts.length).toBe(1);
-    expect(pattern.patternParts[0].pathPattern).not.toBeNull();
-    expect(pattern.patternParts[0].pathPattern.nodePattern.variable).toBe('person');
-    expect(pattern.patternParts[0].pathPattern.nodePattern.nodeLabels).toStrictEqual(['Person']);
-    expect(pattern.patternParts[0].pathPattern.nodePattern.propertyMap).toStrictEqual({name: 'Keanu'});
+    expect(pattern.patternParts[0].getPathPattern()).not.toBeNull();
+    expect(pattern.patternParts[0].getPathPattern().nodePattern.variable).toBe('person');
+    expect(pattern.patternParts[0].getPathPattern().nodePattern.nodeLabels).toStrictEqual(['Person']);
+    expect(pattern.patternParts[0].getPathPattern().nodePattern.propertyMap).toStrictEqual({name: '"Keanu"'});
 
-    expect(pattern.patternParts[0].pathPattern.patternElementChain.length).toBe(1);
-    expect(pattern.patternParts[0].pathPattern.patternElementChain[0].nodePattern.variable).toBe('movie');
-    expect(pattern.patternParts[0].pathPattern.patternElementChain[0].nodePattern.nodeLabels).toStrictEqual(['Movie']);
-    expect(pattern.patternParts[0].pathPattern.patternElementChain[0].relationshipPattern.types).toStrictEqual(['ACTED_IN']);
-    expect(pattern.patternParts[0].pathPattern.patternElementChain[0].relationshipPattern.direction).toBe(RELATIONSHIP_DIRECTION.RIGHT);
+    expect(pattern.patternParts[0].getPathPattern().patternElementChain.length).toBe(1);
+    expect(pattern.patternParts[0].getPathPattern().patternElementChain[0].nodePattern.variable).toBe('movie');
+    expect(pattern.patternParts[0].getPathPattern().patternElementChain[0].nodePattern.nodeLabels).toStrictEqual(['Movie']);
+    expect(pattern.patternParts[0].getPathPattern().patternElementChain[0].relationshipPattern.types).toStrictEqual(['ACTED_IN']);
+    expect(pattern.patternParts[0].getPathPattern().patternElementChain[0].relationshipPattern.direction).toBe(RELATIONSHIP_DIRECTION.RIGHT);
 });
 
 test('convert simple movie pattern to cypher string', () => {
@@ -889,293 +889,34 @@ test('Set variable scope - no initial variable scope', () => {
 
 });
 
-test('test getDebugCypherSnippets - single node pattern', () => {
-    var aNode = cy.node().var('a').labels(['A']);
-    var path = cy.path().node(aNode);
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getDebugCypherSnippets();
-    expect(snippets.length).toBe(1);
-
-    expect(snippets[0]).toBe('(a:A)');
-});
-
-test('test getDebugCypherSnippets - test node-rel-node-rel-node pattern', () => {
-    var aNode = cy.node().var('a').labels(['A']);
-    var bNode = cy.node().var('b').labels(['B']);
-    var cNode = cy.node().var('c').labels(['C']);
-    var rel_ab = cy.rel().setKey('ab').setTypes(['TO']);
-    var rel_bc = cy.rel().setKey('bc').setTypes(['TO']);
+test('shortest path in pattern part', () => {
 
     var path = cy.path()
-        .node(aNode)
-        .link(cy.link().rel(rel_ab).node(bNode))
-        .link(cy.link().rel(rel_bc).node(cNode))
-
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getDebugCypherSnippets();
-    expect(snippets.length).toBe(5);
-
-    expect(snippets[0]).toBe('(a:A) // -[:TO]->(b:B)-[:TO]->(c:C)');
-    expect(snippets[1]).toBe('(a:A)-[:TO]->() // (b:B)-[:TO]->(c:C)');
-    expect(snippets[2]).toBe('(a:A)-[:TO]->(b:B) // -[:TO]->(c:C)');
-    expect(snippets[3]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->() // (c:C)');
-    expect(snippets[4]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C)');
-});
-
-test('test getDebugCypherStatements - test multiple pathPatterns', () => {
-    var nodeB = cy.node().setKey('b').var('b').labels(['B']);
-    var nodeD = cy.node().setKey('d').var('d').labels(['D']);
-
-    var path = cy.path()
-        .node('a', ['A'])
-        .link(cy.link().rel(null, ['TO']).node(nodeB))
-        .link(cy.link().rel(null, ['TO']).node('c', ['C']))
-
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var pathD = cy.path().node(nodeD);
-    var partD = cy.part().path(pathD);
-    pattern.addPart(partD);
-
-    var rel = cy.rel().setTypes(['TO']);
-
-    pattern.addPatternElementChain(null, nodeD, rel, nodeB);
-
-    // var expectedCypher = '(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)';
-
-    var snippets = pattern.getDebugCypherSnippets();
-    expect(snippets.length).toBe(8);
-
-    expect(snippets[0]).toBe('(a:A) // -[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)');
-    expect(snippets[1]).toBe('(a:A)-[:TO]->() // (b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)');
-    expect(snippets[2]).toBe('(a:A)-[:TO]->(b:B) // -[:TO]->(c:C), (d:D)-[:TO]->(b:B)');
-    expect(snippets[3]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->() // (c:C), (d:D)-[:TO]->(b:B)');
-    expect(snippets[4]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C) // , (d:D)-[:TO]->(b:B)');
-    expect(snippets[5]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D) // -[:TO]->(b:B)');
-    expect(snippets[6]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->() // (b:B)');
-    expect(snippets[7]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)');
-});
-
-test('test getValidationCypherSnippets - test multiple pathPatterns', () => {
-    var nodeB = cy.node().setKey('b').var('b').labels(['B']);
-    var nodeD = cy.node().setKey('d').var('d').labels(['D']);
-
-    var path = cy.path()
-        .node('a', ['A'])
-        .link(cy.link().rel(null, ['TO']).node(nodeB))
-        .link(cy.link().rel(null, ['TO']).node('c', ['C']))
-
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var pathD = cy.path().node(nodeD);
-    var partD = cy.part().path(pathD);
-    pattern.addPart(partD);
-
-    var rel = cy.rel().setTypes(['TO']);
-
-    pattern.addPatternElementChain(null, nodeD, rel, nodeB);
-
-    // var expectedCypher = '(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)';
-
-    var snippets = pattern.getValidationCypherSnippets();
-    expect(snippets.length).toBe(8);
-
-    expect(snippets[0]).toBe('(a:A)');
-    expect(snippets[1]).toBe('(a:A)-[:TO]->()');
-    expect(snippets[2]).toBe('(a:A)-[:TO]->(b:B)');
-    expect(snippets[3]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->()');
-    expect(snippets[4]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C)');
-    expect(snippets[5]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)');
-    expect(snippets[6]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->()');
-    expect(snippets[7]).toBe('(a:A)-[:TO]->(b:B)-[:TO]->(c:C), (d:D)-[:TO]->(b:B)');
-});
-
-
-test('test getValidationCypherSnippets with node property key/values', () => {
-
-    var path = cy.path()
-    .node('person', ['Person'], { name: 'Keanu'})
+    .node('person', ['Person'])
     .link(
         cy.link()
             .rel('acted_in', ['ACTED_IN'])
             .node('movie', ['Movie'])
     )
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
 
-    var snippets = pattern.getValidationCypherSnippets();
-    //console.log('snippets: ', snippets);
-    expect(snippets.length).toBe(6);
+    var patternPart = new PatternPart({
+        shortestPath: 'ANY',
+        shortestPathIsFunction: false,
+        pathPatterns: [path]
+    })
 
-    expect(snippets).toStrictEqual(
-    [ '(person:Person)',
-      '(person:Person) \nWHERE exists(person.name)',
-      '(person:Person)-[acted_in:ACTED_IN]->()',
-      '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(person.name)',
-      '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie)',
-      '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(person.name)' ]
-    );
+    let cypher = patternPart.toCypherString();
+    // console.log('cypher: ', cypher);
+    expect(cypher).toEqual('ANY (person:Person)-[acted_in:ACTED_IN]->(movie:Movie)')
 
-});
+    patternPart = new PatternPart({
+        shortestPath: 'shortestpath',
+        shortestPathIsFunction: true,
+        pathPatterns: [path]
+    })
 
-test('test getValidationCypherSnippets with node/rel property key/values', () => {
-
-    var path = cy.path()
-    .node('person', ['Person'], { name: 'Keanu'})
-    .link(
-        cy.link()
-            .rel('acted_in', ['ACTED_IN'], { role: 'Neo'})
-            .node('movie', ['Movie'])
-    )
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getValidationCypherSnippets();
-    //console.log('snippets: ', snippets);
-    expect(snippets.length).toBe(8);
-
-    expect(snippets).toStrictEqual(
-        [ '(person:Person)',
-        '(person:Person) \nWHERE exists(person.name)',
-        '(person:Person)-[acted_in:ACTED_IN]->()',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(person.name)',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(acted_in.role)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(person.name)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(acted_in.role)' ]
-        );
+    cypher = patternPart.toCypherString();
+    // console.log('cypher: ', cypher);
+    expect(cypher).toEqual('shortestpath((person:Person)-[acted_in:ACTED_IN]->(movie:Movie))')
 
 });
-
-test('test getValidationCypherSnippets with node/rel multiple property key/values', () => {
-
-    var path = cy.path()
-    .node('person', ['Person'], { name: 'Keanu', age: 40})
-    .link(
-        cy.link()
-            .rel('acted_in', ['ACTED_IN'], { role: 'Neo', theOne: true})
-            .node('movie', ['Movie'])
-    )
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getValidationCypherSnippets();
-    //console.log('snippets: ', snippets);
-    expect(snippets.length).toBe(13);
-
-    expect(snippets).toStrictEqual(
-        [ '(person:Person)',
-        '(person:Person) \nWHERE exists(person.name)',
-        '(person:Person) \nWHERE exists(person.name) AND exists(person.age)',
-        '(person:Person)-[acted_in:ACTED_IN]->()',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(person.name)',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(person.name) AND exists(person.age)',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(acted_in.role)',
-        '(person:Person)-[acted_in:ACTED_IN]->() \nWHERE exists(acted_in.role) AND exists(acted_in.theOne)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(person.name)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(person.name) AND exists(person.age)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(acted_in.role)',
-        '(person:Person)-[acted_in:ACTED_IN]->(movie:Movie) \nWHERE exists(acted_in.role) AND exists(acted_in.theOne)' ]
-        );
-
-});
-
-test('test getValidationCypherSnippets with node/rel property key/values - no variable', () => {
-
-    var path = cy.path()
-    .node('', ['Person'], { name: 'Keanu', age: 40})
-    .link(
-        cy.link()
-            .rel('', ['ACTED_IN'], { role: 'Neo'})
-            .node('movie', ['Movie'])
-    )
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getValidationCypherSnippets();
-    //console.log('snippets: ', snippets);
-    expect(snippets.length).toBe(11);
-
-    expect(snippets).toStrictEqual(
-        [ '(v1:Person)',
-        '(v1:Person) \nWHERE exists(v1.name)',
-        '(v1:Person) \nWHERE exists(v1.name) AND exists(v1.age)',
-        '(v1:Person)-[v2:ACTED_IN]->()',
-        '(v1:Person)-[v2:ACTED_IN]->() \nWHERE exists(v1.name)',
-        '(v1:Person)-[v2:ACTED_IN]->() \nWHERE exists(v1.name) AND exists(v1.age)',
-        '(v1:Person)-[v2:ACTED_IN]->() \nWHERE exists(v2.role)',
-        '(v1:Person)-[v2:ACTED_IN]->(movie:Movie)',
-        '(v1:Person)-[v2:ACTED_IN]->(movie:Movie) \nWHERE exists(v1.name)',
-        '(v1:Person)-[v2:ACTED_IN]->(movie:Movie) \nWHERE exists(v1.name) AND exists(v1.age)',
-        '(v1:Person)-[v2:ACTED_IN]->(movie:Movie) \nWHERE exists(v2.role)' ]
-      );
-
-});
-
-test('test prop key in end node ', () => {
-
-    // (graphDocView:GraphView)-[:DEFAULT_GRAPH_VIEW_FOR]->(graphDoc:GraphDoc {key:graphDocKey})
-    var path = cy.path()
-    .node('graphDocView', ['GraphView'])
-    .link(
-        cy.link()
-            .rel('', ['DEFAULT_GRAPH_VIEW_FOR'])
-            .node('graphDoc', ['Movie'], {key: 'graphDocKey'})
-    )
-    var part = cy.part().path(path);
-    var pattern = cy.pattern().addPart(part);
-
-    var snippets = pattern.getValidationCypherSnippets();
-    //console.log('snippets: ', snippets);
-    expect(snippets.length).toBe(4);
-    expect(snippets).toStrictEqual([ '(graphDocView:GraphView)',
-        '(graphDocView:GraphView)-[:DEFAULT_GRAPH_VIEW_FOR]->()',
-        '(graphDocView:GraphView)-[:DEFAULT_GRAPH_VIEW_FOR]->(graphDoc:Movie)',
-        '(graphDocView:GraphView)-[:DEFAULT_GRAPH_VIEW_FOR]->(graphDoc:Movie) \nWHERE exists(graphDoc.key)' ]
-    );
-
-});
-
-/*
-// TODO: fix the includePathPattern stuff so that it does a deep value comparison instead of comparing by keys
-test('test paysim print cypher', () => {
-
-    var client = cy.node().var('client1').labels(['Client']);
-    var transaction = cy.node().var('transaction1').labels(['Transaction']);
-    var email = cy.node().var('email1').labels(['Email']);
-    //var ssn = cy.node().var('ssn1').labels(['SSN']);
-    //var phone = cy.node().var('phone1').labels(['Phone']);
-
-    // MATCH (client1:Client)-[:PERFORMED]->(transaction1:Transaction), 
-    //   (client1:Client)-[:HAS_EMAIL]->(email1:Email), 
-    //   (client1:Client)-[:HAS_SSN]->(ssn1:SSN), 
-    //   (client1:Client)-[:HAS_PHONE]->(phone1:Phone)
-    var clientPerformedTransaction = cy.path().node(client).link(cy.link().rel('', ['PERFORMED']).node(transaction));
-    var clientPerformedTransaction2 = cy.path().node(client).link(cy.link().rel('', ['PERFORMED']).node(cy.node().var('transaction1').labels(['Transaction'])));
-    //var clientHasEmail = cy.path().node(client).link(cy.link().rel('', ['HAS_EMAIL']).node(email));
-    //var clientHasSsn = cy.path().node(client).link(cy.link().rel('', ['HAS_SSN']).node(ssn));
-    //var clientHasPhone = cy.path().node(client).link(cy.link().rel('', ['HAS_PHONE']).node(phone));
-
-    var pattern = cy.pattern();
-    var part1 = cy.part().path(clientPerformedTransaction);
-    var part2 = cy.part().path(clientPerformedTransaction2);
-    //var part2 = cy.part().path(clientHasEmail);
-    pattern.addPart(part1);
-    pattern.addPart(part2);
-    //pattern.addPart(cy.part().path(clientHasSsn));
-    //pattern.addPart(cy.part().path(clientHasPhone));
-
-    //console.log(part1.includesPatternPart(part2));
-    //console.log(part1.pathPattern.includesPathPattern(part2.pathPattern));
-    console.log(clientPerformedTransaction.includesPathPattern(clientPerformedTransaction2));
-    console.log(pattern.toCypherString());
-});
-
-*/

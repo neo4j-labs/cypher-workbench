@@ -1,5 +1,5 @@
 
-import neo4j from 'neo4j-driver';
+import neo4j, { Integer } from 'neo4j-driver';
 import { encryptAsymmetricOnlyWithVersion, getUserNameAndPasswordLocally } from './encryption';
 import { executeCypherQuery } from '../persistence/graphql/GraphQLDBConnection';
 import { VERSION } from '../version';
@@ -96,6 +96,14 @@ export function graphQLExecuteCypherQuery (driverId, connectionInfo, cypherQuery
     });
 }
 
+function convertInt (integer) {    
+    if (integer.low !== undefined && integer.high !== undefined) {
+        return new Integer(integer.low && integer.high).toInt();
+    } else {
+        return integer;
+    }
+}
+
 export function graphQLConnectToNeo (connectionInfo, successCallback, errorCallback) {
     const cypherQuery = 'MATCH (n) RETURN count(n) as count';
     // clear these out so they aren't sitting around in memory
@@ -110,7 +118,7 @@ export function graphQLConnectToNeo (connectionInfo, successCallback, errorCallb
         const { success } = response;
         if (success) {
             const { headers, rows, numRows } = response;
-            if (headers.includes('count') && ((numRows === 1 && rows[0]['count'] >= 0) || numRows === 0)) {
+            if (headers.includes('count') && ((numRows === 1 && convertInt(rows[0]['count']) >= 0) || numRows === 0)) {
                 neoDrivers[connectionInfo.id] = {
                     neoDriver: null,
                     connectionInfo: {
@@ -159,7 +167,7 @@ export function connectToNeo (connectionInfo, successCallback, errorCallback) {
         }
         //var driverConfig = (connectionInfo.encrypted) ? {encrypted: true} : undefined;
         var driverConfig = { 
-            disableLosslessIntegers: true,
+            // disableLosslessIntegers: true,
             userAgent: `neo4j-cypher-workbench-ui/v${VERSION}`
         };
         if (!connectionInfo.url.match(/bolt\+s/) && !connectionInfo.url.match(/bolt\+ssc/)
@@ -290,6 +298,16 @@ export function runCypherWithTransactionConfig (cypher, parameters, transactionC
     return runCypherWithDriverId(mainDriverId, cypher, parameters, transactionConfig, completionCallback, errorCallback);
 }
 
+export function runCypherWithTransactionConfigAsPromise (cypher, parameters, transactionConfig) {
+    return new Promise((resolve, reject) => {
+        runCypherWithTransactionConfig(cypher, parameters, transactionConfig, (results, cypher) => {
+            resolve({ results, cypher });
+        }, (error, cypher) => {
+            reject({ error, cypher })
+        });
+    });
+}
+
 export function runCypher (cypher, parameters, completionCallback, errorCallback) {
     return runCypherWithDriverId(mainDriverId, cypher, parameters, undefined, completionCallback, errorCallback);
 }
@@ -304,6 +322,14 @@ export function runCypherAsPromise (cypher, parameters) {
     });
 }
 
+var mainSession = null;
+// in order to stop the executing query by user request
+export function closeMainDriverCurrentSession () {
+    if (mainSession) {
+        mainSession.close();
+    }
+}
+
 export function runCypherWithDriverId (driverId, cypher, parameters, transactionConfig, completionCallback, errorCallback) {
     //console.log('running: ' + cypher);
     var connectionInfo = getCurrentConnectionInfo(driverId);        
@@ -316,25 +342,42 @@ export function runCypherWithDriverId (driverId, cypher, parameters, transaction
     if (neoDriver) {
         const databaseName = (connectionInfo) ? connectionInfo.databaseName : '';
         var session = (databaseName) ? neoDriver.session({ database: databaseName }) : neoDriver.session();
+        mainSession = session;
         var results = {headers: [], rows:[]}
+
+        transactionConfig = transactionConfig || {};
+        let resultLimit = transactionConfig.resultLimit;
+        delete transactionConfig.resultLimit;
+        if (!resultLimit || isNaN(resultLimit)) {
+            resultLimit = 1000;
+        }
+        var numRecordsProcessed = 0;
+        var stopProcessing = false;
 
         const result = session.run(cypher, parameters, transactionConfig);
         //console.log(result);
         result.subscribe({
-            onNext: record => {
-                if (results.headers.length === 0) {
-                    results.headers = (record.keys) ? record.keys.filter(key => key !== 'null') : [];
+            onNext: (record) => {
+                if (!stopProcessing) {
+                    if (results.headers.length === 0) {
+                        results.headers = (record.keys) ? record.keys.filter(key => key !== 'null') : [];
+                    }
+                    var hasValues = false;
+                    var row = {};
+                    record.keys.forEach(function (key) {
+                        var value = record.get(key);
+                        row[key] = value;
+                        if (value)
+                            hasValues = true;
+                    })
+                    if (hasValues) {
+                        results.rows.push(row);
+                    }
+                    numRecordsProcessed++;
                 }
-                var hasValues = false;
-                var row = {};
-                record.keys.forEach(function (key) {
-                    var value = record.get(key);
-                    row[key] = value;
-                    if (value)
-                        hasValues = true;
-                })
-                if (hasValues)
-                    results.rows.push(row);
+                if (numRecordsProcessed >= resultLimit) {
+                    stopProcessing = true;
+                }                
             },
             onCompleted: () => {
                 session.close();

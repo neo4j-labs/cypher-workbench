@@ -5,8 +5,10 @@ import {
     PathPattern,
     PatternPart,
     PatternElementChainLink,
-    Pattern
+    Pattern,
+    QuantifiedPathPattern
 } from './cypherPattern';
+import { WhereClause } from './cypherWhere';
 
 export class CypherStatementBuilder {
 
@@ -27,4 +29,6 @@ export class CypherStatementBuilder {
     link = () => new PatternElementChainLink({ variableScope: this.variableScope });
     part = () => new PatternPart({ variableScope: this.variableScope });
     pattern = () => new Pattern({ variableScope: this.variableScope });
+    qpp = () => new QuantifiedPathPattern({ variableScope: this.variableScope });
+    where = () => new WhereClause();
 }

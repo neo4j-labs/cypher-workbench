@@ -1,6 +1,7 @@
 
 import { 
     whereItem,
+    onlyLeftHandSideFilledOut,
     SimpleWhereItem, 
     WhereClause
 } from './cypherWhere';
@@ -181,7 +182,24 @@ test('test removeAssociatedWhereItems', () => {
     expect(cypher).toBe(expectedCypher);
 });
 
-test('test getDebugCypherSnippets', () => {
+// deprecated
+// test('test getDebugCypherSnippets', () => {
+//     var whereClause = new WhereClause();
+//     var whereItem1 = whereItem('n.x','=',"'foo'",'node1');
+//     var whereItem2 = whereItem('n.y','=',"'bar'",'node2');
+//     whereClause
+//         .item(whereItem1)
+//         .token('AND')
+//         .item(whereItem2);
+
+//     var snippets = whereClause.getDebugCypherSnippets();
+//     expect(snippets.length).toBe(2);
+
+//     expect(snippets[0]).toBe("WHERE n.x = 'foo' //  AND n.y = 'bar'");
+//     expect(snippets[1]).toBe("WHERE n.x = 'foo' AND n.y = 'bar'");
+// });
+
+test('test getDebugCypherSnippetParts', () => {
     var whereClause = new WhereClause();
     var whereItem1 = whereItem('n.x','=',"'foo'",'node1');
     var whereItem2 = whereItem('n.y','=',"'bar'",'node2');
@@ -190,9 +208,90 @@ test('test getDebugCypherSnippets', () => {
         .token('AND')
         .item(whereItem2);
 
-    var snippets = whereClause.getDebugCypherSnippets();
+    var snippets = whereClause.getDebugCypherSnippetParts({addWhere: true});
+    //console.log('snippets: ', snippets);
     expect(snippets.length).toBe(2);
 
-    expect(snippets[0]).toBe("WHERE n.x = 'foo' //  AND n.y = 'bar'");
-    expect(snippets[1]).toBe("WHERE n.x = 'foo' AND n.y = 'bar'");
+    expect(snippets[0]).toBe("WHERE n.x = 'foo'");
+    expect(snippets[1]).toBe(" AND n.y = 'bar'");
+});
+
+test('test adjoining break tokens', () => {
+    var whereClause = new WhereClause();
+    var whereItem1 = whereItem('n.x','=',"'foo'",'node1');
+    var whereItem2 = whereItem('n.y','=',"'bar'",'node2');
+    whereClause
+        .item(whereItem1)
+        .token(' AND')
+        .token(' NOT ')
+        .item(whereItem2);
+
+    var snippets = whereClause.getDebugCypherSnippetParts({addWhere: true});
+    //console.log('snippets: ', snippets);
+    //expect(snippets.length).toBe(2);
+
+    expect(snippets[0]).toBe("WHERE n.x = 'foo'");
+    expect(snippets[1]).toBe(" AND NOT n.y = 'bar'");    
+});
+
+test('test onlyLeftHandSideFilledOut', () => {
+    let item1 = whereItem('foo');
+    let item2 = whereItem('n.x','=',"'foo'",'node1');
+
+    expect(onlyLeftHandSideFilledOut(item1)).toBe(true);
+    expect(onlyLeftHandSideFilledOut(item2)).toBe(false);
+})
+
+test('test getDebugCypherSnippets with bigger where', () => {
+    let tokens = [
+        'p.name ',   '= ',
+        "'Keanu ",   "Reeves' ",
+        'OR ',       'p.name ',
+        'CONTAINS ', "'Carrie' ",
+        'OR ',       'p.name ',
+        'CONTAINS ', "'Tom'"
+    ];
+    let whereItems = tokens.map(token => whereItem(token));
+    let whereClause = new WhereClause();
+    whereClause.setWhereItems(whereItems);
+
+    //console.log(whereClause);
+    var snippets = whereClause.getDebugCypherSnippetParts({addWhere: true});
+    //console.log(snippets);
+
+    expect(snippets.length).toBe(3);
+
+    expect(snippets).toStrictEqual([
+        "WHERE p.name = 'Keanu Reeves' ",
+        "OR p.name CONTAINS 'Carrie' ",
+        "OR p.name CONTAINS 'Tom'"
+    ])    
+});
+
+test('test getDebugCypherSnippetSet', () => {
+    let tokens = [
+        'p.name ',   '= ',
+        "'Keanu ",   "Reeves' ",
+        'OR ',       'p.name ',
+        'CONTAINS ', "'Carrie' ",
+        'OR ',       'p.name ',
+        'CONTAINS ', "'Tom'"
+    ];
+    let whereItems = tokens.map(token => whereItem(token));
+    let whereClause = new WhereClause();
+    whereClause.setWhereItems(whereItems);
+
+    //console.log(whereClause);
+    var snippetSet = whereClause.getDebugCypherSnippetSet({addWhere: true});
+    var snippets = snippetSet.getSnippets();
+
+    //console.log(snippets);
+
+    expect(snippets.length).toBe(3);
+
+    expect(snippets).toStrictEqual([
+        "WHERE p.name = 'Keanu Reeves'  /* OR p.name CONTAINS 'Carrie' OR p.name CONTAINS 'Tom' */",
+        "WHERE p.name = 'Keanu Reeves' OR p.name CONTAINS 'Carrie'  /* OR p.name CONTAINS 'Tom' */",
+        "WHERE p.name = 'Keanu Reeves' OR p.name CONTAINS 'Carrie' OR p.name CONTAINS 'Tom'"
+    ])    
 });

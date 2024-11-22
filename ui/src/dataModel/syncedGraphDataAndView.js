@@ -175,8 +175,6 @@ export class SyncedGraphDataAndView {
     getConnectedNodes = (node) => this.graphDataView.getConnectedNodes(node);
     getNodesThatHaveSelfConnectedRelationships = () => this.graphDataView.getNodesThatHaveSelfConnectedRelationships();
     getNodePairsThatHaveMoreThanOneRelationshipBetweenThem = () => this.graphDataView.getNodePairsThatHaveMoreThanOneRelationshipBetweenThem();
-    getOutboundRelationshipsForNodeByType = (node, relType) => this.graphDataView.getOutboundRelationshipsForNodeByType(node, relType);
-    getInboundRelationshipsForNodeByType = (node, relType) => this.graphDataView.getInboundRelationshipsForNodeByType(node, relType);
 
     fromSaveObject = (graphDocJson, graphDocViewJson, keepDataChangeFlags) => {
         this.graphData.fromSaveObject(graphDocJson, keepDataChangeFlags);

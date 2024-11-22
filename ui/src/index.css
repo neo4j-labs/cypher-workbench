@@ -389,6 +389,13 @@ button {
   height: 100%;
 }
 
+#cypherDebugToolDebugEditor .cm-editor { 
+  /* height: calc(100vh - 320px); */
+  /* margin-left: 5px; */
+  border: 1px solid lightgray;
+  /* margin-right: 10px; */
+}
+
 /* code mirror changes */
 /* // https://discuss.codemirror.net/t/how-to-set-max-height-of-the-editor/2882 */
 .cm-editor { height: 100% }

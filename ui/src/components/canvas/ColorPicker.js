@@ -63,8 +63,16 @@ export default class ColorPicker extends Component {
   }
 
   render() {
-    var { style, width, circleSize, circleSpacing, pickerTop, pickerTopAll } = this.props;
+    var { 
+      style, width, 
+      circleSize, circleSpacing, 
+      pickerTop, pickerLeft, pickerBottom, pickerTopAll,
+      hideColorLabel, moveExtraColorPickerToEnd,
+      overrideColors
+    } = this.props;
     const { displayPopupColorPicker, color, colors, pickerTabIndex } = this.state;
+
+    let colorsToUse = (overrideColors) ? overrideColors : colors;
 
     pickerTop = (pickerTop) ? pickerTop : '0px';
     pickerTopAll = (pickerTopAll) ? pickerTopAll : pickerTop;
@@ -81,11 +89,15 @@ export default class ColorPicker extends Component {
       paddingRight: '3px'
     };
 
-    if (!colors.includes(color)) {
+    if (!colorsToUse.includes(color)) {
       ellipsisStyle.border = '1px solid #ccc';
       ellipsisStyle.borderRadius = '50%';
       ellipsisStyle.paddingTop = '2px';
       ellipsisStyle.paddingLeft = '3px';
+    }
+
+    if (moveExtraColorPickerToEnd) {
+      ellipsisStyle.marginTop = '5px'
     }
 
     var backgroundStyle = {
@@ -100,32 +112,50 @@ export default class ColorPicker extends Component {
       height: window.innerHeight
     };
     
+    let popupPickerStyle = {
+      position: 'absolute', 
+      zIndex: 2, 
+      left: pickerLeft ? pickerLeft : 0,
+      border: '1px solid #ccc',
+      background: '#f8f8f8'
+    }
+    
+    if (pickerBottom) {
+      popupPickerStyle.bottom = pickerBottom;
+    } else {
+      popupPickerStyle.top = pickerTop;
+    }
+
     return (
         <div style={style} className={'noselect'}>
+          {!hideColorLabel &&
           <div style={{fontSize: '0.8em', marginRight: '.5em', marginTop: '-.15em'}}>Color:</div>
-          <div style={{display: 'flex', flexFlow: 'row', height: '1em', 
-            verticalAlign:'middle', zIndex: 2 }}>
+          }
+          <div style={{display: moveExtraColorPickerToEnd ? 'inline' : 'flex', 
+            flexFlow: 'row', height: '1em', 
+            verticalAlign:'middle', zIndex: 2 
+          }}>
+              {!moveExtraColorPickerToEnd &&
               <div className="fa fa-ellipsis-h" style={ellipsisStyle} 
-                          onClick={ this.togglePopupColorPicker }></div>
+                onClick={ this.togglePopupColorPicker }></div>
+              }
               <CirclePicker
                 width={ width }
                 circleSize={ circleSize }
                 circleSpacing={ circleSpacing }
                 color={ color }
-                colors={ colors }
+                colors={ colorsToUse }
                 onChangeComplete={ this.handleChangeComplete }
               />
+              {moveExtraColorPickerToEnd &&
+              <div className="fa fa-ellipsis-h" style={ellipsisStyle} 
+                onClick={ this.togglePopupColorPicker }></div>
+              }
           </div>
           {displayPopupColorPicker &&
             <>
               <div style={backgroundStyle} onClick={this.closePopupColorPicker}/>
-              <div style={{
-                position: 'absolute', 
-                zIndex: 2, 
-                left: 0,
-                border: '1px solid #ccc',
-                background: '#f8f8f8',
-                top: pickerTop}}
+              <div style={popupPickerStyle}
               >
                 <Tabs
                   orientation="horizontal"

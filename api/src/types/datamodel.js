@@ -158,6 +158,27 @@ input DataModelInput {
     removeRelationshipTypes: [RelationshipTypeInput]
 }
 
+input ModelLayoutConfigInput {
+    rankdir: String 
+    align: String
+    nodesep: Int
+    ranksep: Int
+    edgesep: Int
+    marginx: Int
+    marginy: Int
+}
+
+input DrawingConfigInput {
+    autoColor: Boolean
+    layoutConfig: ModelLayoutConfigInput
+}
+
+input GenerateModelFromCypherInput {
+    metadata: DataModelMetadataLiteInput
+    cypher: String
+    drawingConfig: DrawingConfigInput
+}
+
 input NodeLabelDisplayInput {
     key: ID!
     display: String
@@ -183,6 +204,14 @@ input DataModelMetadataInput {
     removeTags: [TagInput]
     upsertUseCases: [UseCaseInput]
     removeUseCases: [UseCaseInput]
+}
+
+input DataModelMetadataLiteInput {
+    title: String
+    description: String
+    notes: String
+    isPublic: Boolean
+    tags: [String]
 }
 
 input NodeLabelInput {
@@ -260,8 +289,9 @@ type Query {
     findIndustries(searchText: String): [Industry]
     findTags(searchText: String): [Tag]
     findUseCases(searchText: String): [UseCase]
-    listDataModelsX(myOrderBy: String, orderDirection: String, skip: Int, limit: Int): [DataModel]
-    searchDataModelsX(searchText: String, myOrderBy: String, orderDirection: String, skip: Int, limit: Int): [DataModel]
+    listDataModelsX(myOrderBy: String, orderDirection: String, includePublic: Boolean, skip: Int, limit: Int): [DataModel]
+    listDataModelsAndAddExplicitMatches(explicitKeysToSearchFor: [String], myOrderBy: String, orderDirection: String, includePublic: Boolean, skip: Int, limit: Int): [DataModel]
+    searchDataModelsX(searchText: String, myOrderBy: String, orderDirection: String, includePublic: Boolean, skip: Int, limit: Int): [DataModel]
 }
 
 type Mutation {
@@ -271,5 +301,7 @@ type Mutation {
     saveDataModelWithFullMetadata(dataModel: DataModelInput): Boolean
     saveNodeLabelDisplay(nodeLabels: [NodeLabelDisplayInput]): Boolean
     removeDataModel(dataModelKey: String): Boolean
+    createModelFromCypher(input: GenerateModelFromCypherInput): String
+    convertToGraphSchemaFormat(dataModelKey: String): JSON
 }
 `;

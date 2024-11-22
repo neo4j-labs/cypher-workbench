@@ -56,7 +56,7 @@ export const initializeDriver = (dbConnection, userKeys, passwordKeys) => {
   }
   const startTime = performance.now();
   var driverConfig = { 
-    disableLosslessIntegers: true,
+    // disableLosslessIntegers: true,
     userAgent: `neo4j-cypher-workbench-proxy/v${VERSION}`
   };
   if (!url.match(/bolt\+s/) && !url.match(/neo4j\+s/)) {

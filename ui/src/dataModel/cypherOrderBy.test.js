@@ -137,6 +137,6 @@ test('test getDebugCypherSnippets', () => {
     var snippets = orderByClause.getDebugCypherSnippets();
     expect(snippets.length).toBe(2);
 
-    expect(snippets[0]).toBe("ORDER BY varB.foo // , varB.bar");
+    expect(snippets[0]).toBe("ORDER BY varB.foo /* , varB.bar */");
     expect(snippets[1]).toBe("ORDER BY varB.foo, varB.bar");
 });

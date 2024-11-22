@@ -734,23 +734,6 @@ export class GraphDataView {
     getNodesThatHaveSelfConnectedRelationships = () => getNodesThatHaveSelfConnectedRelationships(this.getRelationshipArray());
     getNodePairsThatHaveMoreThanOneRelationshipBetweenThem = () => getNodePairsThatHaveMoreThanOneRelationshipBetweenThem(this.getRelationshipArray());
 
-    getOutboundRelationshipsForNodeByType (node, relType) {
-        var array = this.getRelationshipArray();
-        //console.log('full array: ');
-        //console.log(array.map(relationship => relationship.startDisplayNode.key));
-        array = array.filter(relationship => (relationship.startDisplayNode === node
-                                                && relationship.getRelationshipType() === relType));
-        //console.log('filtered array: ');                                                
-        return array;                                 
-    }
-
-    getInboundRelationshipsForNodeByType (node, relType) {
-        var array = this.getRelationshipArray();
-        array = array.filter(relationship => (relationship.endDisplayNode === node
-                                                && relationship.getRelationshipType() === relType));
-        return array;                                 
-    }
-
     getChangedItemsGraphData = () => this.graphData.getChangedItems();
     getViewGraphData = () => this.graphData;
 

@@ -1,11 +1,40 @@
 
 import DataModel from '../../../dataModel/dataModel';
 
+// deprecated for 4.x
+/*
 const CONSTRAINT_REGEXP = {
     isUnique: new RegExp(/CONSTRAINT ON \( (.+) \) ASSERT (.+) IS UNIQUE/),
     isNodeKey: new RegExp(/CONSTRAINT ON \( (.+) \) ASSERT \((.+)\) IS NODE KEY/),
     assertExists: new RegExp(/CONSTRAINT ON \( (.+) \) ASSERT exists\((.+)\)/)
 }
+*/
+
+// 5.x
+const CONSTRAINT_REGEXP = new RegExp(/Constraint\( id=(\d+), name='(.+)', type='(.+)', schema=\((.+)\), ownedIndex=\d+/);
+const SCHEMA_REGEXP = new RegExp(/:(.+) {(.+)}/);
+
+const ConstraintTypes = {
+    None: "None",
+    NodeKey: "NODE KEY",
+    Uniqueness: "UNIQUENESS",
+    NodePropertyExistence: "NODE PROPERTY EXISTENCE"
+}
+
+
+/*
+Constraint( id=95, name='constraint_589fe2b8', type='NODE KEY', schema=(:Product {name}), ownedIndex=94 )
+/Constraint\( id=\d+, name='\w+', type='[\w\s]+', schema=\(\w+\), ownedIndex=\d+ \)/
+
+':Foo Bar {baz qux, qoph fiz}'
+(/:(.+) {(.+)}/
+
+CALL db.schema.visualization() YIELD nodes
+UNWIND nodes as node
+WITH apoc.any.properties(node)['constraints'] as constraints
+UNWIND constraints as constraint
+RETURN constraint
+*/
 
 function getNodeLabel (nodeObject) {
     if (nodeObject && nodeObject.labels && nodeObject.labels.length > 0) {
@@ -15,6 +44,33 @@ function getNodeLabel (nodeObject) {
     }
 }
 
+function processConstraintText (constraint) {
+
+    let matchResult = constraint.match(CONSTRAINT_REGEXP);
+
+    if (matchResult) {
+        let constraintType = matchResult[3];
+        let schema = matchResult[4];
+        let properties = [];
+
+        var schemaMatchResult = schema.match(SCHEMA_REGEXP);
+        if (schemaMatchResult && schemaMatchResult[2]) {
+            properties = schemaMatchResult[2].split(',')
+                .filter(x => x) // cannot be zero-length
+                .map(x => x.trim())
+
+            return {
+                type: constraintType,
+                properties: properties
+            }
+        }
+    }
+
+    // if no matches
+    return null;
+}
+
+/* this was for 4.x something
 function processConstraintText (constraint) {
     var result = Object.keys(CONSTRAINT_REGEXP)
         .map(key => {
@@ -39,26 +95,29 @@ function processConstraintText (constraint) {
         return null;
     }
 }
+*/
 
 function addConstraint (propertyContainer, constraint, dataTypeMap) {
-    //var constraintType = constraint.type;
     constraint = constraint || {};
+    var constraintType = constraint.type || ConstraintTypes.None;
     var properties = constraint.properties || [];
     var dataType = dataTypeMap['string'];
     var refData = null;
-    /* these flags no longer valid - instead using info from db.indexes() / db.constraints()
+    
     var booleanFlags = {
-        isPartOfKey: (constraintType === 'isNodeKey') ? true : false,
-        hasUniqueConstraint: (constraintType === 'isUnique') ? true : false,
-        isIndexed: (constraintType === 'isUnique' || constraintType === 'isNodeKey') ? true : false,
-        mustExist: (constraintType === 'isNodeKey' || constraintType === 'assertExists') ? true : false
-    }*/
+        isPartOfKey: (constraintType === ConstraintTypes.NodeKey) ? true : false,
+        hasUniqueConstraint: (constraintType === ConstraintTypes.Uniqueness) ? true : false,
+        isIndexed: (constraintType === ConstraintTypes.Uniqueness || constraintType === ConstraintTypes.NodeKey) ? true : false,
+        mustExist: (constraintType === ConstraintTypes.NodeKey || constraintType === ConstraintTypes.NodePropertyExistence) ? true : false
+    }
+    
+    /*
     var booleanFlags = {
         isPartOfKey: false,
         hasUniqueConstraint: false,
         isIndexed: false,
         mustExist: false
-    }
+    }*/
 
     if (properties && properties.length > 0) {
         properties.map(property => {

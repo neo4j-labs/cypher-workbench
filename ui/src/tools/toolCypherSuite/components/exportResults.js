@@ -21,8 +21,8 @@ export const getExportPayload = ({cypherQuery, neoConnectionInfo, bigQueryExport
                 ]
             },
             "bigQueryOutput": {
-                "projectId": "big-query-project-id",
-                "datasetId": "DataSetId",
+                "projectId": "neo4j-solutions-workbench",
+                "datasetId": "Paysim",
                 "tableName": "cypherOutput"
             }
         }

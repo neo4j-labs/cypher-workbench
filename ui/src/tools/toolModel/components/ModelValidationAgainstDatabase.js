@@ -21,6 +21,7 @@ import {
 import {
     processDbIndexesRow
 } from '../../../dataModel/neo4jdb/indexes';
+import { Integer } from "neo4j-driver";
 
 export const validateRelationshipTypesAgainstDatabase = (dataModel, updateState) => {
     var relationshipTypeDatabaseValidations = [];
@@ -113,7 +114,13 @@ export const validateNodeLabelsAgainstDatabase = (dataModel, updateState) => {
             var nodeLabels = dataModel.getNodeLabelArray();
             nodeLabels.map(nodeLabel => {
                 var numNodes = countMap[nodeLabel.label];
-                numNodes = (typeof(numNodes) === 'number') ? numNodes : 0;                    
+                
+                if (numNodes instanceof Integer) {
+                    numNodes = numNodes.toInt();
+                } else {
+                    numNodes = (typeof(numNodes) === 'number') ? numNodes : 0;                    
+                }
+                
                 if (numNodes > 0) {
                     nodeLabelDatabaseValidations.push({
                         validationStatus: ValidationStatus.Valid,

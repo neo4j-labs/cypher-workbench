@@ -2,11 +2,18 @@ import {
     SaveDataModel, SaveDataModelMetadata, SaveNodeLabelDisplay,
     LoadDataModel, RemoveDataModel, GrabModelLock
 } from './cypherStatements';
-import { ListModels, SearchForModel } from './searchModelCypher';
+import { ListModels, ListModelsAndAddExplcitMatches, SearchForModel, IncludePublicSnippet } from './searchModelCypher';
 //import { runQuery, runStatement} from "../util/run";
 import { processResult, getFirstRowValue } from './resultHelper';
 import { runQuery } from "../util/run";
 import { isCloudLicense, getLicenseRestriction, LicenseRestriction } from '../license/license';
+import { v4 as uuidv4 } from 'uuid';
+import { VERSION } from '../version';
+import DataModel from "../ui/dataModel/dataModel";
+import { parseCypher } from "../ui/common/parse/parseCypher";
+import { doDagreLayout } from "../layout/layout";
+import { getFullModelObject, getMetadata } from "./dataModelPersistenceHelper";
+import { autoColor } from '../layout/colors';
 
 const OrderBy = {
     Title: "title",
@@ -123,6 +130,34 @@ export const searchForItem = async (searchText, nodeLabel, searchProperty, retur
     return (result.rows);
 }
 
+// return a Map of tag:key, key will be null if tag does not exist
+export const searchForTags = async (tags, context) => {
+    var query = `
+        WITH $tags as tags, $email as email
+        MATCH (u:User {email:email})
+        WITH tags, u.primaryOrganization as primaryOrg
+        UNWIND tags as tag
+        CALL {
+            WITH tag, primaryOrg
+            OPTIONAL MATCH (tagNode:Tag)
+            WHERE primaryOrg IN labels(tagNode)
+              AND (toLower(tagNode.tag) CONTAINS toLower(tag))
+            RETURN tagNode.key as key
+            LIMIT 1
+        }
+        WITH collect({key: key, tag: tag}) as tagList
+        RETURN tagList
+    `;
+    //console.log(cypher);
+    const args={tags: tags, email: context.email};
+    var result=await runQuery(query, args)
+    result = processResult(result);
+    let tagList = getFirstRowValue(result, "tagList");
+    //console.log("searchForTags tagList: ", JSON.stringify(tagList));
+    return tagList;
+}
+
+
 export const loadDataModel = async (dataModelKey, updateLastOpenedModel, context) => {
     //console.log("loadDataModel", dataModelKey);
     const args = {dataModelKey: dataModelKey, updateLastOpenedModel: updateLastOpenedModel, email: context.email};
@@ -177,7 +212,14 @@ const validateArgs = ({myOrderBy, orderDirection, skip, limit}) => {
     return { myOrderBy, orderDirection, skip, limit }
 }
 
-export const listDataModels = async (myOrderBy, orderDirection, skip, limit, context) => {
+const handleIncludePublic = (query, includePublicValue) => {
+    let includePublic = (includePublicValue === undefined) ? true : includePublicValue;
+    let includePublicString = (includePublic) ? IncludePublicSnippet : '';
+    let newQuery = query.replace(/\$INCLUDE_PUBLIC/g, includePublicString);
+    return newQuery;
+}
+
+export const listDataModels = async (myOrderBy, orderDirection, includePublic, skip, limit, context) => {
     const validatedArgs = validateArgs({myOrderBy, orderDirection, skip, limit});
     var args = {
         myOrderBy: validatedArgs.myOrderBy, 
@@ -185,14 +227,33 @@ export const listDataModels = async (myOrderBy, orderDirection, skip, limit, con
         skip: validatedArgs.skip, 
         limit: validatedArgs.limit
     };
-    var query = ListModels.replace(/\$DESC/, validatedArgs.orderDirection);
+    var query = ListModels.replace(/\$DESC/g, validatedArgs.orderDirection);
+    query = handleIncludePublic(query, includePublic);
     var result = await runQuery(query, args)
     result = processResult(result);
     //console.log("result.rows",result.rows);
     return result.rows;
 }
 
-export const searchDataModels = async (searchText, myOrderBy, orderDirection, skip, limit, context) => {
+export const listDataModelsAndAddExplicitMatches = async (explicitKeysToSearchFor, myOrderBy, orderDirection, includePublic, skip, limit, context) => {
+    const validatedArgs = validateArgs({myOrderBy, orderDirection, skip, limit});
+    var args = {
+        explicitKeysToSearchFor: explicitKeysToSearchFor,
+        myOrderBy: validatedArgs.myOrderBy, 
+        email: context.email, 
+        skip: validatedArgs.skip, 
+        limit: validatedArgs.limit,
+    };
+    var query = ListModelsAndAddExplcitMatches.replace(/\$DESC/g, validatedArgs.orderDirection);
+    query = handleIncludePublic(query, includePublic);
+    var result = await runQuery(query, args)
+    result = processResult(result);
+    //console.log("result.rows",result.rows);
+    return result.rows;
+}
+
+
+export const searchDataModels = async (searchText, myOrderBy, orderDirection, includePublic, skip, limit, context) => {
     //console.log('search data models called');
     const validatedArgs = validateArgs({myOrderBy, orderDirection, skip, limit});
     var args = {
@@ -202,8 +263,82 @@ export const searchDataModels = async (searchText, myOrderBy, orderDirection, sk
         skip: validatedArgs.skip, 
         limit: validatedArgs.limit
     };
-    var query = SearchForModel.replace(/\$DESC/, validatedArgs.orderDirection);
+    var query = SearchForModel.replace(/\$DESC/g, validatedArgs.orderDirection);
+    query = handleIncludePublic(query, includePublic);
     var result= await runQuery(query, args);
     result = processResult(result);
     return result.rows;
+}
+
+export const createModelFromCypher = async (input, context) => {
+    //console.log("saveDataModelWithFullMetadata",dataModel);
+    let now = new Date().getTime().toString();
+
+    let tagList = [];
+    //console.log("input.metadata.tags: ", input.metadata.tags);
+    if (input.metadata.tags && input.metadata.tags.length > 0) {
+        tagList = await searchForTags(input.metadata.tags, context);        
+        if (!tagList) {
+            tagList = [];
+        }
+    }
+    // we want an array like this: [ { key: <uuid>, tag: <String> } ]
+    tagList = tagList.map(tag => ({ key: (tag.key) ? tag.key : uuidv4(), tag: tag.tag }));
+    //console.log('tagList: ', tagList);
+
+    let dataModelKey = uuidv4();
+    const metadata = {
+        ...input.metadata,
+        key: dataModelKey,
+        dateCreated: now,
+        dateUpdated: now,
+        cypherWorkbenchVersion: VERSION,
+        viewSettings: {},
+        tags: tagList
+    }
+
+    let metadataToSave = getMetadata(metadata);
+    console.log("metadataToSave: ", metadataToSave);
+    var result = await saveDataModelMetadata(metadataToSave, context);
+    if (result) {
+        try {
+            let drawingConfig = input.drawingConfig || {};
+            let dataModel = convertCypherToDataModel(input.cypher, drawingConfig);
+            let dataModelSaveObject = dataModel.toSaveObject();
+            let modelToSave = getFullModelObject(metadata, dataModelSaveObject, dataModel)
+            let result = await saveDataModel(modelToSave, context);
+            if (result) {
+                return dataModelKey;
+            } else {
+                return "Unexpected response from save, keys didn't match";
+            }
+        } catch (e) {
+            // the saveDataModelMetadata creates it, so we need to delete if Cypher parsing fails
+            await removeDataModel(dataModelKey, context);
+            throw (e);
+        }
+    } else {
+        return "Unexpected response from metadata save, keys didn't match";
+    }
+}
+
+export const convertToGraphSchemaFormat = async () => {
+    // TODO
+}
+
+export const convertCypherToDataModel = (cypher, drawingConfig) => {
+
+    var dataModel = DataModel();
+    let layoutConfig = drawingConfig.layoutConfig || {};
+
+    var result = parseCypher(cypher, dataModel);
+    if (result.success) {
+        doDagreLayout(dataModel, layoutConfig);    
+        if (drawingConfig.autoColor) {
+            autoColor(dataModel);
+        }
+    } else {
+        throw new Error(`Error parsing Cypher: ${result.message}`);
+    }
+    return dataModel;
 }

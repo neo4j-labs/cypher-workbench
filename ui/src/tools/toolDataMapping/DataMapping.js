@@ -55,8 +55,6 @@ import {
 import {
   getUserSettings,
   loadRemoteDataModel,
-  listRemoteDataModelMetadata,
-  searchRemoteDataModelMetadata,
   saveRemoteDataModelMetadata,
   updateUserRolesGraphDoc,
   getUserRolesForGraphDoc,
@@ -69,6 +67,11 @@ import {
   jobStatus,
   runWorkflow
 } from "../../persistence/graphql/GraphQLDataTransfer";
+
+import ModelDialogHelper, { 
+  handleLoadModelDialogClose,
+  showLoadModelDialog 
+} from '../common/model/loadModelDialogHelper';
 
 import {
   anyFeatureLicensed,
@@ -216,12 +219,6 @@ export default class DataMapping extends Component {
       {
         showLoadDialog: false
       });
-  };
-
-  handleLoadModelDialogClose = () => {
-    this.setState({
-      showLoadModelDialog: false,
-    });
   };
 
   handleSaveDialogClose = () => {
@@ -634,36 +631,6 @@ export default class DataMapping extends Component {
     }
   };
 
-  performModelSearch = (searchText, myOrderBy, orderDirection) => {
-    this.setState({
-      loadModelDialog: {
-        ...this.state.loadModelDialog,
-        searchText: searchText,
-        myOrderBy: myOrderBy,
-        orderDirection: orderDirection,
-      },
-    });
-
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(response, "searchDataModelsX");
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX");
-      });
-    }
-  };
-
   showLoadDialog = () => {
     this.getMetadataMap(() => {
       this.setState({
@@ -676,7 +643,6 @@ export default class DataMapping extends Component {
     activeKey: "",
     showSaveDialog: false,
     showLoadDialog: false,
-    showLoadModelDialog: false,
     activityIndicator: false,
 
     destinationTabIndex: 0,    
@@ -1012,6 +978,7 @@ export default class DataMapping extends Component {
     this.dataModelRef = React.createRef();
     this.destNeo4jDatabaseRef = React.createRef();
     this.generalTextDialogRef = React.createRef();
+    this.modelDialogHelperRef = React.createRef();
 
     this.setDataMappingDataProvider(this.getNewDataMappingDataProvider(), true);
     this.canvasConfig = new CanvasConfig({
@@ -1239,7 +1206,7 @@ export default class DataMapping extends Component {
                       //if (!this.isADocumentSelected()) {
                       //alert(NO_ACTIVE_DOCUMENT_MESSAGE, ALERT_TYPES.WARNING);
                       //} else {
-                        this.showLoadModelDialog();
+                        showLoadModelDialog(this.modelDialogHelperRef);
                       //}
                       break;
                     default:
@@ -1623,14 +1590,6 @@ export default class DataMapping extends Component {
     return dataProvider;
   };
 
-  showLoadModelDialog = () => {
-    this.getModelMetadataMap(() => {
-      this.setState({
-        showLoadModelDialog: true,
-      });
-    });
-  };
-
   addModelPattern = () => {
     const { selectedDataModel } = this.state;
     if (!selectedDataModel) {
@@ -1654,36 +1613,6 @@ export default class DataMapping extends Component {
     }
   }
 
-  getModelMetadataMap = (callback) => {
-    const {
-      searchText,
-      myOrderBy,
-      orderDirection,
-    } = this.state.loadModelDialog;
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(
-            response,
-            "searchDataModelsX",
-            callback
-          );
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX", callback);
-      });
-    }
-  };
-
   handleMetadataResponse = (response, key, callback) => {
     if (response.success) {
       var data = response.data;
@@ -1696,34 +1625,6 @@ export default class DataMapping extends Component {
       this.setState(
         {
           metadataMap: metadataMap,
-        },
-        () => {
-          if (callback) {
-            callback();
-          }
-        }
-      );
-    } else {
-      var errorStr = "" + response.error;
-      if (errorStr.match(/Network error/)) {
-        this.communicationHelper.setNetworkStatus(NETWORK_STATUS.OFFLINE);
-      }
-      alert(response.error);
-    }
-  };
-
-  handleModelMetadataResponse = (response, key, callback) => {
-    if (response.success) {
-      var data = response.data;
-      var modelMetadataMap = {};
-      //console.log(data);
-      var dataModels = data && data[key] ? data[key] : [];
-      dataModels.forEach((dataModel) => {
-        modelMetadataMap[dataModel.key] = dataModel.metadata;
-      });
-      this.setState(
-        {
-          modelMetadataMap: modelMetadataMap,
         },
         () => {
           if (callback) {
@@ -1757,7 +1658,7 @@ export default class DataMapping extends Component {
           this.handleDataModel(dataModel, dataModelResponse);
         }
       });
-      this.handleLoadModelDialogClose();
+      handleLoadModelDialogClose(this.modelDialogHelperRef);
     } else {
       alert("Unable to load model, the specified model may not exist");
     }
@@ -2477,8 +2378,6 @@ export default class DataMapping extends Component {
       generalTextDialog,
       showSaveDialog,
       showLoadDialog,
-      showLoadModelDialog,
-      modelMetadataMap,
       saveFormMode,
       editMetadata,
       metadataMap,
@@ -2555,7 +2454,7 @@ export default class DataMapping extends Component {
                     marginBottom: '.5em',
                     cursor: 'pointer',
                     minWidth: '20em'
-                  }} onClick={this.showLoadModelDialog}>
+                  }} onClick={() => showLoadModelDialog(this.modelDialogHelperRef)}>
                     {selectedDataModelText}
                   </span>
                 </div>
@@ -2706,15 +2605,10 @@ export default class DataMapping extends Component {
           performSearch={this.performSearch}
           metadataMap={metadataMap}
         />
-        <LoadModelForm
-          maxWidth={"lg"}
-          open={showLoadModelDialog}
-          onClose={this.handleLoadModelDialogClose}
+        <ModelDialogHelper 
+          ref={this.modelDialogHelperRef}
+          setStatus={this.setStatus}
           load={this.loadRemoteModel}
-          cancel={this.handleLoadModelDialogClose}
-          disableDelete={true}
-          performModelSearch={this.performModelSearch}
-          modelMetadataMap={modelMetadataMap}
         />
         <GeneralDialog
           open={generalDialog.open}

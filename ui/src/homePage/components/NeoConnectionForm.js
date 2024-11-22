@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
 import {
-    Button, Dialog, DialogTitle, DialogActions, DialogContent,
+    Checkbox, Dialog, DialogTitle, DialogActions, DialogContent,
     FormControl, FormControlLabel, InputLabel,
     MenuItem, Select, Switch, TextField
 } from '@material-ui/core';
+import { track } from '../../common/util/tracking';
 
 import { getAllDbConnectionsForUser } from '../../persistence/graphql/GraphQLDBConnection';
 import { ALERT_TYPES } from '../../common/Constants';
@@ -19,22 +20,27 @@ import {
     encryptAsymmetricOnlyWithVersion
 } from "../../common/encryption";
 
+const UserEntered = '<User Entered>';
+const UserEnteredKey = '_user_entered_key_';
+
 export default class NeoConnectionForm extends Component {
 
     onConnectCallback = null;
+    onDisconnectCallback = null;
     isConnected = false;
     buttonText = 'Connect';
     keymakerDbConnection = null;
 
     state = {
-        selectedDatabaseId: '',
+        selectedDatabaseId: UserEntered,
         url: 'bolt://localhost:7687',
         databaseName: '',
         encrypted: false,
         proxyThroughAppServer: false,
         username: 'neo4j',
         password: '',
-        dbConnections: []
+        dbConnections: [],
+        showPublicConnections: false
     }
 
     constructor (props) {
@@ -64,8 +70,11 @@ export default class NeoConnectionForm extends Component {
     }
 
     initializeConnectionDialog = (properties) => {
-        var { onConnectCallback, buttonText, doCallbackOnWebSocketError, keymakerDbConnection } = properties;
+        var { onConnectCallback, onDisconnectCallback,
+                buttonText, doCallbackOnWebSocketError, keymakerDbConnection 
+        } = properties;
         this.onConnectCallback = onConnectCallback;
+        this.onDisconnectCallback = onDisconnectCallback;
         this.doCallbackOnWebSocketError = doCallbackOnWebSocketError;
         this.keymakerDbConnection = (keymakerDbConnection) ? keymakerDbConnection : this.keymakerDbConnection;
         if (buttonText) this.buttonText = buttonText;
@@ -103,6 +112,9 @@ export default class NeoConnectionForm extends Component {
     handleDisconnect = () => {
         var { onClose } = this.props;
         disconnectFromNeo();
+        if (this.onDisconnectCallback) {
+            this.onDisconnectCallback();
+        }
         onClose();
     }
 
@@ -115,8 +127,10 @@ export default class NeoConnectionForm extends Component {
         var encryptedPassword = encryptAsymmetricOnlyWithVersion(password);
         
         var connectionInfo = {
-            id: dbConnection.id,
-            name: (dbConnection) ? dbConnection.name : 'Unnamed connection',
+            id: dbConnection?.id || dbConnection,
+            name: (dbConnection) 
+                ? `${dbConnection.name}: ${url} / ${databaseName}`
+                : `${url} / ${databaseName}`,
             url: url,
             databaseName: databaseName,
             encrypted: encrypted,
@@ -130,6 +144,9 @@ export default class NeoConnectionForm extends Component {
         }
         connectToNeo(connectionInfo, () => {
             onClose();
+            track("DATABASE_CONNECT", { 
+                toolName: 'MainToolbar'    
+            });
             if (this.onConnectCallback) {
                 this.onConnectCallback(connectionInfo);
             }
@@ -170,7 +187,11 @@ export default class NeoConnectionForm extends Component {
             dbConnections = this.state.dbConnections;
         }
 
-        if (selectedDatabaseId !== databaseId) {
+        if (databaseId === UserEntered) {
+            this.setState({
+                selectedDatabaseId: UserEntered
+            })
+        } else if (selectedDatabaseId !== databaseId) {
             var dbConnection = dbConnections.filter(x => x.id === databaseId)[0];
             if (dbConnection) {
                 const { username, password } = await getUserNameAndPasswordLocally(dbConnection.id);
@@ -187,33 +208,90 @@ export default class NeoConnectionForm extends Component {
         }
     }
 
+    toggleShowPublicConnections = () => {
+        const { showPublicConnections } = this.state;
+        this.setState({
+            showPublicConnections: !showPublicConnections
+        })
+    }
+
     render () {
-        const { selectedDatabaseId, url, databaseName, encrypted, proxyThroughAppServer, username, password, dbConnections } = this.state;
+        const { selectedDatabaseId, url, databaseName, 
+            encrypted, proxyThroughAppServer, username, password, 
+            dbConnections, showPublicConnections
+        } = this.state;
+
+        var filteredDbConnections = dbConnections
+          .filter(dbConnection => 
+              dbConnection.isPrivate || 
+              (!dbConnection.isPrivate && showPublicConnections            
+          ))
 
         return (
             <Dialog open={this.props.open} onClose={this.props.onClose} fullWidth={true} maxWidth={this.props.maxWidth} >
                 <DialogTitle id="alert-dialog-title">{"Neo4j Database Connection"}</DialogTitle>
                 <DialogContent>
                     <div style={{marginBottom: '5px'}} >
-                        <FormControl variant="outlined" style={{minWidth: '30em', marginTop:'.375em'}}>
-                        <InputLabel htmlFor="database-label" style={{transform: 'translate(3px, 3px) scale(0.75)'}}>
-                          Database
-                        </InputLabel>
-                            <Select
-                              value={selectedDatabaseId}
-                              onChange={(e) => this.setSelectedDatabase(e.target.value)}
-                              id="selectedDatabaseId"
-                              inputProps={{
-                                name: 'database',
-                                id: 'database-label',
-                              }}
-                              style={{height: '3em', marginRight: '.5em'}}
-                            >
-                                {dbConnections.map((dbConnection, index) =>
-                                    <MenuItem key={dbConnection.id} value={dbConnection.id}>{dbConnection.name}</MenuItem>
-                                )}
-                            </Select>
-                        </FormControl>
+                        <div style={{display:'flex', flexFlow: 'row'}}>
+                            <FormControl variant="outlined" style={{minWidth: '30em', marginTop:'.375em'}}>
+                            <InputLabel htmlFor="database-label" style={{transform: 'translate(3px, 3px) scale(0.75)'}}>
+                            Database
+                            </InputLabel>
+                                <Select
+                                value={selectedDatabaseId}
+                                onChange={(e) => this.setSelectedDatabase(e.target.value)}
+                                id="selectedDatabaseId"
+                                inputProps={{
+                                    name: 'database',
+                                    id: 'database-label',
+                                }}
+                                style={{height: '3em', marginRight: '.5em'}}
+                                >
+                                    <MenuItem 
+                                        key={UserEnteredKey}
+                                        value={UserEntered}
+                                    >
+                                        {UserEntered}
+                                    </MenuItem>
+                                    {filteredDbConnections
+                                        .sort((a,b) => {
+                                            let aName = a.name?.toLowerCase() || '';
+                                            let bName = b.name?.toLowerCase() || '';
+                                            if (aName === bName) return 0;
+                                            if (aName < bName) return -1;
+                                            return 1;
+                                        })                                
+                                        .map((dbConnection) => {
+                                            let publicText = (dbConnection.isPrivate) ? '' : ' (public)';
+                                            return <MenuItem key={dbConnection.id} value={dbConnection.id}>{`${dbConnection.name}${publicText}`}</MenuItem>
+                                        }
+                                            
+                                    )}
+                                </Select>
+                            </FormControl>
+                            <FormControlLabel style={{
+                                // marginLeft: '3px'
+                            }}
+                                control={
+                                <Checkbox
+                                    checked={showPublicConnections}
+                                    onChange={this.toggleShowPublicConnections}
+                                    name="showPublicConnections"
+                                    color="primary"
+                                />
+                                }
+                                label={
+                                    <span
+                                        style={{
+                                            fontSize: '0.75em',
+                                            color: 'rgba(0,0,0,0.54)'
+                                        }}
+                                    >
+                                        Show Public
+                                    </span>
+                                }
+                            />
+                        </div>
                         <div>
                             <TextField id="url" label="URL" value={url} onChange={this.setValue}
                                 margin="dense" style={{width: '30em', marginRight: '.5em'}}/>

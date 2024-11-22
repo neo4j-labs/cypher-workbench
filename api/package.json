@@ -23,11 +23,14 @@
     "@graphql-tools/merge": "^8.2.2",
     "@neo4j/graphql": "3.4.0",
     "@segment/analytics-node": "^0.0.1-beta.16",
+    "antlr4": "^4.13.1-patch-1",
     "apollo-server": "^3.10.2",
     "apollo-server-express": "^3.10.2",
     "axios": "^0.21.4",
     "buffer": "^5.7.1",
+    "chroma-js": "^2.4.2",
     "crypto-js": "^3.1.9-1",
+    "dagre": "^0.8.4",
     "dotenv": "^5.0.1",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
@@ -39,7 +42,8 @@
     "node-fetch": "^2.6.7",
     "papaparse": "^5.4.1",
     "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1"
+    "tweetnacl-util": "^0.15.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.0",
@@ -66,6 +70,9 @@
     ]
   },
   "jest": {
-    "testPathIgnorePatterns": ["dist", "src/debug"]
+    "testPathIgnorePatterns": [
+      "dist",
+      "src/debug"
+    ]
   }
 }

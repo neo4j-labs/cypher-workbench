@@ -455,6 +455,24 @@ export default class CypherListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by CypherParser#oC_SubQueryVariableScope.
+	enterOC_SubQueryVariableScope(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_SubQueryVariableScope.
+	exitOC_SubQueryVariableScope(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_SubQueryDirective.
+	enterOC_SubQueryDirective(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_SubQueryDirective.
+	exitOC_SubQueryDirective(ctx) {
+	}
+
+
 	// Enter a parse tree produced by CypherParser#oC_StandaloneCall.
 	enterOC_StandaloneCall(ctx) {
 	}
@@ -662,6 +680,24 @@ export default class CypherListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by CypherParser#oC_OpenParen.
+	enterOC_OpenParen(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_OpenParen.
+	exitOC_OpenParen(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_CloseParen.
+	enterOC_CloseParen(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_CloseParen.
+	exitOC_CloseParen(ctx) {
+	}
+
+
 	// Enter a parse tree produced by CypherParser#oC_NodePattern.
 	enterOC_NodePattern(ctx) {
 	}
@@ -698,6 +734,24 @@ export default class CypherListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by CypherParser#oC_QuantifiedPathPattern.
+	enterOC_QuantifiedPathPattern(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_QuantifiedPathPattern.
+	exitOC_QuantifiedPathPattern(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_PathPatternQuantifier.
+	enterOC_PathPatternQuantifier(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_PathPatternQuantifier.
+	exitOC_PathPatternQuantifier(ctx) {
+	}
+
+
 	// Enter a parse tree produced by CypherParser#oC_Properties.
 	enterOC_Properties(ctx) {
 	}
@@ -725,12 +779,156 @@ export default class CypherListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeTerm.
+	enterOC_RelationshipTypeTerm(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeTerm.
+	exitOC_RelationshipTypeTerm(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeOr.
+	enterOC_RelationshipTypeOr(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeOr.
+	exitOC_RelationshipTypeOr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeAnd.
+	enterOC_RelationshipTypeAnd(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeAnd.
+	exitOC_RelationshipTypeAnd(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeNot.
+	enterOC_RelationshipTypeNot(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeNot.
+	exitOC_RelationshipTypeNot(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeContainer.
+	enterOC_RelationshipTypeContainer(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeContainer.
+	exitOC_RelationshipTypeContainer(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeGroup.
+	enterOC_RelationshipTypeGroup(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeGroup.
+	exitOC_RelationshipTypeGroup(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeNotNested.
+	enterOC_RelationshipTypeNotNested(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeNotNested.
+	exitOC_RelationshipTypeNotNested(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_RelationshipTypeAny.
+	enterOC_RelationshipTypeAny(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_RelationshipTypeAny.
+	exitOC_RelationshipTypeAny(ctx) {
+	}
+
+
 	// Enter a parse tree produced by CypherParser#oC_NodeLabels.
 	enterOC_NodeLabels(ctx) {
 	}
 
 	// Exit a parse tree produced by CypherParser#oC_NodeLabels.
 	exitOC_NodeLabels(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelTerm.
+	enterOC_NodeLabelTerm(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelTerm.
+	exitOC_NodeLabelTerm(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelOr.
+	enterOC_NodeLabelOr(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelOr.
+	exitOC_NodeLabelOr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelAnd.
+	enterOC_NodeLabelAnd(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelAnd.
+	exitOC_NodeLabelAnd(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelNot.
+	enterOC_NodeLabelNot(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelNot.
+	exitOC_NodeLabelNot(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelContainer.
+	enterOC_NodeLabelContainer(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelContainer.
+	exitOC_NodeLabelContainer(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelGroup.
+	enterOC_NodeLabelGroup(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelGroup.
+	exitOC_NodeLabelGroup(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelNotNested.
+	enterOC_NodeLabelNotNested(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelNotNested.
+	exitOC_NodeLabelNotNested(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeLabelAny.
+	enterOC_NodeLabelAny(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeLabelAny.
+	exitOC_NodeLabelAny(ctx) {
 	}
 
 
@@ -884,6 +1082,15 @@ export default class CypherListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by CypherParser#oC_PropertyOrLabelsExpression.
 	exitOC_PropertyOrLabelsExpression(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CypherParser#oC_NodeProjection.
+	enterOC_NodeProjection(ctx) {
+	}
+
+	// Exit a parse tree produced by CypherParser#oC_NodeProjection.
+	exitOC_NodeProjection(ctx) {
 	}
 
 

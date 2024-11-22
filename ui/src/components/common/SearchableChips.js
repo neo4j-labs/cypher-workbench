@@ -87,9 +87,10 @@ export default class SearchableChips extends Component {
 
     render () {
         var { searchText, chips } = this.state;
-        var { onChipClick, displaySearch, additionalStyle, style, noValueMessage } = this.props;
+        var { onChipClick, displaySearch, additionalStyle, searchBoxWidth, style, noValueMessage } = this.props;
         style = style || {};
         
+        searchBoxWidth = (searchBoxWidth) ? searchBoxWidth : '8em';
         if (!additionalStyle) {
             additionalStyle = {
                 overflowY: 'auto', 
@@ -117,7 +118,7 @@ export default class SearchableChips extends Component {
                                 } 
                               }}
                   
-                            margin="dense" style={{marginRight: '.5em', minWidth:'8em'}}/>
+                            margin="dense" style={{marginRight: '.5em', width: searchBoxWidth, minWidth: searchBoxWidth}}/>
                     }
                     <CustomChips 
                         ref={this.chipsRef}
