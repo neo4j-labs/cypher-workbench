@@ -474,17 +474,18 @@ const listModelResult = `
     }
 `
 
-export function listRemoteDataModelMetadata (myOrderBy, orderDirection, callback, doTokenExpiredErrorHandling = true) {
+export function listRemoteDataModelMetadata (includePublic, myOrderBy, orderDirection, callback, doTokenExpiredErrorHandling = true) {
   getClient()
     .query({
       query: gql`
-        query ListDataModel ($myOrderBy: String, $orderDirection: String) {
-      	  listDataModelsX(myOrderBy: $myOrderBy, orderDirection: $orderDirection) {
+        query ListDataModel ($includePublic: Boolean, $myOrderBy: String, $orderDirection: String) {
+      	  listDataModelsX(includePublic: $includePublic, myOrderBy: $myOrderBy, orderDirection: $orderDirection) {
               ${listModelResult}
       	  }
         }
         `,
         variables: {
+            includePublic: includePublic,
             myOrderBy: myOrderBy,
             orderDirection: orderDirection
         }
@@ -498,18 +499,45 @@ export function listRemoteDataModelMetadata (myOrderBy, orderDirection, callback
     });
 }
 
-export function searchRemoteDataModelMetadata (searchText, myOrderBy, orderDirection, callback, doTokenExpiredErrorHandling = true) {
+export function listRemoteDataModelMetadataAndAddExplicitMatches (explicitKeysToSearchFor, includePublic, myOrderBy, orderDirection, callback, doTokenExpiredErrorHandling = true) {
+    getClient()
+      .query({
+        query: gql`
+          query ListDataModel ($explicitKeysToSearchFor: [String], $includePublic: Boolean, $myOrderBy: String, $orderDirection: String) {
+              listDataModelsAndAddExplicitMatches(explicitKeysToSearchFor: $explicitKeysToSearchFor, includePublic: $includePublic, myOrderBy: $myOrderBy, orderDirection: $orderDirection) {
+                ${listModelResult}
+              }
+          }
+          `,
+          variables: {
+              explicitKeysToSearchFor: explicitKeysToSearchFor,
+              includePublic: includePublic,
+              myOrderBy: myOrderBy,
+              orderDirection: orderDirection
+          }
+      })
+      .then(result => {
+          callback({ success: true, data: result.data });
+      })
+      .catch((error) => {
+          //console.log("listRemoteDataModelMetadata error", error);
+          handleError(listRemoteDataModelMetadataAndAddExplicitMatches, arguments, callback, error, doTokenExpiredErrorHandling);
+      });
+  }
+
+export function searchRemoteDataModelMetadata (searchText, includePublic, myOrderBy, orderDirection, callback, doTokenExpiredErrorHandling = true) {
   getClient()
     .query({
       query: gql`
-          query SearchDataModel ($searchText: String, $myOrderBy: String, $orderDirection: String) {
-          	searchDataModelsX(searchText: $searchText, myOrderBy: $myOrderBy, orderDirection: $orderDirection) {
+          query SearchDataModel ($searchText: String, $includePublic: Boolean, $myOrderBy: String, $orderDirection: String) {
+          	searchDataModelsX(searchText: $searchText, includePublic: $includePublic, myOrderBy: $myOrderBy, orderDirection: $orderDirection) {
                 ${listModelResult}
           	}
           }
         `,
         variables: {
             searchText: searchText,
+            includePublic: includePublic,
             myOrderBy: myOrderBy,
             orderDirection: orderDirection
         }
@@ -1230,7 +1258,7 @@ export async function getLicenseInfo () {
                 }
             })
             .catch((error) => {
-                console.log('getLicenseInfo: resolving error', error);
+                //console.log('resolving error');
                 resolve({ success: false, error: error })
             });
         });

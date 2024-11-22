@@ -241,7 +241,6 @@ class Auth {
           await this.createUser();
           resolve(authResult.expiresIn);
         }
-
       });
     })
     return await promise;

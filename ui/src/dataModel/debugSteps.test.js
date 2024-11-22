@@ -6,7 +6,6 @@ import {
     DebugStepResult
 } from './debugSteps';
 
-/*
 test('make single debug step', () => {
     var cypher = 'MATCH (n)';
     var step = debugStep(cypher);
@@ -101,7 +100,7 @@ test('make debug steps with internal steps', () => {
     expect(debugSteps.canStepBackward()).toBe(false);
     expect(debugSteps.canStepForward()).toBe(true);
 });
-*/
+
 test('step forward with internal steps', () => {
     var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()', 'MATCH (a)-[:B]->(c)'];
     var internalSteps2 = ['RETURN a', 'RETURN a, b', 'RETURN a, b, c'];
@@ -193,6 +192,118 @@ test('step forward with steps, backward with internal steps', () => {
     debugSteps.internalStepBackward();
     expect(debugSteps.getCypher()).toBe('MATCH (a)');
     debugSteps.internalStepBackward();
+    expect(debugSteps.getCypher()).toBe('');
+
+    var result = debugSteps.internalStepBackward();
+    expect(result).toBe(DebugStepResult.NoMoreSteps);
+    expect(debugSteps.getCypher()).toBe('');
+});
+
+test('test getInternalActiveStep - no internal steps', () => {
+    var cypherBlocks = ['MATCH (n)', 'RETURN n'];
+    var debugSteps = new DebugSteps();
+    cypherBlocks
+        .map(snippet => debugStep(snippet))
+        .map(step => debugSteps.addStep(step));
+
+    expect(debugSteps.getActiveStep()).toBeNull();
+    expect(debugSteps.getActiveInternalStep()).toBeNull();    
+    debugSteps.stepForward();
+
+    expect(debugSteps.getActiveStep()).not.toBeNull();
+    expect(debugSteps.getActiveStep().getInternalActiveStep()).toBeNull();
+    expect(debugSteps.getActiveInternalStep()).toBeNull();    
+})
+
+test('test getInternalActiveStep - internal steps', () => {
+    var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()', 'MATCH (a)-[:B]->(c)'];
+    var internalSteps2 = ['RETURN a', 'RETURN a, b', 'RETURN a, b, c'];
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1, internalSteps1);
+    var step2 = debugStep(cypher2, internalSteps2);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+
+    expect(debugSteps.getActiveStep()).toBeNull();
+    expect(debugSteps.getActiveInternalStep()).toBeNull();    
+    debugSteps.stepForward();
+
+    expect(debugSteps.getActiveStep()).not.toBeNull();
+    expect(debugSteps.getActiveStep().getInternalActiveStep()).not.toBeNull();
+    expect(debugSteps.getActiveInternalStep()).not.toBeNull();
+})
+
+test('step forward with steps, backward with internal steps - get internal index', () => {
+    var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()', 'MATCH (a)-[:B]->(c)'];
+    var internalSteps2 = ['RETURN a', 'RETURN a, b', 'RETURN a, b, c'];
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1, internalSteps1);
+    var step2 = debugStep(cypher2, internalSteps2);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+
+    debugSteps.stepForward();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)');
+    debugSteps.stepForward();
+
+    let indexes = debugSteps.getActiveIndexAndActiveInternalIndex();
+    // console.log('indexes: ', indexes);
+    expect(indexes.activeStepIndex).toBe(1);
+    expect(indexes.internalActiveStepIndex).toBe(2);
+
+    expect(debugSteps.getActiveStep().getMyIndex()).toBe(1);
+    expect(debugSteps.getActiveInternalStep().getMyIndex()).toBe(2);
+    expect(debugSteps.getActiveInternalStep().getParentStep()).toBe(debugSteps.getActiveStep());
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nRETURN a, b, c');
+
+    debugSteps.internalStepBackward();
+    //console.log(debugSteps.getCypher());
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(1);
+    expect(indexes.internalActiveStepIndex).toBe(1);
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nRETURN a, b');
+    debugSteps.internalStepBackward();
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(1);
+    expect(indexes.internalActiveStepIndex).toBe(0);
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nRETURN a');
+    debugSteps.internalStepBackward();
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(0);
+    expect(indexes.internalActiveStepIndex).toBe(2);
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)');
+    debugSteps.internalStepBackward();
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(0);
+    expect(indexes.internalActiveStepIndex).toBe(1);
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->()');
+    debugSteps.internalStepBackward();
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(0);
+    expect(indexes.internalActiveStepIndex).toBe(0);
+    expect(debugSteps.getActiveStep().getInternalActiveStep()).not.toBeNull();
+
+    expect(debugSteps.getCypher()).toBe('MATCH (a)');
+    debugSteps.internalStepBackward();
+
+    indexes = debugSteps.getActiveIndexAndActiveInternalIndex(); 
+    expect(indexes.activeStepIndex).toBe(-1);
+    expect(indexes.internalActiveStepIndex).toBe(-1);
+
     expect(debugSteps.getCypher()).toBe('');
 
     var result = debugSteps.internalStepBackward();
@@ -379,4 +490,248 @@ test('internal breakpoint', () => {
 
     debugSteps.runToNextBreakpoint();
     expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nRETURN a, b, c');
+});
+
+test ('setBreakpointLine 1', () => {
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1);
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+});
+
+test ('setBreakpointLine 2', () => {
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person \n AND c:Company'
+    var cypher3 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1);
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 3, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person \n AND c:Company');
+    expect(debugSteps.activeStepIndex).toBe(1);
+
+    expect(debugSteps.canStepForward()).toBe(true);    
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person \n AND c:Company\nRETURN a, b, c');
+    expect(debugSteps.activeStepIndex).toBe(2);
+
+    expect(debugSteps.canStepForward()).toBe(false);    
+});
+
+test('setBreakpointLine 3 - internal steps before', () => {
+    var debugSteps = new DebugSteps();
+
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+
+    var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()','MATCH (a)-[:B]->(c)'];
+
+    internalSteps1 = internalSteps1.map(x => new DebugStep({ cypher: x }));
+    //console.log('internalSteps1: ', internalSteps1);
+
+    var step1DebugSteps = new DebugSteps({ steps: internalSteps1, stepsAreAdditive: false });
+
+    var step1 = new DebugStep({ cypher: cypher1, internalSteps: step1DebugSteps });
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person');
+    expect(debugSteps.activeStepIndex).toBe(1);
+
+    expect(debugSteps.canStepForward()).toBe(true);    
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person\nRETURN a, b, c');
+    expect(debugSteps.activeStepIndex).toBe(2);
+
+    expect(debugSteps.canStepForward()).toBe(false);    
+
+});
+
+test('setBreakpointLine 4 - on internal steps', () => {
+    var debugSteps = new DebugSteps();
+
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+
+    var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()','MATCH (a)-[:B]->(c)'];
+
+    internalSteps1 = internalSteps1.map(x => new DebugStep({ cypher: x }));
+    //console.log('internalSteps1: ', internalSteps1);
+
+    var step1DebugSteps = new DebugSteps({ steps: internalSteps1, stepsAreAdditive: false });
+
+    var step1 = new DebugStep({ cypher: cypher1, internalSteps: step1DebugSteps });
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 1, breakpointOn: true})
+
+    expect(step1.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)');
+    expect(debugSteps.activeStepIndex).toBe(0);
+
+    expect(debugSteps.canStepForward()).toBe(true);    
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person\nRETURN a, b, c');
+    expect(debugSteps.activeStepIndex).toBe(2);
+
+    expect(debugSteps.canStepForward()).toBe(false);    
+});
+
+test ('setBreakpointLine 5 - last step', () => {
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person \n AND c:Company'
+    var cypher3 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1);
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 4, breakpointOn: true})
+
+    expect(step3.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person \n AND c:Company\nRETURN a, b, c');
+    expect(debugSteps.activeStepIndex).toBe(2);
+
+    expect(debugSteps.canStepForward()).toBe(false);
+ 
+});
+
+test ('setBreakpointLine - toggle on then off', () => {
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1);
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: false})
+
+    expect(step2.isBreakpoint).toBe(false);
+
+});
+
+test ('setBreakpointLine - toggle on, run, then toggle off, then run', () => {
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+    var debugSteps = new DebugSteps();
+    var step1 = debugStep(cypher1);
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person');
+    expect(debugSteps.activeStepIndex).toBe(1);
+
+    expect(debugSteps.canStepForward()).toBe(true);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: false})
+
+    expect(step2.isBreakpoint).toBe(false);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person\nRETURN a, b, c');
+    expect(debugSteps.activeStepIndex).toBe(2);
+
+    expect(debugSteps.canStepForward()).toBe(false);
+
+});
+
+test('breakpoints - run to breakpoint, internal step back, run to breakpoint', () => {
+    var debugSteps = new DebugSteps();
+
+    var cypher1 = 'MATCH (a)-[:B]->(c)';
+    var cypher2 = 'WHERE a:Person'
+    var cypher3 = 'RETURN a, b, c';
+
+    var internalSteps1 = ['MATCH (a)', 'MATCH (a)-[:B]->()','MATCH (a)-[:B]->(c)'];
+
+    internalSteps1 = internalSteps1.map(x => new DebugStep({ cypher: x }));
+    //console.log('internalSteps1: ', internalSteps1);
+
+    var step1DebugSteps = new DebugSteps({ steps: internalSteps1, stepsAreAdditive: false });
+
+    var step1 = new DebugStep({ cypher: cypher1, internalSteps: step1DebugSteps });
+    var step2 = debugStep(cypher2);
+    var step3 = debugStep(cypher3);
+
+    debugSteps.addStep(step1);
+    debugSteps.addStep(step2);
+    debugSteps.addStep(step3);
+
+    debugSteps.setBreakpointLine({oneBasedLineNumber: 2, breakpointOn: true})
+
+    expect(step2.isBreakpoint).toBe(true);
+
+    debugSteps.runToNextBreakpoint();
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person');
+    expect(debugSteps.activeStepIndex).toBe(1);
+
+    debugSteps.internalStepBackward();
+    expect(debugSteps.activeStepIndex).toBe(0);
+
+    debugSteps.runToNextBreakpoint();
+    // console.log(debugSteps.getCypher());
+    expect(debugSteps.getCypher()).toBe('MATCH (a)-[:B]->(c)\nWHERE a:Person');
+    expect(debugSteps.activeStepIndex).toBe(1);
 });

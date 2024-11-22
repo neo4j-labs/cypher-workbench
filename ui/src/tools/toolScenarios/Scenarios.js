@@ -20,7 +20,6 @@ import { ScenarioBlockDataProvider } from "./components/dataProvider/scenarioBlo
 import { SyncedEventTypes } from "../../dataModel/syncedGraphDataAndView";
 import ModalRelationship from "../../components/common/ModalRelationship";
 
-
 import { 
   getDataModelFromCypherStatement, 
   validateCypherAgainstModel 
@@ -28,7 +27,6 @@ import {
 import LoadForm from "../common/edit/LoadForm";
 import { SaveForm, getMetadata } from "../common/edit/SaveForm";
 import { getModelMetadata } from '../toolModel/components/SaveModelForm';
-import LoadModelForm from "../toolModel/components/LoadModelForm";
 import { ALERT_TYPES, USER_ROLE, COLORS } from "../../common/Constants";
 import { SAVE_MODE } from "../common/toolConstants";
 
@@ -41,7 +39,11 @@ import DocumentSecurityRole from "../common/DocumentSecurityRole";
 import Sharing from '../common/security/Sharing';
 import EditHelper from '../common/edit/editHelper';
 import { ModelPersistence, PERSISTENCE_STATE_ITEMS } from '../common/model/modelPersistence';
-
+import ModelDialogHelper, { 
+  addModelMetadata, 
+  handleLoadModelDialogClose,
+  showLoadModelDialog 
+} from '../common/model/loadModelDialogHelper';
 import {
   anyFeatureLicensed,
   isFeatureLicensed,
@@ -61,8 +63,6 @@ import { getDynamicConfigValue } from '../../dynamicConfig';
 import {
   getUserSettings,
   loadRemoteDataModel,
-  listRemoteDataModelMetadata,
-  searchRemoteDataModelMetadata,
   saveRemoteDataModelMetadata,
   updateUserRolesGraphDoc,
   getUserRolesForGraphDoc,
@@ -341,6 +341,7 @@ export default class Scenarios extends Component {
     this.modalRelationshipRef = React.createRef();
     this.shareDialogRef = React.createRef();
     this.importExportDialogRef = React.createRef();
+    this.modelDialogHelperRef = React.createRef();
 
     this.persistenceHelper = new PersistenceHelper({
       graphDocContainer: this,
@@ -447,12 +448,10 @@ export default class Scenarios extends Component {
     showLoadDialog: false,
     showAssociateCypherDialog: false,
     activeScenarioBlockKey: "", // used to track which block the cypher association dialog was launched from
-    showLoadModelDialog: false,
     saveFormMode: "",
     editMetadata: {},
     metadataMap: {},
     cypherStatementMap: {},
-    modelMetadataMap: {},
     loadedMetadata: getMetadata(NEW_DOCUMENT_TITLE),
     cancelMetadata: {},
     loadDialog: {
@@ -461,11 +460,6 @@ export default class Scenarios extends Component {
       orderDirection: "DESC",
     },
     associateCypherDialog: {
-      searchText: "",
-      myOrderBy: "dateUpdated",
-      orderDirection: "DESC",
-    },
-    loadModelDialog: {
       searchText: "",
       myOrderBy: "dateUpdated",
       orderDirection: "DESC",
@@ -1327,7 +1321,7 @@ export default class Scenarios extends Component {
                       if (!this.isADocumentSelected()) {
                         alert(NO_ACTIVE_DOCUMENT_MESSAGE, ALERT_TYPES.WARNING);
                       } else {
-                        this.showLoadModelDialog();
+                        showLoadModelDialog(this.modelDialogHelperRef);
                       }
                       break;
                     case 'force':
@@ -1654,11 +1648,8 @@ export default class Scenarios extends Component {
                 alert(errorMessage);
             }
         } else {
+            addModelMetadata(loadedModelMetadata, this.modelDialogHelperRef);
             this.setState({
-                modelMetadataMap: {
-                    ...this.state.modelMetadataMap,
-                    [loadedModelMetadata.key]: loadedModelMetadata
-                },
                 selectedDataModelText: loadedModelMetadata.title
             });
             this.scenarioBlockDataProvider.handleDataModel(
@@ -1946,36 +1937,6 @@ export default class Scenarios extends Component {
     }
   };
 
-  getModelMetadataMap = (callback) => {
-    const {
-      searchText,
-      myOrderBy,
-      orderDirection,
-    } = this.state.loadModelDialog;
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(
-            response,
-            "searchDataModelsX",
-            callback
-          );
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX", callback);
-      });
-    }
-  };
-
   handleMetadataResponse = (response, key, callback) => {
     if (response.success) {
       var data = response.data;
@@ -2033,64 +1994,6 @@ export default class Scenarios extends Component {
     }
   };
 
-  handleModelMetadataResponse = (response, key, callback) => {
-    if (response.success) {
-      var data = response.data;
-      var modelMetadataMap = {};
-      //console.log(data);
-      var dataModels = data && data[key] ? data[key] : [];
-      dataModels.forEach((dataModel) => {
-        modelMetadataMap[dataModel.key] = dataModel.metadata;
-      });
-      this.setState(
-        {
-          modelMetadataMap: modelMetadataMap,
-        },
-        () => {
-          if (callback) {
-            callback();
-          }
-        }
-      );
-    } else {
-      var errorStr = "" + response.error;
-      if (errorStr.match(/Network error/)) {
-        this.communicationHelper.setNetworkStatus(NETWORK_STATUS.OFFLINE);
-      }
-      alert(response.error);
-    }
-  };
-
-  performModelSearch = (searchText, myOrderBy, orderDirection) => {
-    this.setState({
-      loadModelDialog: {
-        ...this.state.loadModelDialog,
-        searchText: searchText,
-        myOrderBy: myOrderBy,
-        orderDirection: orderDirection,
-      },
-    });
-
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(response, "searchDataModelsX");
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX");
-      });
-    }
-  };
-
   showLoadDialog = () => {
     this.getMetadataMap(() => {
       this.setState({
@@ -2110,14 +2013,6 @@ export default class Scenarios extends Component {
     } else {
       alert(SecurityMessages.NoPermissionToEdit, ALERT_TYPES.WARNING);
     }
-  };
-
-  showLoadModelDialog = () => {
-    this.getModelMetadataMap(() => {
-      this.setState({
-        showLoadModelDialog: true,
-      });
-    });
   };
 
   isThereAnAssociatedDataModel = () => {
@@ -2154,12 +2049,6 @@ export default class Scenarios extends Component {
         // do nothing
       }
     );
-  };
-
-  handleLoadModelDialogClose = () => {
-    this.setState({
-      showLoadModelDialog: false,
-    });
   };
 
   new = () => {
@@ -2334,7 +2223,7 @@ export default class Scenarios extends Component {
       );
     }
   };
-
+ 
   performCypherStatementSearch = (searchText, myOrderBy, orderDirection) => {
     this.setState({
       associateCypherDialog: {
@@ -2591,7 +2480,7 @@ export default class Scenarios extends Component {
           this.handleDataModel(dataModel, dataModelResponse);
         }
       });
-      this.handleLoadModelDialogClose();
+      handleLoadModelDialogClose(this.modelDialogHelperRef);
     } else {
       alert("Unable to load model, the specified model may not exist");
     }
@@ -3138,12 +3027,10 @@ export default class Scenarios extends Component {
       showSaveDialog,
       showLoadDialog,
       showAssociateCypherDialog,
-      showLoadModelDialog,
       saveFormMode,
       editMetadata,
       metadataMap,
       cypherStatementMap,
-      modelMetadataMap,
       selectedDataModelText,
       rightDrawerOpen,
       rightDrawerOpenWidth,
@@ -3232,7 +3119,9 @@ export default class Scenarios extends Component {
                   </span>
                 </div>
                 <OutlinedStyledButton
-                  onClick={this.showLoadModelDialog}
+                  onClick={() => {
+                    showLoadModelDialog(this.modelDialogHelperRef);
+                  }}
                   style={{ marginLeft: "1em", height: "2em" }}
                   color="primary"
                 >
@@ -3459,15 +3348,10 @@ export default class Scenarios extends Component {
           booleanKeys={['isPublic','isVisualCypher']}
           showActions={false}
         />
-        <LoadModelForm
-          maxWidth={"lg"}
-          open={showLoadModelDialog}
-          onClose={this.handleLoadModelDialogClose}
+        <ModelDialogHelper 
+          ref={this.modelDialogHelperRef}
+          setStatus={this.setStatus}
           load={this.loadRemoteModel}
-          cancel={this.handleLoadModelDialogClose}
-          disableDelete={true}
-          performModelSearch={this.performModelSearch}
-          modelMetadataMap={modelMetadataMap}
         />
         <GeneralDialog
           open={generalDialog.open}

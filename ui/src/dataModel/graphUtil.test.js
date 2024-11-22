@@ -1,7 +1,20 @@
 
 
+import { transform } from 'lodash';
 import DataTypes from './DataTypes';
-import { deserializeObject, getDataType, serializeObject } from './graphUtil';
+import { 
+    deserializeObject, 
+    getDataType, 
+    serializeObject,
+    findValues,
+    findObjectsContainingKeys,
+    findObjectsContainingAllKeys,
+    transformObjectsContainingAllKeys,
+    performFullTransform,
+    findObjectsOfACertainClass
+ } from './graphUtil';
+ import { buildPattern } from './debugStatement.test';
+import { NodePattern, RelationshipPattern, VariableContainer } from './cypherPattern';
 
 test('test data types', () => {
     expect(getDataType('foo')).toBe(DataTypes.String);
@@ -281,3 +294,287 @@ test('test using myObjectName in a plain object', () => {
     expect(deserializedFoo.constructor.name).toBe('Foo');
 
 });
+
+test('find values', () => {
+    let item = {
+        id: 'foo',
+        items: [
+            {id: 'bar'},
+            {id: 'baz',
+                items: [{id: 'qux'}]
+            }
+        ],
+        more: [
+            {id: 'qoph'},
+        ]
+    }
+    let values = findValues(item, 'id');
+    //console.log('values: ', values);
+    expect(values).toStrictEqual(['foo','bar','baz','qux','qoph']);
+});
+
+test('find objects containing keys', () => {
+    let bar = {id: 'bar'};
+    let qux = {id: 'qux'};
+    let baz = {id: 'baz',
+        items: [qux]
+    }
+    let qoph = {id: 'qoph'};
+
+    let foo = {
+        id: 'foo',
+        items: [bar, baz],
+        more: [qoph]
+    }
+    let objects = findObjectsContainingKeys(foo, 'id');
+    // console.log('objects: ', objects);
+    expect(objects).toStrictEqual([foo, bar, baz, qux, qoph]);
+});
+
+test('find objects containing keys - test on non-objects', () => {
+    let objects = findObjectsContainingKeys('string', 'id');
+    expect(objects).toStrictEqual([]);
+
+    objects = findObjectsContainingKeys(100, 'id');
+    expect(objects).toStrictEqual([]);
+
+    objects = findObjectsContainingKeys(true, 'id');
+    expect(objects).toStrictEqual([]);
+});
+
+test('find objects containing all keys', () => {
+    let fb = {
+        start: 'foo',
+        end: 'bar'
+    };
+    let qq = {
+        start: 'qux',
+        end: 'qoph'
+    };
+
+    let items = [
+        fb,
+        {
+            path: qq
+        },
+        {
+            start: 'baz'
+        }
+    ]
+    let objects = findObjectsContainingAllKeys(items, ['start','end']);
+    // console.log('objects: ', objects);
+    expect(objects).toStrictEqual([fb, qq]);
+});
+
+test('transform objects containing all keys', () => {
+    let fb = {
+        start: 'foo',
+        end: 'bar'
+    };
+    let qq = {
+        start: 'qux',
+        end: 'qoph'
+    };
+
+    let items = [
+        fb,
+        {
+            path: qq
+        },
+        {
+            start: 'baz'
+        }
+    ]
+
+    let transform = (value) => `${value.start}->${value.end}`;
+    let newObj = transformObjectsContainingAllKeys(items, ['start','end'], transform);
+    // console.log('newObj: ', newObj);
+    // expect(objects).toStrictEqual([fb, qq]);
+    expect(newObj).toStrictEqual([ 'foo->bar', { path: 'qux->qoph' }, { start: 'baz' } ]);
+
+});
+
+test('performFullTransform', () => {
+    let fb = {
+        start: 'foo',
+        end: 'bar'
+    };
+    let qq = {
+        start: 'qux',
+        end: 'qoph'
+    };
+
+    let items = [
+        fb,
+        {
+            str: 'yo',
+            path: qq
+        },
+        {
+            start: 'baz'
+        }
+    ]
+
+    let indentSpaces = '    ';
+
+    let getIndent = (indent) => 
+        [...Array(indent).keys()].reduce((runningIndent, _) => runningIndent + indentSpaces, '');
+
+    let transformMap = {
+        ArrayOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}<array>`,
+        ArrayItemOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}`,
+        ArrayItemSeparator: ({isLastItem}) => `${isLastItem ? '' : ','}`,
+        ArrayClose: ({indentLevel}) => `\n${getIndent(indentLevel)}</array>`,
+        ObjectOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}<object>`,
+        ObjectKey: ({indentLevel, key}) => `\n${getIndent(indentLevel)}${key}`,
+        ObjectKeySeparator: () => ': ',
+        ObjectValueSeparator: ({isLastItem}) => `${isLastItem ? '' : ','}`,
+        ObjectClose: ({indentLevel}) => `\n${getIndent(indentLevel)}</object>`,
+        Value: ({item}) => `<val>${item}</val>`,
+        // custom transforms
+        StartEnd: {
+            requiredKeys: ['start','end'],
+            func: ({item,indentLevel}) => `${item.start}->${item.end}`
+        }
+    }
+
+    let transformedItem = performFullTransform(items, transformMap);
+    // console.log(transformedItem);
+    let transformedText = transformedItem.join('');
+    // console.log(transformedText);
+    expect(transformedText).toEqual(`
+<array>
+    foo->bar,
+    <object>
+        str: <val>yo</val>,
+        path: qux->qoph
+    </object>,
+    <object>
+        start: <val>baz</val>
+    </object>
+</array>`)
+});
+
+test('performFullTransform - ObjectKeyValue transform', () => {
+    let fb = {
+        start: 'foo',
+        end: 'bar'
+    };
+    let qq = {
+        start: 'qux',
+        end: 'qoph'
+    };
+
+    let items = [
+        fb,
+        {
+            str: 'yo',
+            path: qq
+        },
+        {
+            start: 'baz'
+        }
+    ]
+
+    let indentSpaces = '    ';
+
+    let getIndent = (indent) => 
+        [...Array(indent).keys()].reduce((runningIndent, _) => runningIndent + indentSpaces, '');
+
+    let transformMap = {
+        ArrayOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}<array>`,
+        ArrayItemOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}`,
+        ArrayItemSeparator: ({isLastItem}) => `${isLastItem ? '' : ','}`,
+        ArrayClose: ({indentLevel}) => `\n${getIndent(indentLevel)}</array>`,
+        ObjectOpen: ({indentLevel}) => `\n${getIndent(indentLevel)}<object>`,
+        ObjectKeyValue: ({indentLevel, key, item, isLastItem}) => {
+            let comma = isLastItem ? '' : ',';
+            let str = `\n${getIndent(indentLevel)}${key}: ${item}${comma}`
+            return str;
+        },
+        ObjectClose: ({indentLevel}) => `\n${getIndent(indentLevel)}</object>`,
+        Value: ({item}) => `<val>${item}</val>`,
+        // custom transforms
+        StartEnd: {
+            requiredKeys: ['start','end'],
+            func: ({item,indentLevel}) => `${item.start}->${item.end}`
+        }
+    }
+
+    let transformedItem = performFullTransform(items, transformMap);
+    // console.log(transformedItem);
+    let transformedText = transformedItem.join('');
+    // console.log(transformedText);
+    expect(transformedText).toEqual(`
+<array>
+    foo->bar,
+    <object>
+        str: <val>yo</val>,
+        path: qux->qoph
+    </object>,
+    <object>
+        start: <val>baz</val>
+    </object>
+</array>`)
+
+    let item = {
+        hour: 22,
+        minute: 37,
+        second: 0,
+        nanosecond: 0,
+        timeZoneOffsetSeconds: 0
+    }
+    transformedItem = performFullTransform(item, transformMap);
+    transformedText = transformedItem.join('');
+    // console.log(transformedText);
+
+});
+
+class TestClass {
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+test('findObjectsOfACertainClass', () => {
+  
+    let f = new TestClass('foo');
+    let q = new TestClass('qux')
+
+    let items = [
+        f,
+        {
+            str: 'yo',
+            path: q
+        },
+        {
+            start: 'baz'
+        }
+    ]
+    
+    let matches = findObjectsOfACertainClass(items, TestClass);
+    expect(matches.length).toBe(2);
+    expect(matches[0]).toBe(f);
+    expect(matches[1]).toBe(q);
+
+})
+
+test('findObjectsOfACertainClass for a Pattern', () => {
+
+    let pattern = buildPattern();
+    
+    let matches = findObjectsOfACertainClass(pattern, VariableContainer);
+    let nodePatterns = matches.filter(match => match instanceof NodePattern);
+    let relPatterns = matches.filter(match => match instanceof RelationshipPattern)
+
+    expect(nodePatterns.length).toBe(3);
+    expect(relPatterns.length).toBe(2);
+
+    let nodeVars = nodePatterns.map(x => x.variable);
+    let relVars = relPatterns.map(x => x.variable);
+
+    expect(nodeVars).toStrictEqual(['person','movie','director'])
+    expect(relVars).toStrictEqual(['acted_in','directed'])
+
+})
+

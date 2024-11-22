@@ -395,6 +395,13 @@ class Homepage extends Component {
         tabHeader: { icon: 'fa fa-code', title: 'Cypher Suite', paddingLeft: '0.15em' }
       },
       {
+        name: TOOL_NAMES.CYPHER_DEBUG,
+        sureRef: this.getSureRef(TOOL_NAMES.CYPHER_DEBUG),
+        setSureRef: this.setSureRef(TOOL_NAMES.CYPHER_DEBUG),
+        // tabHeader: { icon: 'fa fa-bug', title: 'Reveal', paddingLeft: '0.15em' }
+        tabHeader: { icon: 'fa fa-draw-polygon', title: 'Reveal', paddingLeft: '0.15em' }
+      },
+      {
         name: TOOL_NAMES.CYPHER_BUILDER,
         sureRef: this.getSureRef(TOOL_NAMES.CYPHER_BUILDER),
         setSureRef: this.setSureRef(TOOL_NAMES.CYPHER_BUILDER),
@@ -456,6 +463,11 @@ class Homepage extends Component {
                             // import must be passed a string, and not a variable, or else Webpack cannot find it
                             //tool.component = lazy(() => import('../tools/toolCypherBuilder/CypherBuilder'));
                             tool.component = lazy(() => import('../tools/toolCypherSuite/CypherSuite'));
+                            break;
+                        case TOOL_NAMES.CYPHER_DEBUG:
+                            // import must be passed a string, and not a variable, or else Webpack cannot find it
+                            //tool.component = lazy(() => import('../tools/toolCypherBuilder/CypherBuilder'));
+                            tool.component = lazy(() => import('../tools/toolCypherDebug/CypherDebug'));
                             break;
                         case TOOL_NAMES.SCENARIOS:
                             // import must be passed a string, and not a variable, or else Webpack cannot find it
@@ -971,7 +983,24 @@ class Homepage extends Component {
 
   promptConnectToNeo = () => {
       showNeoConnectionDialog({
-        onConnectCallback: () => {}, 
+        onConnectCallback: () => {
+            let { activeTabIndex } = this.state;
+            var activeTool = this.getToolsArray()[activeTabIndex];
+            activeTool.sureRef(ref => {
+                if (typeof(ref.onNeoConnect) === 'function') {
+                    ref.onNeoConnect();
+                }
+            });            
+        }, 
+        onDisconnectCallback: () => {
+            let { activeTabIndex } = this.state;
+            var activeTool = this.getToolsArray()[activeTabIndex];
+            activeTool.sureRef(ref => {
+                if (typeof(ref.onNeoDisconnect) === 'function') {
+                    ref.onNeoDisconnect();
+                }
+            });            
+        },
         buttonText: "Connect",
         doCallbackOnWebSocketError: false
       });
@@ -1073,7 +1102,6 @@ class Homepage extends Component {
       });
   }
 
-
   render () {
       const { classes } = this.props;
       const { open, activeTabIndex, title, menus, currentUser, 
@@ -1082,7 +1110,7 @@ class Homepage extends Component {
           settingsIconAnchor, alertMessage, showNeoConnectionDialog } = this.state;
 
       const { brandingInfo } = this.props;
-      var { logourl, logoheight, primaryColor, secondaryColor  } = 
+      var { logourl, logoheight, primaryColor, secondaryColor } = 
       brandingInfo.logourl !== undefined
       ? brandingInfo
       : {
@@ -1310,7 +1338,7 @@ class Homepage extends Component {
             
           </div>                
           <main id='main' className={classes.content}>
-              <Box mt={8} p={0} width="100%" height="100%">
+              <Box mt={8} p={0} width="100%" height="calc(100% - 64px)">
                   <Snackbar open={alertMessage.display} style={alertMessageMargins}
                         anchorOrigin={{vertical: alertMessage.vertical, horizontal: alertMessage.horizontal}}
                         autoHideDuration={6000} onClose={alertMessage.close}>

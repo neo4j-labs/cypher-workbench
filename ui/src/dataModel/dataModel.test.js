@@ -508,7 +508,7 @@ test('test getConstraintStatements', () => {
     testNodeLabel.addOrUpdateProperty (propertyMap, { isPartOfKey: true });
     //console.log("dataModel.getConstraintStatements(): ", dataModel.getConstraintStatements());
 
-    var match = dataModel.getConstraintStatements().match(/CREATE CONSTRAINT IF NOT EXISTS ON \(n\:Test\) ASSERT \(n\.prop1\) IS NODE KEY/)
+    var match = dataModel.getConstraintStatements().match(/CREATE CONSTRAINT IF NOT EXISTS FOR \(n\:Test\) REQUIRE \(n\.prop1\) IS NODE KEY/)
     expect(match).not.toBeNull();
 });
 
@@ -846,6 +846,66 @@ test('getAllSecondaryNodeLabelProperties 4', () => {
     expect(props[0].name).toBe('prop1');
     expect(props[1].name).toBe('prop2');
 });
+
+test('llm generated string', () => {
+    var dataModel = getDataModelWithNodeLabels(['Farm']);
+    var dataModel = getDataModelWithRelationshipTypes([
+        {startNodeLabel: 'Cow', type: 'LIVES_ON', endNodeLabel: 'Farm'},
+        {startNodeLabel: 'Horse', type: 'LIVES_ON', endNodeLabel: 'Farm'},
+        {startNodeLabel: 'Mammal', type: 'EATS', endNodeLabel: 'Food'}
+    ]);
+    var cow = dataModel.getNodeLabelByLabel('Cow');
+    var horse = dataModel.getNodeLabelByLabel('Horse');
+    var food = dataModel.getNodeLabelByLabel('Food');
+    var mammal = dataModel.getNodeLabelByLabel('Mammal');
+    dataModel.addSecondaryNodeLabel(cow, mammal);
+    dataModel.addSecondaryNodeLabel(horse, mammal);
+
+    var propertyMap1 = {
+        key: 'propKey1', 
+        name: 'wears', 
+        datatype: 'String', 
+        referenceData: 'bell'
+    }     
+
+    var propertyMap2 = {
+        key: 'propKey2', 
+        name: 'name', 
+        datatype: 'String', 
+        referenceData: 'name'
+    }     
+    cow.addOrUpdateProperty(propertyMap1);
+    cow.addOrUpdateProperty(propertyMap2);
+    horse.addOrUpdateProperty(propertyMap1);
+    horse.addOrUpdateProperty(propertyMap2);
+    food.addOrUpdateProperty(propertyMap2);
+
+    var mammalRels = dataModel.getOutboundRelationshipsByNodeLabelAndRelationshipType('Mammal','EATS');
+    var eats = mammalRels[0];
+
+    var relPropertyMap = {
+        key: 'relPropKey', 
+        name: 'quantity', 
+        datatype: 'Integer', 
+        referenceData: 'a lot'
+    }      
+    eats.addOrUpdateProperty(relPropertyMap);
+
+    var llmString = dataModel.toLLMModelText(dataModel);
+    //console.log(llmString);
+    //expect(true).toBe(true);
+    
+    let llmLines = llmString.split('\n').map(x => x.trim());
+    expect(llmLines).toContain("(:Cow:Mammal): [wears:'String',name:'String']");
+    expect(llmLines).toContain("(:Farm):");
+    expect(llmLines).toContain("(:Horse:Mammal): [wears:'String',name:'String']");
+    expect(llmLines).toContain("(:Mammal):");
+    expect(llmLines).toContain("(:Food): [name:'String']");
+    expect(llmLines).toContain("(:Cow:Mammal)-[:LIVES_ON]->(:Farm)");
+    expect(llmLines).toContain("(:Horse:Mammal)-[:LIVES_ON]->(:Farm)");
+    expect(llmLines).toContain("(:Mammal)-[:EATS {quantity:'Integer'}]->(:Food)");
+});
+
 
 test('matchesPropertyDefinition', () => {
     var dataModel = DataModel();

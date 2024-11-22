@@ -129,9 +129,22 @@ test('test getDebugCypherSnippets', () => {
     var snippets = returnClause.getDebugCypherSnippets();
     expect(snippets.length).toBe(3);
 
-    expect(snippets[0]).toBe("RETURN varA // , varB.foo, varB.bar");
-    expect(snippets[1]).toBe("RETURN varA, varB.foo // , varB.bar");
+    expect(snippets[0]).toBe("RETURN varA /* , varB.foo, varB.bar */");
+    expect(snippets[1]).toBe("RETURN varA, varB.foo /* , varB.bar */");
     expect(snippets[2]).toBe("RETURN varA, varB.foo, varB.bar");
+});
+
+test('test getDebugCypherSnippets - return *', () => {
+    var asterisk = new SimpleReturnItem({isAsterisk: true})
+    var returnClause = new ReturnClause({ limit: ''});
+    returnClause.item(asterisk);
+
+    // console.log('returnClause: ', returnClause);
+
+    var snippets = returnClause.getDebugCypherSnippets();
+    expect(snippets.length).toBe(1);
+
+    expect(snippets[0]).toBe("RETURN *");
 });
 
 test('parse returnItemText', () => {
@@ -150,8 +163,8 @@ test('parse returnItemText', () => {
     expect(parseObj.propertyExpression).toBe('bar');
     expect(parseObj.alias).toBe('baz');
 
-    parseObj = parseReturnItemText('apoc.math.round((foo.profits), 2, "HALF_UP") as rounded');
+    parseObj = parseReturnItemText('apoc.math.round((hasarb.profits), 2, "HALF_UP") as rounded');
     expect(parseObj.variable).toBeNull();
-    expect(parseObj.propertyExpression).toBe('apoc.math.round((foo.profits), 2, "HALF_UP")');
+    expect(parseObj.propertyExpression).toBe('apoc.math.round((hasarb.profits), 2, "HALF_UP")');
     expect(parseObj.alias).toBe('rounded');
 });

@@ -8,7 +8,7 @@
 * related to graphCanvas
 * 
 * Since the migration never finished, both this file and graphCanvas are both used,
-* but by different user-facing tools
+* but by different   user-facing tools
 */
 
 import * as d3 from "d3";

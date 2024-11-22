@@ -21,7 +21,7 @@ import {
     grabModelLock,
     getUserRolesForDataModel,
     updateUserRoles,
-    listRemoteDataModelMetadata,
+    listRemoteDataModelMetadataAndAddExplicitMatches,
     searchRemoteDataModelMetadata,
     loadRemoteDataModel,
     loadLastOpenedModel,
@@ -32,7 +32,7 @@ import {
 
 import { Canvas } from '../../components/canvas/Canvas';
 import { CONTAINER_CALLBACK_MESSAGES } from '../../components/canvas/d3/dataModelCanvas';
-import DataModel from '../../dataModel/dataModel';
+import DataModel, { CypherType, Neo4jVersion } from '../../dataModel/dataModel';
 import { downloadUrlAsFile } from '../../common/util/download';
 import {
     currentlyConnectedToNeo,
@@ -54,6 +54,7 @@ import {
 import FullScreenWaitOverlay from '../../components/common/FullScreenWaitOverlay';
 import GeneralDialog from '../../components/common/GeneralDialog';
 import GeneralTextDialog from '../../components/common/GeneralTextDialog';
+import GeneralTextDialogWithOptions from '../../components/common/GeneralTextDialogWithOptions';
 import ModalVariableLabelsAndTypes from '../../components/common/ModalVariableLabelsAndTypes';
 import { OutlinedStyledButton, StyledButton } from '../../components/common/Components';
 
@@ -192,6 +193,14 @@ export default class Model extends Component {
         return dataModel;
     }
 
+    closeExportConstraintsDialog = () => {
+        this.setState({ exportConstraintsDialog: { ...this.state.exportConstraintsDialog, open: false }});
+    }
+
+    closeExportCypherStatementDialog = () => {
+        this.setState({ exportCypherStatementDialog: { ...this.state.exportCypherStatementDialog, open: false }});
+    }
+
     closeImportExportDialog = () => {
         this.setState({ importExportDialog: { ...this.state.importExportDialog, open: false }});
     }
@@ -253,11 +262,12 @@ export default class Model extends Component {
         }
     }
 
-    performModelSearch = (searchText, myOrderBy, orderDirection) => {
+    performModelSearch = (searchText, includePublic, myOrderBy, orderDirection) => {
         this.setState({
             loadDialog: {
                 ...this.state.loadDialog,
                 searchText: searchText,
+                includePublic: includePublic,
                 myOrderBy: myOrderBy,
                 orderDirection: orderDirection
             }
@@ -265,15 +275,17 @@ export default class Model extends Component {
 
         if (searchText) {
             this.setStatus('Searching...', {fullScreenBusy: true});
-            searchRemoteDataModelMetadata(searchText, myOrderBy, orderDirection, (response) => {
+            searchRemoteDataModelMetadata(searchText, includePublic, myOrderBy, orderDirection, (response) => {
                 this.setStatus('', false);
                 this.handleMetadataResponse(response, 'searchDataModelsX');
             });
         } else {
             this.setStatus('Loading...', {fullScreenBusy: true});
-            listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
+            let { urlParamsId } = this.state;
+            let urlParamsArray = (urlParamsId) ? [urlParamsId] : [];
+            listRemoteDataModelMetadataAndAddExplicitMatches(urlParamsArray, includePublic, myOrderBy, orderDirection, (response) => {
                 this.setStatus('', false);
-                this.handleMetadataResponse(response, 'listDataModelsX');
+                this.handleMetadataResponse(response, 'listDataModelsAndAddExplicitMatches');
             });
         }
     }
@@ -308,6 +320,7 @@ export default class Model extends Component {
     }
 
     state = {
+        urlParamsId: '',
         modelInput: '',
         saved: false,
         status: '',
@@ -334,6 +347,33 @@ export default class Model extends Component {
         modelMetadataMap: {},
         dataModel: this.getDataModel(),
         editHelper: new EditHelper(),
+        exportCypherString: '',
+        exportConstraintsDialog: {
+            open: false,
+            handleClose: this.closeExportConstraintsDialog,
+            title: '',
+            text: '',
+            placeholder: '',
+            disableEditing: true,
+            setText: () => {},
+            buttons: [],
+            defaultOptionValue: '',
+            optionChanged: () => {},
+            options: []
+        },
+        exportCypherStatementDialog: {
+            open: false,
+            handleClose: this.closeExportCypherStatementDialog,
+            title: '',
+            text: '',
+            placeholder: '',
+            disableEditing: true,
+            setText: () => {},
+            buttons: [],
+            defaultOptionValue: '',
+            optionChanged: () => {},
+            options: []
+        },
         importExportDialog: {
             open: false,
             handleClose: this.closeImportExportDialog,
@@ -514,6 +554,118 @@ export default class Model extends Component {
         });
     }
 
+    showExportConstraints = () => {
+        let fileName = this.getExportFileName('cw_constraints', 'cypher');
+        var buttons = [];
+        buttons.push({
+            text: 'Download As File',
+            onClick: () => {
+                const { exportConstraintsString } = this.state;
+                let downloadFunc = this.downloadTextAsFile(exportConstraintsString, fileName)
+                downloadFunc();
+            },
+            autofocus: true
+        });
+        buttons.push({
+            text: 'OK',
+            onClick: (button, index) => this.closeExportConstraintsDialog(),
+            autofocus: true
+        });
+
+        var { dataModel } = this.state;
+        let defaultValue = Neo4jVersion.v5;
+        var constraints = dataModel.getConstraintStatements({ neo4jVersion: defaultValue });
+        //console.log(constraints);
+
+        this.setState({
+            exportConstraintsString: constraints,
+            exportConstraintsDialog: {
+                ...this.state.exportConstraintsDialog,
+                open: true,
+                title: 'Export Constraints',
+                text: constraints,
+                placeholder: '',
+                htmlText: '',
+                htmlPreviewMode: false,
+                disableEditing: true,
+                buttons: buttons,
+                optionChanged: (newValue) => { 
+                    const newConstraints = dataModel.getConstraintStatements({ neo4jVersion: newValue });
+                    this.setState({exportConstraintsString: newConstraints})
+                },
+                options: [{
+                    value: Neo4jVersion.v5, 
+                    label: Neo4jVersion.v5
+                },
+                {
+                    value: Neo4jVersion.v4_4, 
+                    label: Neo4jVersion.v4_4
+                },
+                {
+                    value: Neo4jVersion.v4_3, 
+                    label: Neo4jVersion.v4_3
+                }],
+                defaultOptionValue: defaultValue
+            }
+        }, () => {
+            this.exportConstraintsRef.current.focusTextBox();
+        });
+    }
+
+    showExportCypher = () => {
+        let fileName = this.getExportFileName('cw_cypher', 'cypher');
+        var buttons = [];
+        buttons.push({
+            text: 'Download As File',
+            onClick: () => {
+                const { exportCypherString } = this.state;
+                let downloadFunc = this.downloadTextAsFile(exportCypherString, fileName)
+                downloadFunc();
+            },
+            autofocus: true
+        });
+        buttons.push({
+            text: 'OK',
+            onClick: (button, index) => this.closeExportCypherStatementDialog(),
+            autofocus: true
+        });
+
+        var { dataModel } = this.state;
+        let defaultValue = CypherType.Create;
+        var cypher = dataModel.toArrowsStyleCypher(dataModel, { cypherType: defaultValue });
+        //console.log(cypher);
+
+        this.setState({
+            exportCypherString: cypher,
+            exportCypherStatementDialog: {
+                ...this.state.exportCypherStatementDialog,
+                open: true,
+                title: 'Export Cypher',
+                text: cypher,
+                placeholder: '',
+                htmlText: '',
+                htmlPreviewMode: false,
+                disableEditing: true,
+                buttons: buttons,
+                optionChanged: (newValue) => { 
+                    const newCypher = dataModel.toArrowsStyleCypher(dataModel, { cypherType: newValue });
+                    this.setState({exportCypherString: newCypher})
+                },
+                options: [{
+                    value: CypherType.Create, 
+                    label: CypherType.Create
+                },
+                {
+                    value: CypherType.Merge, 
+                    label: CypherType.Merge
+                }],
+                defaultOptionValue: defaultValue
+            }
+        }, () => {
+            this.exportCypherStatementRef.current.focusTextBox();
+        });
+    }
+
     showExportText = (title, text, downloadAsFileName) => {
         var buttons = [];
         if (downloadAsFileName) {
@@ -567,6 +719,8 @@ export default class Model extends Component {
         this.shareDialogRef = React.createRef();
         this.saveAsDialogRef = React.createRef();
         this.importExportDialogRef = React.createRef();
+        this.exportCypherStatementRef = React.createRef();
+        this.exportConstraintsRef = React.createRef();
         this.parseDialogRef = React.createRef();
         this.propertyDialogRef = React.createRef();
         this.relationshipCardinalityDialogRef = React.createRef();
@@ -1145,6 +1299,11 @@ export default class Model extends Component {
             needExportDivider = true;
             exportMenuItems.push({id: 'exportConstraints', text: 'Export Constraints'})
         }
+        if (isFeatureLicensed(FEATURES.MODEL.ExportModel)) {
+            needExportDivider = true;
+            exportMenuItems.push({id: 'exportLLMModel', text: 'Export LLM Model'})
+        }
+
         //if (isFeatureLicensed(FEATURES.MODEL.ExportConstraints)) {
         if (this.isDataExportEnabled()) {
             if (needExportDivider) {
@@ -1191,10 +1350,17 @@ export default class Model extends Component {
                         if (!this.isAModelSelected()) {
                             alert(NO_ACTIVE_MODEL_MESSAGE, ALERT_TYPES.WARNING);
                         } else {                        
-                            var constraints = dataModel.getConstraintStatements();
-                            console.log(constraints);
-                            fileName = this.getExportFileName('cw_constraints', 'cypher');
-                            this.showExportText('Export Constraints', constraints, fileName);
+                            this.showExportConstraints();
+                        }
+                        break;
+                    case 'exportLLMModel':
+                        if (!this.isAModelSelected()) {
+                            alert(NO_ACTIVE_MODEL_MESSAGE, ALERT_TYPES.WARNING);
+                        } else {                        
+                            var llmModel = dataModel.toLLMModelText(dataModel);
+                            //console.log(constraints);
+                            fileName = this.getExportFileName('cw_llm_model', 'txt');
+                            this.showExportText('Export LLM Model', llmModel, fileName);
                         }
                         break;
                     case 'getDataExportJson':
@@ -1220,10 +1386,7 @@ export default class Model extends Component {
                         if (!this.isAModelSelected()) {
                             alert(NO_ACTIVE_MODEL_MESSAGE, ALERT_TYPES.WARNING);
                         } else {                        
-                            var cypher = dataModel.toArrowsStyleCypher(dataModel);
-                            //console.log(cypher);
-                            fileName = this.getExportFileName('cw_cypher', 'cypher');
-                            this.showExportText('Export Cypher', cypher, fileName);
+                            this.showExportCypher();
                         }
                         break;
                     case 'exportMarkdown':
@@ -1391,8 +1554,10 @@ export default class Model extends Component {
             var { modelMetadata, dataModel } = this.getImportDataModel(jsonSchema, cypherFunction, connectionInfo);
 
             // enhance imported model with calls to db.constraints() and db.indexes()
-            // TODO: fix this for Neo4j 5 syntax
+
+            // TODO: fix this for Neo4j 5
             // await enhanceDataModelWithConstraintsAndIndexes(dataModel, this.setStatus);
+
             // TODO: make optional!!
             //runSecondaryNodeLabelPostProcessing(dataModel);
 
@@ -1406,7 +1571,9 @@ export default class Model extends Component {
     }
 
     showLoadModelDialog = () => {
-        this.persistenceHelper.getModelMetadataMap(() => {
+        let { urlParamsId } = this.state;
+        let urlParamsArray = (urlParamsId) ? [urlParamsId] : [];
+        this.persistenceHelper.getModelMetadataMapAndAddExplicitMatches(urlParamsArray, () => {
             this.setState({
                 showLoadDialog: true
             });
@@ -1738,6 +1905,12 @@ export default class Model extends Component {
         this.showExportText('Export Model', modelJson, fileName);
     }
 
+    showExportLLMModel () {
+        var modelJson = this.getExportData();
+        var fileName = this.getExportFileName('cw_export', 'json');
+        this.showExportText('Export Model', modelJson, fileName);
+    }
+
     getExportData = () => {
         var metadata = { ...this.state.loadedModelMetadata };
         const dataModel = this.state.dataModel;
@@ -1870,7 +2043,9 @@ export default class Model extends Component {
         });
         this.focusTextBox();
 
-        this.persistenceHelper.getModelMetadataMap(() => {
+        var { urlParamsId } = properties;
+        let urlParamsArray = (urlParamsId) ? [urlParamsId] : [];
+        this.persistenceHelper.getModelMetadataMapAndAddExplicitMatches(urlParamsArray, () => {
             var { modelMetadataMap } = this.state;
             //var localDataModelString = localStorage.getItem('localDataModel');
             var localDataModelString = this.persistenceHelper.getLocalStorageDataModelString();
@@ -1887,12 +2062,12 @@ export default class Model extends Component {
                 });*/
                 this.persistenceHelper.tryToGoOnline();
             } else {
-                var { urlParamsId } = properties;
                 var { componentLoadedAlready, modelMetadataMap } = this.state;
                 if (!componentLoadedAlready && urlParamsId && modelMetadataMap[urlParamsId]) {
                     var modelInfo = modelMetadataMap[urlParamsId];
                     this.setState({
-                        componentLoadedAlready: true
+                        componentLoadedAlready: true,
+                        urlParamsId: urlParamsId
                     });
                     this.loadModel(modelInfo);
                 } else {
@@ -2031,6 +2206,7 @@ export default class Model extends Component {
         var saveModelFormMode = (Object.keys(modelMetadataMap).length > 0) ? SAVE_MODE.NEW : SAVE_MODE.TOTALLY_NEW;
 
         this.setState({
+            urlParamsId: '',
             saveModelFormMode: saveModelFormMode,
             cancelModelMetadata: cancelModelMetadata,
             loadedModelMetadata: newModelMetadata,
@@ -2387,7 +2563,8 @@ export default class Model extends Component {
             modelMetadataMap: {
                 ...this.state.modelMetadataMap,
                 [modelInfo.key]: modelInfo
-            }
+            },
+            urlParamsId: modelInfo.key
         });
         SecurityRole.setRole(userRole);
         this.props.setTitle(this.getTitle(modelInfo));
@@ -2627,7 +2804,9 @@ export default class Model extends Component {
     render() {
         var { modelInput, dataModel, loadedModelMetadata,
             showSaveDialog, showLoadDialog, saveModelFormMode,
-            editModelMetadata, modelMetadataMap, importExportDialog, parseDialog,
+            editModelMetadata, modelMetadataMap, importExportDialog, 
+            exportConstraintsDialog, exportConstraintsString,
+            exportCypherStatementDialog, exportCypherString, parseDialog,
             saveAsDialog, shareDialog, propertyDialog, generalDialog,
             relationshipCardinalityDialog, 
             rightDrawerOpen,
@@ -2863,6 +3042,31 @@ export default class Model extends Component {
                         title={importExportDialog.title} placeholder={importExportDialog.placeholder}
                         text={importExportDialog.text} setText={importExportDialog.setText}
                         buttons={importExportDialog.buttons} rows={15} />
+            <GeneralTextDialogWithOptions maxWidth={'md'} open={exportConstraintsDialog.open} onClose={exportConstraintsDialog.handleClose}
+                        ref={this.exportConstraintsRef}
+                        htmlText={exportConstraintsDialog.htmlText}
+                        htmlPreviewMode={exportConstraintsDialog.htmlPreviewMode}
+                        disableEditing={exportConstraintsDialog.disableEditing}
+                        title={exportConstraintsDialog.title} placeholder={exportConstraintsDialog.placeholder}
+                        text={exportConstraintsString} setText={exportConstraintsDialog.setText}
+                        buttons={exportConstraintsDialog.buttons} rows={15} 
+                        defaultOptionValue={exportConstraintsDialog.defaultOptionValue}
+                        optionsLabel="Neo4j Version: "
+                        options={exportConstraintsDialog.options}
+                        optionChanged={exportConstraintsDialog.optionChanged}
+                        />
+            <GeneralTextDialogWithOptions maxWidth={'md'} open={exportCypherStatementDialog.open} onClose={exportCypherStatementDialog.handleClose}
+                        ref={this.exportCypherStatementRef}
+                        htmlText={exportCypherStatementDialog.htmlText}
+                        htmlPreviewMode={exportCypherStatementDialog.htmlPreviewMode}
+                        disableEditing={exportCypherStatementDialog.disableEditing}
+                        title={exportCypherStatementDialog.title} placeholder={exportCypherStatementDialog.placeholder}
+                        text={exportCypherString} setText={exportCypherStatementDialog.setText}
+                        buttons={exportCypherStatementDialog.buttons} rows={15} 
+                        defaultOptionValue={exportCypherStatementDialog.defaultOptionValue}
+                        options={exportCypherStatementDialog.options}
+                        optionChanged={exportCypherStatementDialog.optionChanged}
+                        />
             <GeneralTextDialog maxWidth={'md'} open={parseDialog.open} onClose={parseDialog.handleClose}
                         ref={this.parseDialogRef}
                         title={parseDialog.title} placeholder={parseDialog.placeholder}

@@ -176,7 +176,7 @@ AS : ( 'A' | 'a' ) ( 'S' | 's' )  ;
 
 FIELDTERMINATOR : ( 'F' | 'f' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'O' | 'o' ) ( 'R' | 'r' )  ;
 
-oC_Match : ( OPTIONAL SP )? MATCH SP? oC_Pattern ( oC_Hint )* ( SP? oC_Where )? ;
+oC_Match : ( OPTIONAL SP )? MATCH SP? oC_Pattern ( oC_Hint )* ( SP? oC_Where )? ( SP oC_Order )? ( SP oC_Skip )? ( SP oC_Limit )? ;
 
 OPTIONAL : ( 'O' | 'o' ) ( 'P' | 'p' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'L' | 'l' )  ;
 
@@ -228,9 +228,22 @@ FOREACH : ( 'F' | 'f' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'A' | 'a' ) 
 
 IN : ( 'I' | 'i' ) ( 'N' | 'n' )  ;
 
-oC_InQueryCall : CALL SP oC_ExplicitProcedureInvocation ( SP? YIELD SP oC_YieldItems )? ;
+TRANSACTIONS : ( 'T' | 't' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'S' | 's' ) ( 'A' | 'a' ) ( 'C' | 'c' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'S' | 's' ) ;
 
-oC_SubQuery : CALL SP? '{' SP? oC_Query SP? '}' SP? oC_Return? ;
+CONCURRENT  : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'T' | 't' )  ;
+
+ROWS : ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'W' | 'w' ) ( 'S' | 's' );
+
+oC_InQueryCall : ( OPTIONAL SP )? CALL SP oC_ExplicitProcedureInvocation ( SP? YIELD SP oC_YieldItems )? ;
+
+oC_SubQuery : ( OPTIONAL SP )? CALL SP? oC_SubQueryVariableScope? SP? '{' SP? oC_Query SP? '}' SP? oC_SubQueryDirective? SP? oC_Return? ;
+
+oC_SubQueryVariableScope:
+    '(' SP? oC_Variable? ( SP? ',' SP? oC_Variable )* SP? ')'
+    | '(' SP? '*' SP? ')'
+    ;
+
+oC_SubQueryDirective: SP? IN (SP oC_IntegerLiteral? SP CONCURRENT)? SP TRANSACTIONS (SP OF SP oC_IntegerLiteral SP ROWS)?;
 
 CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' )  ;
 
@@ -244,7 +257,7 @@ oC_YieldItems : ( oC_YieldItem ( SP? ',' SP? oC_YieldItem )* )
 
 oC_YieldItem : ( oC_ProcedureResultField SP AS SP )? oC_Variable ;
 
-oC_With : WITH ( SP? DISTINCT )? SP oC_ReturnBody ( SP? oC_Where )? ;
+oC_With : WITH ( SP? DISTINCT )? SP oC_ReturnBody ( SP? oC_Where )? ( SP oC_Order )? ( SP oC_Skip )? ( SP oC_Limit )? ;
 
 DISTINCT : ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' )  ;
 
@@ -268,9 +281,11 @@ ORDER : ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' )  ;
 
 BY : ( 'B' | 'b' ) ( 'Y' | 'y' )  ;
 
-oC_Skip : L_SKIP SP oC_Expression ;
+oC_Skip : ( L_SKIP | L_OFFSET ) SP oC_Expression ;
 
 L_SKIP : ( 'S' | 's' ) ( 'K' | 'k' ) ( 'I' | 'i' ) ( 'P' | 'p' )  ;
+
+L_OFFSET : ( 'O' | 'o' ) ( 'F' | 'f' ) ( 'F' | 'f' ) ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' )  ;
 
 oC_Limit : LIMIT SP oC_Expression ;
 
@@ -304,7 +319,10 @@ oC_IdLookup : '(' ( oC_LiteralIds | oC_LegacyParameter | '*' ) ')' ;
 
 oC_LiteralIds : oC_IntegerLiteral ( SP? ',' SP? oC_IntegerLiteral )* ;
 
-oC_Where : WHERE SP oC_Expression ;
+oC_Where : WHERE SP NOT? SP? EXISTS SP? '{' SP? oC_Expression SP? '}'
+    | WHERE SP COUNT SP? '{' SP? oC_Expression SP? '}'
+    | WHERE SP oC_Expression
+    ;    
 
 WHERE : ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'E' | 'e' )  ;
 
@@ -315,32 +333,73 @@ oC_PatternPart : ( oC_Variable SP? '=' SP? oC_AnonymousPatternPart )
                ;
 
 oC_AnonymousPatternPart : oC_ShortestPathPattern
-                        | oC_PatternElement
+                        | oC_PatternElement*
                         ;
 
-oC_ShortestPathPattern : ( SHORTESTPATH '(' oC_PatternElement ')' )
-                       | ( ALLSHORTESTPATHS '(' oC_PatternElement ')' )
+oC_ShortestPathPattern : ( SHORTESTPATH SP? '(' SP? oC_PatternElement SP? ')' )
+                       | ( ALLSHORTESTPATHS SP? '(' SP? oC_PatternElement SP? ')' )
+                       | ALL SP SHORTEST SP oC_PatternElement
+                       | SHORTEST SP oC_IntegerLiteral ( SP GROUPS )? SP oC_PatternElement
+                       | ANY SP SHORTEST SP oC_PatternElement
+                       | ANY SP oC_PatternElement
                        ;
+
+GROUPS : ( 'G' | 'g' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'P' | 'p' ) ( 'S' | 's' ) ;
+
+SHORTEST : ( 'S' | 's' ) ( 'H' | 'h' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'T' | 't' )  ;
 
 SHORTESTPATH : ( 'S' | 's' ) ( 'H' | 'h' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'P' | 'p' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'H' | 'h' )  ;
 
 ALLSHORTESTPATHS : ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ( 'S' | 's' ) ( 'H' | 'h' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'P' | 'p' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'H' | 'h' ) ( 'S' | 's' )  ;
 
 oC_PatternElement : ( oC_NodePattern ( SP? oC_PatternElementChain )* )
-                  | ( '(' oC_PatternElement ')' )
+                  | oC_QuantifiedPathPattern
+                  | oC_NodePattern SP? oC_QuantifiedPathPattern
                   ;
 
-oC_NodePattern : '(' SP? ( oC_Variable SP? )? ( oC_NodeLabels SP? )? ( oC_Properties SP? )? ')' ;
+oC_OpenParen : '(';
+oC_CloseParen : ')';
 
-oC_PatternElementChain : oC_RelationshipPattern SP? oC_NodePattern ;
+/* for 5.9, the "WHERE" clause is new
+nodePattern ::= "(" [ nodeVariable ] [ labelExpression ]
+    [ propertyKeyValueExpression ] [ "WHERE" booleanExpression ] ")"
+*/
+//oC_NodePattern : '(' SP? ( oC_Variable SP? )? ( oC_NodeLabels SP? )? ( oC_Properties SP? )? ')' ;
 
-oC_RelationshipPattern : ( oC_LeftArrowHead SP? oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash SP? oC_RightArrowHead )
-                       | ( oC_LeftArrowHead SP? oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash )
-                       | ( oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash SP? oC_RightArrowHead )
-                       | ( oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash )
+oC_NodePattern : '(' SP? ( oC_Variable SP? )? ( oC_NodeLabels SP? )? ( oC_Properties SP? )? ( SP? oC_Where SP? )? ')' ;
+
+oC_PatternElementChain : oC_RelationshipPattern SP? oC_NodePattern? ;
+
+oC_RelationshipPattern : ( oC_LeftArrowHead SP? oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash SP? oC_RightArrowHead )(SP? oC_PathPatternQuantifier SP?)?
+                       | ( oC_LeftArrowHead SP? oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash )(SP? oC_PathPatternQuantifier SP?)?
+                       | ( oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash SP? oC_RightArrowHead )(SP? oC_PathPatternQuantifier SP?)?
+                       | ( oC_Dash SP? oC_RelationshipDetail? SP? oC_Dash )(SP? oC_PathPatternQuantifier SP?)?
+                       | oC_QuantifiedPathPattern  // changes for 5.9
                        ;
 
-oC_RelationshipDetail : '[' SP? ( oC_Variable SP? )? ( oC_RelationshipTypes SP? )? oC_RangeLiteral? ( oC_Properties SP? )? ']' ;
+oC_RelationshipDetail : '[' SP? ( oC_Variable SP? )? ( oC_RelationshipTypes SP? )? oC_RangeLiteral? ( oC_Properties SP? )? ( SP? oC_Where SP? )? ']' ;
+
+// changes for 5.9 - Quantifier syntax
+/*
+  {m,n}         Between m and n iterations.
+  + OR {1,}     1 or more iterations.
+  * OR {0,}     0 or more iterations.
+  {n} OR {n,n}  Exactly n iterations.
+  {m,}          m or more iterations.
+  {,n} OR {0,n} Between 0 and n iterations.
+  {,} OR {0,}   0 or more iterations.
+*/
+//oC_QuantifiedPathPattern : SP? '(' SP? oC_PatternElement SP? ( SP? oC_Where SP? )? ')' SP? oC_PathPatternQuantifier SP? ;
+oC_QuantifiedPathPattern : SP? oC_OpenParen SP? oC_PatternElement SP? ( SP? oC_Where SP? )? oC_CloseParen (SP? oC_PathPatternQuantifier SP?)? ;
+
+oC_PathPatternQuantifier : '{' SP? oC_IntegerLiteral? SP? ',' SP? oC_IntegerLiteral? SP? '}'
+                        | '{' SP? oC_IntegerLiteral?  SP? ','? SP? '}'
+                        | '{' SP? oC_IntegerLiteral?  SP? '}'
+                        | '{' SP? ','? SP? oC_IntegerLiteral? SP? '}'
+                        | '{' SP? ','? SP? '}'
+                        | '+'
+                        | '*'
+                        ;
 
 oC_Properties : oC_MapLiteral
               | oC_Parameter
@@ -349,9 +408,67 @@ oC_Properties : oC_MapLiteral
 
 oC_RelType : ':' SP? oC_RelTypeName ;
 
-oC_RelationshipTypes : ':' SP? oC_RelTypeName ( SP? '|' ':'? SP? oC_RelTypeName )* ;
+// in 5.9, we can now do boolean operations on relationship types
+//oC_RelationshipTypes : ':' SP? oC_RelTypeName ( SP? '|' ':'? SP? oC_RelTypeName )* ;
+oC_RelationshipTypes : ':' SP? oC_RelTypeName ( SP? '|' ':'? SP? oC_RelTypeName )*
+                        | (':' SP? oC_RelationshipTypeTerm)
+                        ;
 
-oC_NodeLabels : oC_NodeLabel ( SP? oC_NodeLabel )* ;
+// modifications to support relationship type boolean logic for 5.9
+
+oC_RelationshipTypeTerm: oC_RelationshipTypeOr ;
+
+oC_RelationshipTypeOr : oC_RelationshipTypeAnd ( SP? '|' SP? oC_RelationshipTypeAnd )* ;
+
+oC_RelationshipTypeAnd : oC_RelationshipTypeNot ( SP? '&' SP? oC_RelationshipTypeNot )* ;
+
+oC_RelationshipTypeNot : (( SP? '!' SP? )? oC_RelationshipTypeContainer SP? ) ;
+
+oC_RelationshipTypeContainer : oC_RelTypeName ( SP? oC_RelationshipTypeTerm )*
+                    | oC_RelationshipTypeGroup
+                    | oC_RelationshipTypeNotNested
+                    | oC_RelationshipTypeAny
+                    ;
+
+oC_RelationshipTypeGroup : ( SP? '(' SP? oC_RelationshipTypeTerm SP? ')' SP? ) ;
+oC_RelationshipTypeNotNested : ( SP? '!' SP? oC_RelationshipTypeTerm SP? ) ;
+oC_RelationshipTypeAny : ( SP? '%' SP? ( oC_RelationshipTypeTerm )* ) ;
+
+// end modifications
+
+
+// in 5.9, we can now do boolean operations on node labels
+//oC_NodeLabels : oC_NodeLabel ( SP? oC_NodeLabel )* ;
+oC_NodeLabels : oC_NodeLabel ( SP? oC_NodeLabel )*
+                | (':' SP? oC_NodeLabelTerm)
+                ;
+
+/* operators and precendence
+   %    Wildcard. Evaluates to true if the label set is non-empty
+1  ()   Contained expression is evaluated before evaluating the outer expression the group is contained in.
+2  !    Negation
+3  &    Conjunction
+4  |    Disjunction
+*/
+oC_NodeLabelTerm: oC_NodeLabelOr ;
+
+oC_NodeLabelOr : oC_NodeLabelAnd ( SP? '|' SP? oC_NodeLabelAnd )* ;
+
+oC_NodeLabelAnd : oC_NodeLabelNot ( SP? '&' SP? oC_NodeLabelNot )* ;
+
+oC_NodeLabelNot : (( SP? '!' SP? )? oC_NodeLabelContainer SP? ) ;
+
+oC_NodeLabelContainer : oC_LabelName ( SP? oC_NodeLabelTerm )*
+                    | oC_NodeLabelGroup
+                    | oC_NodeLabelNotNested
+                    | oC_NodeLabelAny
+                    ;
+
+oC_NodeLabelGroup : ( SP? '(' SP? oC_NodeLabelTerm SP? ')' SP? ) ;
+oC_NodeLabelNotNested : ( SP? '!' SP? oC_NodeLabelTerm SP? ) ;
+oC_NodeLabelAny : ( SP? '%' SP? ( oC_NodeLabelTerm )* ) ;
+
+// end of modifications
 
 oC_NodeLabel : ':' SP? oC_LabelName ;
 
@@ -389,7 +506,23 @@ oC_PowerOfExpression : oC_UnaryAddOrSubtractExpression ( SP? '^' SP? oC_UnaryAdd
 
 oC_UnaryAddOrSubtractExpression : ( ( '+' | '-' ) SP? )* oC_StringListNullOperatorExpression ;
 
-oC_StringListNullOperatorExpression : oC_PropertyOrLabelsExpression ( ( SP? '[' oC_Expression ']' ) | ( SP? '[' oC_Expression? '..' oC_Expression? ']' ) | ( ( oC_RegularExpression | ( SP IN ) | ( SP STARTS SP WITH ) | ( SP ENDS SP WITH ) | ( SP CONTAINS ) ) SP? oC_PropertyOrLabelsExpression ) | ( SP IS SP NULL ) | ( SP IS SP NOT SP NULL ) )* ;
+oC_StringListNullOperatorExpression :
+            oC_PropertyOrLabelsExpression (
+                      ( SP? '[' oC_Expression ']' )
+                    | (( SP? '[' oC_Expression ']' ) ( SP? oC_PropertyLookup )* )+
+                    | ( SP? '[' oC_Expression? '..' oC_Expression? ']' )
+                    | (
+                        ( oC_RegularExpression
+                        | ( SP IN )
+                        | ( SP STARTS SP WITH )
+                        | ( SP ENDS SP WITH )
+                        | ( SP CONTAINS )
+                       ) SP? oC_PropertyOrLabelsExpression )
+                    | ( SP IS SP NULL )
+                    | ( SP IS SP NOT SP NULL )
+            )*
+            | oC_FunctionInvocation
+            ;
 
 STARTS : ( 'S' | 's' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'S' | 's' )  ;
 
@@ -403,7 +536,10 @@ oC_RegularExpression : SP? '=~' ;
 
 oC_PropertyOrLabelsExpression : oC_Atom ( SP? oC_PropertyLookup )* ( SP? oC_NodeLabels )? ;
 
+oC_NodeProjection : oC_Variable SP? '{' SP? oC_PropertyLookup SP? ( SP? ',' SP? oC_PropertyLookup SP? )* '}';
+
 oC_Atom : oC_Literal
+        | oC_NodeProjection
         | oC_Parameter
         | oC_LegacyParameter
         | oC_CaseExpression
@@ -423,6 +559,9 @@ oC_Atom : oC_Literal
         | oC_FunctionInvocation
         | oC_Variable
         | oC_ExplicitProcedureInvocation
+        | ( EXISTS | COUNT ) SP? '{' SP? oC_RegularQuery SP? '}'
+        // stuff from oC_Match
+        | ( EXISTS | COUNT ) SP? '{' SP? oC_Pattern ( oC_Hint )* ( SP? oC_Where )? SP? '}'
         ;
 
 COUNT : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'N' | 'n' ) ( 'T' | 't' )  ;

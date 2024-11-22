@@ -21,6 +21,7 @@ export const TOOL_NAMES = {
     SCENARIOS: 'scenarios',
     CYPHER_BUILDER: 'cypherbuilder',
     CYPHER_SUITE: 'cyphersuite',
+    CYPHER_DEBUG: 'reveal',
     MODEL: 'model',
     DATABASES: 'databases',
     DASHBOARD: 'dashboard',
@@ -75,6 +76,10 @@ export const FEATURES = {
     CYPHER_SUITE: {   // enterprise
         View: 'cyphersuite.view',
         Share: 'cyphersuite.share'  // enterprise
+    },
+    CYPHER_DEBUG: {   // enterprise
+        View: 'cypherdebug.view',
+        Share: 'cypherdebug.share'  // enterprise
     },
     DASHBOARD: {
         View: 'dashboard.view',

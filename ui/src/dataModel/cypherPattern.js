@@ -4,6 +4,8 @@ import differenceWith from 'lodash/differenceWith';
 import difference from 'lodash/difference';
 import { CypherStatementBuilder } from './cypherStatementBuilder';
 import { smartQuote } from './helper';
+import SnippetSet from './cypherSnippetSet';
+import { ExplanatoryMarker } from './explanations';
 
 export const RELATIONSHIP_DIRECTION = {
     NONE: 'none',
@@ -72,12 +74,82 @@ const getPropertyMapCypherString = (propertyMap) => {
     return str;
 }
 
+const getPropertyMapDebugSnippetParts = (propertyMap) => {
+    let snippets = [];
+    if (propertyMap) {
+        var keys = Object.keys(propertyMap);
+        if (keys.length > 0) {
+            keys.forEach((key,i) => {
+                var value = propertyMap[key];
+                var valueStr = getValueCypherString(value);
+                var key = (key && key.indexOf(' ') !== -1) ? `\`${key}\`` : key;
+                var keyValueStr = `${key}:${valueStr}`;
+                let snippet = (i > 0) ? `, ${keyValueStr}` : keyValueStr;
+                snippets.push(snippet);
+            });
+        }
+    }
+    return snippets;
+}
+
+export const getDebugCypherTypeExpressionStringSnippetParts = (str) => {
+    // oC_NodeLabelTerm can contain things with ( ) and &, |, !, % but we don't parse it
+    // instead will use regex here
+    let snippets = [];
+
+    if (str) {
+        let BREAK_STRS = ['&','|','!','%'];
+        let ADJACENT_DONT_BREAK = ['&','|','!','%','(',')'];
+        let tokens = str.split(/([&|!%])/).filter(x => x);
+        var currentSnippet = '';
+        for (var i = 0; i < tokens.length; i++) {
+            var token = tokens[i];
+            var priorToken = i > 0 ? tokens[i-1] : null;
+            if (BREAK_STRS.includes(token) && !ADJACENT_DONT_BREAK.includes(priorToken)) {
+                if (currentSnippet) {
+                    snippets.push(currentSnippet);
+                }
+                currentSnippet = token;
+            } else {
+                currentSnippet += token;
+            }
+        }
+        if (currentSnippet) {
+            snippets.push(currentSnippet);
+        }
+    }       
+    if (snippets.length > 1) {
+        snippets = Array.from(new Set(snippets));
+    }
+    return snippets; 
+}
+
+const addClosingParensIfNeeded = (expr) => {
+    if (expr) {
+        let openParenCount = 0;
+        let closeParenCount = 0;
+        for (let i = 0; i < expr.length; i++) {
+            if (expr.charAt(i) === '(') openParenCount++;
+            if (expr.charAt(i) === ')') closeParenCount++;
+        }
+        let howManyClosingParensNeeded = openParenCount - closeParenCount;
+        if (howManyClosingParensNeeded) {
+            for (let i = 0; i < howManyClosingParensNeeded; i++) {
+                expr += ')';
+            }
+        }
+    }
+    return expr;
+}
+
 export const getValueCypherString = (value) => {
     var valueStr;
     if (value instanceof VariableValue) {
         valueStr = value.value;
     } else {
-        valueStr = (typeof(value) === 'string') ? `"${value}"`: value;
+        //valueStr = (typeof(value) === 'string') ? `"${value}"`: value;
+        // I want to preserve quotes here
+        valueStr = value;
     }
     return valueStr;
 }
@@ -171,6 +243,92 @@ const generateVariable = (generatedVariables) => {
     return variable;
 }
 
+const populateNodeOrRelSnippetSet = ({
+    id, parentSnippetSet, getVariableString, config,
+    typeExprString, labelsOrTypes, labelsOrTypesSeparator,
+    propertyMap, where, rangeInfo, associatedCypherObject
+}) => {
+    let parts = [];
+
+    let firstSnippet = getVariableString(config) || '';
+    if (typeExprString) {
+        parts = getDebugCypherTypeExpressionStringSnippetParts(typeExprString);
+    } else if (labelsOrTypes && labelsOrTypes.length > 0) {
+        parts = labelsOrTypes.map((x,i) => {
+            let typeExprStr = (x && x.indexOf && x.indexOf(' ') !== -1) ? `\`${x}\`` : x;
+            typeExprStr = (i === 0) ? typeExprStr : `${labelsOrTypesSeparator}${typeExprStr}`;
+            return typeExprStr;
+        })
+    }
+    firstSnippet += parts.length > 0 ? `:${parts[0]}` : '';
+    let typeExprSnippetSet = null;
+    if (firstSnippet) {
+        typeExprSnippetSet = new SnippetSet({
+            id: (id) ? `${id}_typeExpr` : 'typeExpr',
+            explanatoryMarker: ExplanatoryMarker.TypeExpression,
+            processFunc: addClosingParensIfNeeded,
+            associatedCypherObject: associatedCypherObject
+        });
+
+        typeExprSnippetSet.addOneOrMoreSnippets(firstSnippet);
+
+        if (parts.length > 1) {
+            typeExprSnippetSet.addOneOrMoreSnippets(parts.slice(1));
+        }
+
+        typeExprSnippetSet.cypherSnippet = typeExprSnippetSet.computeCypherSnippet();
+        parentSnippetSet.addOneOrMoreSnippets(typeExprSnippetSet);
+    }
+
+    if (rangeInfo) {
+        let { rangeLiteral, variableLengthStart, variableLengthEnd } = rangeInfo;
+        let str = '';
+        if (rangeLiteral) {
+            str += rangeLiteral;
+        } else {
+            if (variableLengthStart) {
+                str += `*${variableLengthStart}`;
+            }
+            if (variableLengthEnd) {
+                str += `..${variableLengthEnd}`;
+            }
+        }
+        if (str) {
+            parentSnippetSet.addOneOrMoreSnippets(str);
+        }
+    }
+
+    if (propertyMap && Object.keys(propertyMap).length > 0) {
+        let propSnippetSet = new SnippetSet({
+            id: (id) ? `${id}_propMap` : 'propMap',
+            explanatoryMarker: ExplanatoryMarker.PropertyMap,
+            opener: ' { ',
+            closer: ' }',
+            associatedCypherObject: associatedCypherObject
+        });
+        let snippetParts = getPropertyMapDebugSnippetParts(propertyMap);
+        propSnippetSet.addOneOrMoreSnippets(snippetParts); 
+        propSnippetSet.cypherSnippet = propSnippetSet.computeCypherSnippet();
+        parentSnippetSet.addOneOrMoreSnippets(propSnippetSet);
+    }
+
+    if (where) {
+        let whereSnippetSet = new SnippetSet({
+            id: (id) ? `${id}_where` : 'where',
+            explanatoryMarker: ExplanatoryMarker.PatternWhereClause,
+            opener: ' ',
+            associatedCypherObject: where
+        });
+        let snippetParts = where.getDebugCypherSnippetParts({addWhere: true});
+        whereSnippetSet.addOneOrMoreSnippets(snippetParts);
+        whereSnippetSet.cypherSnippet = whereSnippetSet.computeCypherSnippet();
+        parentSnippetSet.addOneOrMoreSnippets(whereSnippetSet);
+    }
+    parentSnippetSet.cypherSnippet = parentSnippetSet.computeCypherSnippet();
+
+    return parentSnippetSet;
+}
+
 export class KeyedItem {
     constructor (properties) {
         properties = properties || {};
@@ -249,15 +407,42 @@ export class NodePattern extends VariableContainer {
     constructor (properties) {
         super(properties);
         properties = properties || {};
-        var { nodeLabels, propertyMap, displayNode } = properties;
+        var { nodeLabels, propertyMap, displayNode, nodeLabelString, where } = properties;
         this.nodeLabels = (nodeLabels) ? nodeLabels : [];
         this.propertyMap = (propertyMap) ? propertyMap : {};
         this.displayNode = displayNode;
+
+        // new for 5 syntax
+        this.nodeLabelString = nodeLabelString;
+        this.where = where;
     }
 
     labels = (nodeLabels) => {
         this.nodeLabels = nodeLabels;
         return this;
+    }
+
+    nodeString = (str) => {
+        this.nodeLabelString = str;
+        return this;
+    }
+
+    prop = (key, value) => {
+        this.propertyMap[key] = value;
+        return this;
+    }
+
+    isEmpty = () => {
+        
+        if (this.variable || this.nodeLabelString || this.where) {
+            return false;
+        } else if (this.nodeLabels.length > 0) {
+            return false;
+        } else if (Object.keys(this.propertyMap).length > 0) { 
+            return false;
+        } else {
+            return true;
+        }
     }
 
     getPropertyKeys = () => Object.keys(this.propertyMap);
@@ -290,13 +475,40 @@ export class NodePattern extends VariableContainer {
         return false;
     }
 
-    toCypherString = (config) => {
-        config = config || {};
+    getDebugCypherSnippetSet = (config) => {
+        let snippetSet = new SnippetSet({
+            id: 'nodePattern',
+            opener: '(',
+            closer: ')',
+            associatedCypherObject: this
+        });
 
-        const validationMode = (config.validationMode) ? true : false;
+        populateNodeOrRelSnippetSet({
+            id: 'nodePattern',
+            associatedCypherObject: this,
+            parentSnippetSet: snippetSet, 
+            getVariableString: this.getVariableString, 
+            config: config, 
+            typeExprString: this.nodeLabelString, 
+            labelsOrTypes: this.nodeLabels, 
+            labelsOrTypesSeparator: ':',
+            propertyMap: this.propertyMap, 
+            where: this.where
+        });
+
+        return snippetSet;
+    }   
+    
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
+        return snippets;
+    }    
+
+    getVariableString = (config) => {
+        config = config || {};
         const { addMissingVars, variableScope } = config;
 
-        var str = '';
         var variable = this.getVariable();
         if (config.overrideNodePatternVariable) {
             variable = config.overrideNodePatternVariable;
@@ -309,19 +521,40 @@ export class NodePattern extends VariableContainer {
                 variableScope.addVariable(variable, this);
             }
         }
-
         if (variable) {
             variable = (variable && variable.indexOf && variable.indexOf(' ') !== -1) ? `\`${variable}\`` : variable;
+        }
+        return variable;
+    }
+
+    toCypherString = (config) => {
+        config = config || {};
+
+        const validationMode = (config.validationMode) ? true : false;
+
+        var str = '';
+        var variable = this.getVariableString(config);
+
+        if (variable) {
             str += variable;
         }
-        if (this.nodeLabels && this.nodeLabels.length > 0) {
-            var nodeLabelStrings = this.nodeLabels.map(x => 
-                (x && x.indexOf && x.indexOf(' ') !== -1) ? `\`${x}\`` : x
-            )
-            str += `:${nodeLabelStrings.join(':')}`;
+
+        if (this.nodeLabelString) {
+            str += `:${this.nodeLabelString}`;
+        } else {
+            if (this.nodeLabels && this.nodeLabels.length > 0) {
+                var nodeLabelStrings = this.nodeLabels.map(x => 
+                    (x && x.indexOf && x.indexOf(' ') !== -1) ? `\`${x}\`` : x
+                )
+                str += `:${nodeLabelStrings.join(':')}`;
+            }
         }
         if (!validationMode) {
             str += getPropertyMapCypherString(this.propertyMap);
+        }
+        if (!validationMode && this.where) {
+            //console.log('this.where: ', this.where);
+            str += ' ' + this.where.toCypherString();
         }
         return `(${str})`;
     }
@@ -341,17 +574,31 @@ export class RelationshipPattern extends VariableContainer {
         super(properties);
         properties = properties || {};
         var { types, direction, propertyMap,
+                rangeLiteral, patternQuantifier,
                 variableLengthStart, variableLengthEnd,
-                displayRelationship } = properties;
+                displayRelationship, relationshipTypeString,
+                where, quantifiedPathPattern } = properties;
         this.types = (types) ? types : [];
         this.direction = (direction) ? direction : RELATIONSHIP_DIRECTION.RIGHT;
         this.propertyMap = (propertyMap) ? propertyMap : {};
+        this.rangeLiteral = rangeLiteral;
         this.variableLengthStart = variableLengthStart;
         this.variableLengthEnd = variableLengthEnd;
         this.displayRelationship = displayRelationship;
+
+        // new for 5 syntax
+        this.relationshipTypeString = relationshipTypeString;
+        this.patternQuantifier = patternQuantifier;
+        this.where = where;
+        this.quantifiedPathPattern = quantifiedPathPattern;
     }
 
     getPropertyKeys = () => Object.keys(this.propertyMap);
+
+    qpp (quantifiedPathPattern) {
+        this.quantifiedPathPattern = quantifiedPathPattern;
+        return this;
+    }
 
     dir = (direction) => {
         this.direction = direction;
@@ -360,6 +607,16 @@ export class RelationshipPattern extends VariableContainer {
 
     setTypes = (types) => {
         this.types = types;
+        return this;
+    }
+
+    relString = (str) => {
+        this.relationshipTypeString = str;
+        return this;
+    }
+
+    prop = (key, value) => {
+        this.propertyMap[key] = value;
         return this;
     }
 
@@ -373,12 +630,9 @@ export class RelationshipPattern extends VariableContainer {
         }
     }
 
-    toCypherString = (config) => {
+    getVariableString = (config) => {
         config = config || {};
-        const validationMode = (config.validationMode) ? true : false;
         const { addMissingVars, variableScope } = config;
-
-        var str = '';
 
         var variable = this.getVariable();
         if (config.overrideRelationshipPatternVariable) {
@@ -392,40 +646,140 @@ export class RelationshipPattern extends VariableContainer {
                 variableScope.addVariable(variable, this);
             }
         }
-
         if (variable) {
             variable = (variable && variable.indexOf && variable.indexOf(' ') !== -1) ? `\`${variable}\`` : variable;
-            str += variable;
         }
-        if (this.types) {
-            var types = this.types.filter(type => type);
-            if (types.length > 0) {
-                types = this.types.map(x => 
-                    (x && x.indexOf && x.indexOf(' ') !== -1) ? `\`${x}\`` : x
-                )
-                str += `:${types.join('|')}`;
+        return variable;
+    }
+
+    getDebugCypherSnippetSet = (config) => {
+
+        if (this.quantifiedPathPattern) {
+            let qppSnippetSet = new SnippetSet({ 
+                closer: ' ',
+                explanatoryMarker: ExplanatoryMarker.RelationshipQuantifiedPathPattern,
+                associatedCypherObject: this
+            });
+            qppSnippetSet.addOneOrMoreSnippets(this.quantifiedPathPattern.getDebugCypherSnippetSet(config));
+            qppSnippetSet.cypherSnippet = qppSnippetSet.computeCypherSnippet();
+            return qppSnippetSet;
+        } else {
+            let patternQuantifierSnippetSet = null;
+            if (this.patternQuantifier) {
+                patternQuantifierSnippetSet = new SnippetSet({
+                    id: 'relationshipPattern_patternQuantifier',
+                    explanatoryMarker: ExplanatoryMarker.RelationshipPatternQuantifier,
+                    associatedCypherObject: this
+                });
+            }
+
+            let opener = '';
+            let closer = '';
+            if (this.direction === RELATIONSHIP_DIRECTION.LEFT) {
+                opener = '<-['
+                closer = ']-';
+            } else if (this.direction === RELATIONSHIP_DIRECTION.RIGHT) {
+                opener = '-['
+                closer = ']->';
+            } else {
+                opener = '-['
+                closer = ']-';
+            }
+    
+            let snippetSet = new SnippetSet({ 
+                id: 'relationshipPattern', opener, closer,
+                associatedCypherObject: this
+            });
+            snippetSet = populateNodeOrRelSnippetSet({
+                id: 'relationshipPattern',
+                associatedCypherObject: this,
+                parentSnippetSet: snippetSet, 
+                getVariableString: this.getVariableString, 
+                config: config, 
+                typeExprString: this.relationshipTypeString, 
+                labelsOrTypes: this.types, 
+                labelsOrTypesSeparator: '|',
+                propertyMap: this.propertyMap, 
+                where: this.where,
+                rangeInfo: {
+                    rangeLiteral: this.rangeLiteral,
+                    variableLengthStart: this.variableLengthStart,
+                    variableLengthEnd: this.variableLengthEnd
+                }
+            });      
+
+            if (patternQuantifierSnippetSet) {
+                patternQuantifierSnippetSet.addOneOrMoreSnippets(snippetSet);
+                patternQuantifierSnippetSet.addOneOrMoreSnippets(this.patternQuantifier);
+                patternQuantifierSnippetSet.cypherSnippet = patternQuantifierSnippetSet.computeCypherSnippet();
+                return patternQuantifierSnippetSet;
+            } else {
+                return snippetSet;
             }
         }
+    }
 
-        if (this.variableLengthStart) {
-            str += this.variableLengthStart;
-        }
-        if (this.variableLengthEnd) {
-            str += `..${this.variableLengthEnd}`;
-        }
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
+        return snippets;
+    }    
 
-        if (!validationMode) {
-            str += getPropertyMapCypherString(this.propertyMap);
-        }
+    toCypherString = (config) => {
+        config = config || {};
+        const validationMode = (config.validationMode) ? true : false;
 
-        if (this.direction === RELATIONSHIP_DIRECTION.LEFT) {
-            str = `<-[${str}]-`;
-        } else if (this.direction === RELATIONSHIP_DIRECTION.RIGHT) {
-            str = `-[${str}]->`;
+        if (this.quantifiedPathPattern) {
+            return this.quantifiedPathPattern.toCypherString(config);
         } else {
-            str = `-[${str}]-`;
+            var str = '';
+
+            var variable = this.getVariableString(config);
+            if (variable) {
+                str += variable;
+            }
+            if (this.relationshipTypeString) {
+                str += `:${this.relationshipTypeString}`;
+            } else if (this.types) {
+                var types = this.types.filter(type => type);
+                if (types.length > 0) {
+                    types = this.types.map(x => 
+                        (x && x.indexOf && x.indexOf(' ') !== -1) ? `\`${x}\`` : x
+                    )
+                    str += `:${types.join('|')}`;
+                }
+            }
+    
+            if (this.rangeLiteral) {
+                str += this.rangeLiteral
+            } else {
+                if (this.variableLengthStart) {
+                    str += `*${this.variableLengthStart}`;
+                }
+                if (this.variableLengthEnd) {
+                    str += `..${this.variableLengthEnd}`;
+                }
+            }
+    
+            if (!validationMode) {
+                str += getPropertyMapCypherString(this.propertyMap);
+            }
+            if (!validationMode && this.where) {
+                str += ' ' + this.where.toCypherString();
+            }
+    
+            if (this.direction === RELATIONSHIP_DIRECTION.LEFT) {
+                str = `<-[${str}]-`;
+            } else if (this.direction === RELATIONSHIP_DIRECTION.RIGHT) {
+                str = `-[${str}]->`;
+            } else {
+                str = `-[${str}]-`;
+            }
+            if (this.patternQuantifier) {
+                str += this.patternQuantifier;
+            }
+            return str;
         }
-        return str;
     }
 
     getRelationshipTypes = () => (this.types) ? this.types.slice(0) : [];
@@ -557,12 +911,47 @@ export class PatternElementChainLink extends KeyedItem {
         }
     }
 
-    toCypherString = (config) => {
-        var str = '';
+    getDebugCypherSnippetSet = (config) => {
+        let snippetSet = new SnippetSet({ 
+            id: 'patternElementChainLink',
+            associatedCypherObject: this
+        });
+        
         if (this.relationshipPattern) {
-            str += this.relationshipPattern.toCypherString(config);
+            let relSnippetSet = this.relationshipPattern.getDebugCypherSnippetSet(config);
+            snippetSet.addOneOrMoreSnippets(relSnippetSet);
         }
         if (this.nodePattern) {
+            let nodePatternSnippetSet = this.nodePattern.getDebugCypherSnippetSet(config);
+            if (!this.relationshipPattern.quantifiedPathPattern) {
+                nodePatternSnippetSet.commentSubstitionStr = '()';
+            }
+            nodePatternSnippetSet.skipMe = this.nodePattern.isEmpty();
+            snippetSet.addOneOrMoreSnippets(nodePatternSnippetSet);
+        }
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+
+        return snippetSet;
+    }
+
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
+        return snippets;
+    }    
+
+    toCypherString = (config) => {
+        var str = '';
+        var relStr = '';
+        if (this.relationshipPattern) {
+            relStr = this.relationshipPattern.toCypherString(config);
+            str += relStr;
+        }
+        if (this.nodePattern) {
+            // +, *, and } are the valid endings to path pattern quantifier
+            if (relStr.match(/[\*\+\}]$/)) {
+                str += ' ';
+            }
             str += this.nodePattern.toCypherString(config);
         }
         return str;
@@ -575,6 +964,91 @@ export class PatternElementChainLink extends KeyedItem {
     }
 }
 
+export class QuantifiedPathPattern extends KeyedItem {
+    constructor (properties) {
+        super(properties);
+        properties = properties || {};
+        var { patternElement, where, pathPatternQuantifier } = properties;
+        this.pathPattern = patternElement;
+        this.where = where;
+        this.pathPatternQuantifier = pathPatternQuantifier;
+    }
+
+    path = (pathPattern) => {
+        //console.log('path set with path pattern: ', pathPattern)
+        this.pathPattern = pathPattern;
+        return this;
+    }
+
+    getDebugCypherSnippetSet = (config) => {
+
+        let opener = '(';
+        let closer = ')';
+        
+        if (this.pathPatternQuantifier) {
+            closer += this.pathPatternQuantifier;
+        }
+
+        let snippetSet = new SnippetSet({
+            id: 'quantifiedPathPattern',
+            opener, closer,
+            associatedCypherObject: this
+        });
+        
+        if (this.pathPattern) {
+            snippetSet.addOneOrMoreSnippets(this.pathPattern.getDebugCypherSnippetSet(config));
+        }
+
+        if (this.where) {
+            snippetSet.addOneOrMoreSnippets(this.where.getDebugCypherSnippetParts(config));
+        } 
+
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+
+        return snippetSet;
+    }    
+
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
+        return snippets;
+    }    
+
+    toCypherString = (config) => {
+        config = config || {};
+        const validationMode = (config.validationMode) ? true : false;
+        // const { addMissingVars, variableScope } = config;
+
+        var str = ' (';
+
+        if (this.pathPattern) {
+            str += this.pathPattern.toCypherString(config);
+        }
+        // console.log('validationMode: ', validationMode);
+        // console.log('this.where: ', this.where);
+        if (!validationMode && this.where) {
+            // do not put 'config' in the toCypherString below. 
+            //   that one accepts 'whereItems' and not 'config'
+            str += ' ' + this.where.toCypherString();
+            // console.log('qpp str: ' + str);
+        }
+        str += ')';
+        if (this.pathPatternQuantifier) {
+            str += this.pathPatternQuantifier;
+        }
+        str += ' ';
+        
+        return str;        
+    }    
+}
+
+/*
+PathPattern is equivalent to oC_PatternElement
+
+oC_PatternElement : ( oC_NodePattern ( SP? oC_PatternElementChain )* )
+                  | oC_QuantifiedPathPattern
+                  | oC_NodePattern SP? oC_QuantifiedPathPattern
+*/
 export class PathPattern extends KeyedItem {
     constructor (properties) {
         super(properties);
@@ -582,6 +1056,9 @@ export class PathPattern extends KeyedItem {
         var { nodePattern, patternElementChain } = properties;
         this.nodePattern = nodePattern;
         this.patternElementChain = (patternElementChain) ? patternElementChain : [];
+
+        // for new 5 stuff
+        this.quantifiedPathPattern = null;
     }
 
     node (nodePatternOrVariable, nodeLabels, propertyMap) {
@@ -604,6 +1081,15 @@ export class PathPattern extends KeyedItem {
 
     link (patternElementChainLink) {
         this.patternElementChain.push(patternElementChainLink);
+        return this;
+    }
+
+    qpp (quantifiedPathPattern) {
+        if (quantifiedPathPattern instanceof QuantifiedPathPattern) {
+            this.quantifiedPathPattern = quantifiedPathPattern;
+        } else {
+            this.quantifiedPathPattern = new QuantifiedPathPattern();
+        }        
         return this;
     }
 
@@ -880,52 +1366,107 @@ export class PathPattern extends KeyedItem {
         if (this.patternElementChain) {
             str += this.patternElementChain.map(chainLink => chainLink.toCypherString(config)).join('');
         }
+        if (this.quantifiedPathPattern) {
+            str += this.quantifiedPathPattern.toCypherString(config);
+        }
         //console.log('pathPattern: ', str);
         return str;
     }
 
-    getDebugCypherSnippets = (options) => {
-        //console.log('getDebugCypherSnippets: ', options);
-        var snippets = [];
+    getDebugCypherSnippetSet = (config) => {
 
-        var firstSnippet = '';
-        var nodePattern = '()';
+        let snippetSet = new SnippetSet({ 
+            id: 'pathPattern ',
+            associatedCypherObject: this
+        });
+        
         if (this.nodePattern) {
-            nodePattern = this.nodePattern.toCypherString(options);
-            firstSnippet = nodePattern;
+            let nodePatternSnippetSet = this.nodePattern.getDebugCypherSnippetSet(config);
+            nodePatternSnippetSet.skipMe = this.nodePattern.isEmpty();
+            snippetSet.addOneOrMoreSnippets(nodePatternSnippetSet);
         }
         if (this.patternElementChain && this.patternElementChain.length > 0) {
-            firstSnippet += ' // ';
-            firstSnippet += this.patternElementChain.map(chainLink => chainLink.toCypherString(options)).join('');
+            let moreSnippetSets = this.patternElementChain
+                .map(chainLink => chainLink.getDebugCypherSnippetSet(config) )
+                .reduce((acc, snippetSetArray) => acc.concat(snippetSetArray), [])
+
+                snippetSet.addOneOrMoreSnippets(moreSnippetSets);
         }
-        snippets.push(firstSnippet);
 
-        if (this.patternElementChain && this.patternElementChain.length > 0) {
-            for (var i = 0; i < this.patternElementChain.length; i++) {
-                var beforeSnippet = this.patternElementChain.slice(0, i)
-                    .map(chainLink => chainLink.toCypherString(options)).join('');
-
-                var afterSnippet = this.patternElementChain.slice(i + 1)
-                    .map(chainLink => chainLink.toCypherString(options)).join('');
-
-                var current = this.patternElementChain[i];
-                var relSnippet = (current.relationshipPattern) ? current.relationshipPattern.toCypherString(options) : '-[]->'
-                var nodeSnippet = (current.nodePattern) ? current.nodePattern.toCypherString(options) : '()';
-                var currentSnippet1 = `${relSnippet}()`;
-                var currentSnippet2 = `${relSnippet}${nodeSnippet}`;
-
-                var snippet1 = `${nodePattern}${beforeSnippet}${currentSnippet1} // ${nodeSnippet}${afterSnippet}`
-                    
-                var snippet2 = (afterSnippet) 
-                    ? `${nodePattern}${beforeSnippet}${currentSnippet2} // ${afterSnippet}`
-                    : `${nodePattern}${beforeSnippet}${currentSnippet2}`;
-
-                snippets.push(snippet1);
-                snippets.push(snippet2);
-            }
+        if (this.quantifiedPathPattern) {
+            snippetSet.addOneOrMoreSnippets(this.quantifiedPathPattern.getDebugCypherSnippetSet(config));
         }
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+
+        return snippetSet;
+    }    
+
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
         return snippets;
-    }
+    }    
+
+    // getDebugCypherSnippets = (options) => {
+    //     //console.log('getDebugCypherSnippets: ', options);
+    //     var snippets = [];
+
+    //     var firstSnippet = '';
+    //     var nodePattern = '()';
+
+    //     var chainStr = '';
+    //     var qppStr = '';
+
+    //     if (this.nodePattern) {
+    //         nodePattern = this.nodePattern.toCypherString(options);
+    //         firstSnippet = nodePattern;
+    //     }
+    //     if (this.patternElementChain && this.patternElementChain.length > 0) {
+    //         chainStr = this.patternElementChain.map(chainLink => chainLink.toCypherString(options)).join('');
+    //     }
+    //     if (this.quantifiedPathPattern) {
+    //         qppStr = this.quantifiedPathPattern.toCypherString(options);
+    //     }
+
+    //     if (chainStr) {
+    //         firstSnippet += ` /* ${chainStr}${qppStr} */`;
+    //     }
+    //     snippets.push(firstSnippet);
+
+    //     if (this.patternElementChain && this.patternElementChain.length > 0) {
+    //         for (var i = 0; i < this.patternElementChain.length; i++) {
+    //             var beforeSnippet = this.patternElementChain.slice(0, i)
+    //                 .map(chainLink => chainLink.toCypherString(options)).join('');
+
+    //             var afterSnippet = this.patternElementChain.slice(i + 1)
+    //                 .map(chainLink => chainLink.toCypherString(options)).join('');
+
+    //             afterSnippet += qppStr;
+
+    //             var current = this.patternElementChain[i];
+    //             var relSnippet = (current.relationshipPattern) ? current.relationshipPattern.toCypherString(options) : '-[]->'
+    //             var nodeSnippet = (current.nodePattern) ? current.nodePattern.toCypherString(options) : '()';
+    //             var currentSnippet1 = `${relSnippet}()`;
+    //             var currentSnippet2 = `${relSnippet}${nodeSnippet}`;
+
+    //             var snippet1 = `${nodePattern}${beforeSnippet}${currentSnippet1} /* ${nodeSnippet}${afterSnippet} */`
+    //             snippets.push(snippet1);
+                
+    //             if (currentSnippet2 !== currentSnippet1) {
+    //                 var snippet2 = (afterSnippet) 
+    //                     ? `${nodePattern}${beforeSnippet}${currentSnippet2} /* ${afterSnippet} */`
+    //                     : `${nodePattern}${beforeSnippet}${currentSnippet2}`;
+
+    //                 snippets.push(snippet2);
+    //             }
+    //         }
+    //     }
+
+    //     if (this.quantifiedPathPattern) {
+    //     }
+
+    //     return snippets;
+    // }
 
     getValidationCypherSnippets = (config) => {
         config = config || {};
@@ -1063,32 +1604,61 @@ export class PatternPart extends VariableContainer {
     constructor (properties) {
         super(properties);
         properties = properties || {};
-        var { pathFunction, pathPattern } = properties;
-        this.pathFunction = pathFunction;
-        this.pathPattern = pathPattern;  
+        var { 
+            // pathFunction, 
+            shortestPath,
+            shortestPathIsFunction,
+            pathPatterns 
+        } = properties;
+        // this.pathFunction = pathFunction;
+
+        this.shortestPath = shortestPath;
+        this.shortestPathIsFunction = shortestPathIsFunction;
+
+        //this.pathPattern = pathPattern;  // commented out - superceded by pathPatterns below
+        // new syntax in Neo4j 5 means we can have multiple patterns
+        this.pathPatterns = pathPatterns || [];
     }
 
-    function = (pathFunction) => {
-        this.pathFunction = pathFunction;
-        return pathFunction;
+    // function = (pathFunction) => {
+    //     this.pathFunction = pathFunction;
+    //     return pathFunction;
+    // }
+
+    // to be backward compatible with 4 syntax where it was only possible to have 1 path pattern
+    hasAPathPattern = () => {
+        return this.pathPatterns?.length > 0;
+    }
+
+    // to be backward compatible with 4 syntax where it was only possible to have 1 path pattern
+    getPathPattern = () => {
+        return this.hasAPathPattern() ? this.pathPatterns[0] : null;
+    }
+
+    addPathPattern = (pathPattern) => {
+        this.pathPatterns.push(pathPattern);
+    }
+
+    getPathPatterns = () => {
+        return this.pathPatterns;
     }
 
     path = (pathPattern) => {
-        this.pathPattern = pathPattern;
+        this.addPathPattern(pathPattern);
         return this;
     }
 
     setVariableScope = (variableScope) => {
         super.setVariableScope(variableScope);
-        if (this.pathPattern) {
-            this.pathPattern.setVariableScope(variableScope);
+        if (this.hasAPathPattern()) {
+            this.getPathPattern().setVariableScope(variableScope);
         }
     }
 
     removeFromVariableScope = () => {
         super.removeFromVariableScope();
-        if (this.pathPattern) {
-            this.pathPattern.removeFromVariableScope();
+        if (this.hasAPathPattern()) {
+            this.getPathPattern().removeFromVariableScope();
         }
     }
 
@@ -1096,79 +1666,150 @@ export class PatternPart extends VariableContainer {
         if (patternPart) {
             return (
                 this.variable === patternPart.variable &&
-                this.pathFunction === patternPart.pathFunction &&
-                this.pathPattern &&
-                this.pathPattern.includesPathPattern(patternPart.pathPattern)
+                // this.pathFunction === patternPart.pathFunction &&
+                this.shortestPath === patternPart.shortestPath &&
+                this.shortestPathIsFunction === patternPart.shortestPathIsFunction &&
+                this.hasAPathPattern() &&
+                this.getPathPattern().includesPathPattern(patternPart.getPathPattern())
             );
         } else {
             return false;
         }
     }
 
-    isEmpty = () => !this.pathPattern || this.pathPattern.isEmpty();
+    isEmpty = () => !this.getPathPattern() || this.getPathPattern().isEmpty();
 
     findNodePattern = (nodePatternProperties) => {
-        if (this.pathPattern) {
-            return this.pathPattern.findNodePattern(nodePatternProperties);
+        if (this.hasAPathPattern()) {
+            return this.getPathPattern().findNodePattern(nodePatternProperties);
         } else {
             return null;
         }
     }
 
     findAllNodePatternTriples = (nodePatternProperties) => {
-        if (this.pathPattern) {
-            return this.pathPattern.findAllNodePatternTriples(nodePatternProperties);
+        if (this.hasAPathPattern()) {
+            return this.getPathPattern().findAllNodePatternTriples(nodePatternProperties);
         } else {
             return [];
         }
     }
 
     getNodeRelNodePattern = (relationshipPattern) => 
-        (this.pathPattern) ? this.pathPattern.getNodeRelNodePattern(relationshipPattern) : null;
+        (this.hasAPathPattern()) ? this.getPathPattern().getNodeRelNodePattern(relationshipPattern) : null;
 
     removeNodePattern = (nodePattern, variableScope) => {
-        if (this.pathPattern) {
-            return this.pathPattern.removeNodePattern(nodePattern, variableScope);
+        if (this.hasAPathPattern()) {
+            return this.getPathPattern().removeNodePattern(nodePattern, variableScope);
         } else {
             return null;
         }
     }
 
     removeRelationshipPattern = (relationshipPattern, variableScope) => {
-        if (this.pathPattern) {
-            return this.pathPattern.removeRelationshipPattern(relationshipPattern, variableScope);
+        if (this.hasAPathPattern()) {
+            return this.getPathPattern().removeRelationshipPattern(relationshipPattern, variableScope);
         } else {
             return null;
         }
     }
 
-    getLength = () => this.pathPattern.getLength();
+    getLength = () => this.getPathPattern().getLength();
 
     toCypherString = (config) => {
         var str = '';
         if (this.variable) {
             str += `${this.variable} = `;
         }
-        if (this.pathFunction) {
-            str += `(${this.pathFunction})`;
+        // if (this.pathFunction) {
+        //     str += `${this.pathFunction}(`;
+        // }
+        if (this.shortestPath) {
+            if (this.shortestPathIsFunction) {
+                str += `${this.shortestPath}(`;
+            } else {
+                str += `${this.shortestPath} `;
+            }
         }
-        if (this.pathPattern) {
-            str += this.pathPattern.toCypherString(config);
+        if (this.hasAPathPattern()) {
+            //str += this.getPathPattern().toCypherString(config);
+            str += this.getPathPatterns()
+                .map(x => x.toCypherString(config))
+                .reduce((fullStr, x) => {
+                    x = x.replace(/\s+$/, '');  // right trim string
+                    let space = (fullStr && x.match(/^\s/)) ? '' : ' '
+                    let newStr = `${fullStr}${space}${x}`;
+                    return newStr;
+                })
+        }
+        // if (this.pathFunction) {
+        //     str += ')'
+        // }
+        if (this.shortestPath && this.shortestPathIsFunction) {
+            str += ')'
         }
         //console.log('patternPart: ', str);
         return str;
     }
 
-    getDebugCypherSnippets = (config) => 
-        (this.pathPattern) ? this.pathPattern.getDebugCypherSnippets(config) : [];
+    getDebugCypherSnippetSet = (config) => {
+
+        let opener = '';
+        let closer = '';
+        if (this.variable) {
+            opener += `${this.variable} = `;
+        }
+        // if (this.pathFunction) {
+        //     opener += `${this.pathFunction}(`;
+        //     closer += ')';
+        // }        
+        if (this.shortestPath) {
+            if (this.shortestPathIsFunction) {
+                    opener += `${this.shortestPath}(`;
+                    closer += ')';
+            } else {
+                opener += `${this.shortestPath} `;
+            }
+        }
+
+        let snippetSet = new SnippetSet({
+            id: 'patternPart',
+            closer, opener,
+            associatedCypherObject: this
+        });
+        
+        this.getPathPatterns().forEach(pathPattern => {
+            snippetSet.addOneOrMoreSnippets(pathPattern.getDebugCypherSnippetSet(config));
+        })
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+
+        return snippetSet;
+    }   
+
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
+        return snippets;
+    }    
+
+    // getDebugCypherSnippets = (config) => {
+    //     //(this.hasAPathPattern()) ? this.getPathPattern().getDebugCypherSnippets(config) : [];
+    //     if (this.hasAPathPattern()) {
+    //         return this.getPathPatterns()
+    //             .map(pathPattern => pathPattern.getDebugCypherSnippets(config))
+    //             .reduce((acc, x) => acc.concat(x), []);
+    //     } else {
+    //         return [];
+    //     }
+    // }
 
     getValidationCypherSnippets = (config) => 
-        (this.pathPattern) ? this.pathPattern.getValidationCypherSnippets(config) : [];
+        (this.hasAPathPattern()) ? this.getPathPattern().getValidationCypherSnippets(config) : [];
 
     getVariableSet = () => {
         var varSet = nonNullSet(this.variable);
-        if (this.pathPattern) {
-            addSets(varSet, this.pathPattern.getVariableSet());
+        if (this.hasAPathPattern()) {
+            addSets(varSet, this.getPathPattern().getVariableSet());
         }
         return varSet;
     }
@@ -1209,38 +1850,73 @@ export class Pattern extends KeyedItem {
     toCypherString = (config) => this.getPatternPartsToPrint()
             .map(patternPart => patternPart.toCypherString(config)).join(', ');
 
-    getDebugCypherSnippets = (config) => {
-        var snippets = [];
-        const patternParts = this.getPatternPartsToPrint();
-        patternParts.forEach((_, i) => {
-            var beforeSnippet = patternParts.slice(0, i)
-                .map(patternPart => patternPart.toCypherString(config)).join(', ');
 
-            var afterSnippet = patternParts.slice(i + 1)
-                .map(patternPart => patternPart.toCypherString(config)).join(', ');
+    getDebugCypherSnippetSet = (config) => {
+        let snippetSet = new SnippetSet({ 
+            id: 'pattern',
+            associatedCypherObject: this
+        });
+        let patternParts = this.patternParts || [];
+        //console.log('patternParts: ', patternParts);
+        patternParts.forEach((patternPart, i) => {
+            let patternPartSnippetSet = patternPart.getDebugCypherSnippetSet(config);
+            if (i > 0) {
+                let subSnippetSet = new SnippetSet({ 
+                    id: `pattern_patternPart_${i}`, 
+                    explanatoryMarker: ExplanatoryMarker.PatternPatternPartArrayItem,
+                    opener: ', ',
+                    associatedCypherObject: patternPart
+                })
+                subSnippetSet.addOneOrMoreSnippets(patternPartSnippetSet);
+                subSnippetSet.cypherSnippet = subSnippetSet.computeCypherSnippet();
 
-            //console.log('before snippet: ', beforeSnippet);
-            //console.log('after snippet: ', afterSnippet);
-
-            var currentPatternSnippets = patternParts[i].getDebugCypherSnippets(config);
-            //console.log('currentPatternSnippets: ', currentPatternSnippets);
-            currentPatternSnippets.forEach(patternSnippet => {
-                //console.log('pattern snippet: ', patternSnippet);
-                const before = (beforeSnippet) ? `${beforeSnippet}, ` : '';
-                const snippetHasComment = (patternSnippet.match(/\/\//) !== null);
-                const after = (afterSnippet) 
-                    ? (snippetHasComment) 
-                        ? `, ${afterSnippet}` 
-                        : ` // , ${afterSnippet}` 
-                    : '';
-
-                const snippetToAdd = `${before}${patternSnippet}${after}`;
-                snippets.push(snippetToAdd);
-            });
+                snippetSet.addOneOrMoreSnippets(subSnippetSet);                
+            } else {
+                snippetSet.addOneOrMoreSnippets(patternPartSnippetSet);
+            }            
         })
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+        return snippetSet;
+    }   
 
+    getDebugCypherSnippets = (config) => {
+        var snippetSet = this.getDebugCypherSnippetSet(config);
+        var snippets = snippetSet.getSnippets();
         return snippets;
     }
+
+    // getDebugCypherSnippets = (config) => {
+    //     var snippets = [];
+    //     const patternParts = this.getPatternPartsToPrint();
+    //     patternParts.forEach((_, i) => {
+    //         var beforeSnippet = patternParts.slice(0, i)
+    //             .map(patternPart => patternPart.toCypherString(config)).join(', ');
+
+    //         var afterSnippet = patternParts.slice(i + 1)
+    //             .map(patternPart => patternPart.toCypherString(config)).join(', ');
+
+    //         //console.log('before snippet: ', beforeSnippet);
+    //         //console.log('after snippet: ', afterSnippet);
+
+    //         var currentPatternSnippets = patternParts[i].getDebugCypherSnippets(config);
+    //         //console.log('currentPatternSnippets: ', currentPatternSnippets);
+    //         currentPatternSnippets.forEach(patternSnippet => {
+    //             //console.log('pattern snippet: ', patternSnippet);
+    //             const before = (beforeSnippet) ? `${beforeSnippet}, ` : '';
+    //             const snippetHasComment = (patternSnippet.match(/\/\//) !== null);
+    //             const after = (afterSnippet) 
+    //                 ? (snippetHasComment) 
+    //                     ? `, ${afterSnippet}` 
+    //                     : ` /* , ${afterSnippet} */`  
+    //                 : '';
+
+    //             const snippetToAdd = `${before}${patternSnippet}${after}`;
+    //             snippets.push(snippetToAdd);
+    //         });
+    //     })
+
+    //     return snippets;
+    // }
 
     // this is for getting progressively built path patterns that can be executed against a 
     //   Neo4j database to see if data exists
@@ -1268,7 +1944,7 @@ export class Pattern extends KeyedItem {
                     var { variable, propertyKeys } = variableAndPropertyKeysItem;
                     for (var j = 0; j < propertyKeys.length; j++) {
                         var whereCriteria = propertyKeys.slice(0,j+1)
-                            .map(propertyKey => `exists(${smartQuote(variable)}.${smartQuote(propertyKey)})`)
+                            .map(propertyKey => `${smartQuote(variable)}.${smartQuote(propertyKey)} IS NOT NULL`)
                             .join(' AND ');
                         var whereSnippet = `${snippetToAdd} \nWHERE ${whereCriteria}`;
                         snippets.push(whereSnippet);
@@ -1288,7 +1964,7 @@ export class Pattern extends KeyedItem {
 
         var patternPart = new PatternPart({
             key: nodePattern.key,
-            pathPattern: pathPattern,
+            pathPatterns: [pathPattern],
             variableScope: variableScope
         });
 
@@ -1304,7 +1980,7 @@ export class Pattern extends KeyedItem {
 
         var patternPart = new PatternPart({
             key: nodePattern.key,
-            pathPattern: pathPattern,
+            pathPatterns: [pathPattern],
             variableScope: variableScope
         });
 
@@ -1431,19 +2107,19 @@ export class Pattern extends KeyedItem {
         /*
         var matchingPathPatterns = [];
         this.patternParts.map(patternPart => {
-            var pathPattern = patternPart.pathPattern;
+            var pathPattern = patternPart.getPathPattern();
             if (pathPattern.containsNodePatternKey(nodePatternKey)) {
                 matchingPathPatterns.push(pathPattern);
             }
         });
         return matchingPathPatterns;
         */
-       return this.findNodePatternPatternPartsByKey(nodePatternKey).map(x => x.pathPattern);
+       return this.findNodePatternPatternPartsByKey(nodePatternKey).map(x => x.getPathPattern());
     }
 
     findNodePatternPatternPartsByKey = (nodePatternKey) => {
         return this.patternParts.filter(patternPart => {
-            var pathPattern = patternPart.pathPattern;
+            var pathPattern = patternPart.getPathPattern();
             return (pathPattern.containsNodePatternKey(nodePatternKey));
         })
     }
@@ -1451,7 +2127,7 @@ export class Pattern extends KeyedItem {
     removeStandaloneNodePathPattern = (nodePatternKey) => {
         var patternParts = this.findNodePatternPatternPartsByKey(nodePatternKey);
         patternParts = patternParts
-            .filter(x => x.pathPattern.isStandaloneStartNode(nodePatternKey));
+            .filter(x => x.getPathPattern().isStandaloneStartNode(nodePatternKey));
         
         patternParts.forEach((patternPart) => {
             var index = this.patternParts.indexOf(patternPart);
@@ -1497,11 +2173,11 @@ export class Pattern extends KeyedItem {
 
         // add to an existing PathPattern or construct a new PathPattern
         var matchingStartPatternParts = this.findNodePatternPatternPartsByKey(startNodePatternKey)
-                    .filter(x => x.pathPattern.isStandaloneStartNode(startNodePatternKey)
-                        || x.pathPattern.isEndNode(startNodePatternKey));
+                    .filter(x => x.getPathPattern().isStandaloneStartNode(startNodePatternKey)
+                        || x.getPathPattern().isEndNode(startNodePatternKey));
         matchingStartPatternParts.sort(this.sortByLength);
         var matchingEndPatternParts = this.findNodePatternPatternPartsByKey(endNodePatternKey)
-                    .filter(x => x.pathPattern.isStartNode(endNodePatternKey));
+                    .filter(x => x.getPathPattern().isStartNode(endNodePatternKey));
 
         matchingEndPatternParts.sort(this.sortByLength);
 
@@ -1523,35 +2199,35 @@ export class Pattern extends KeyedItem {
         var link = this.cy.link().rel(relationshipPattern).node(endNodePattern);
 
         /*
-        console.log("endPatternPart len: " + endPatternPart.pathPattern.getLength());
-        console.log("startPatternPart len: " + startPatternPart.pathPattern.getLength());
-        console.log("startPatternPart.pathPattern", startPatternPart.pathPattern);
-        console.log("startPatternPart.pathPattern.patternElementChain", startPatternPart.pathPattern.patternElementChain);
+        console.log("endPatternPart len: " + endPatternPart.getPathPattern().getLength());
+        console.log("startPatternPart len: " + startPatternPart.getPathPattern().getLength());
+        console.log("startPatternPart.getPathPattern()", startPatternPart.getPathPattern());
+        console.log("startPatternPart.getPathPattern().patternElementChain", startPatternPart.getPathPattern().patternElementChain);
         */
 
-        if (endPatternPart.pathPattern.getLength() > 1) {
-            if (startPatternPart.pathPattern.getLength() > 1) {
+        if (endPatternPart.getPathPattern().getLength() > 1) {
+            if (startPatternPart.getPathPattern().getLength() > 1) {
                 // this is the case of start being A->B, and we are adding C->D, not just C
-                startPatternPart.pathPattern.link(link);    // makes it A->B->C, (C->D still exists)
+                startPatternPart.getPathPattern().link(link);    // makes it A->B->C, (C->D still exists)
                 if (startPatternPart !== endPatternPart) {
-                    startPatternPart.pathPattern.mergeLinks(endPatternPart.pathPattern); // makes it A->B->C->D
+                    startPatternPart.getPathPattern().mergeLinks(endPatternPart.getPathPattern()); // makes it A->B->C->D
                     this.removePatternPart(endPatternPart);
                 }
             } else {
                 // this is the case of start being B, and we are adding C->D, not just C
-                endPatternPart.pathPattern.node(startNodePattern).addStartLink(link);
+                endPatternPart.getPathPattern().node(startNodePattern).addStartLink(link);
                 this.removeStandaloneNodePathPattern(startNodePatternKey);
             }
         } else {
             // this is the case of start being B, or A->B, and we are adding just C, not C->D
-            startPatternPart.pathPattern.link(link);
+            startPatternPart.getPathPattern().link(link);
             this.removeStandaloneNodePathPattern(endNodePatternKey);
         }
     }
 
     getAllNodePatterns = () => {
         var allNodePatterns = this.patternParts.map(patternPart => {
-            var pathPattern = patternPart.pathPattern;
+            var pathPattern = patternPart.getPathPattern();
             if (pathPattern) {
                 return pathPattern.getAllNodePatterns();
             } else {
@@ -1564,7 +2240,7 @@ export class Pattern extends KeyedItem {
 
     getAllRelationshipPatterns = () => {
         var allRelationshipPatterns = this.patternParts.map(patternPart => {
-            var pathPattern = patternPart.pathPattern;
+            var pathPattern = patternPart.getPathPattern();
             if (pathPattern) {
                 return pathPattern.getAllRelationshipPatterns();
             } else {
@@ -1577,7 +2253,7 @@ export class Pattern extends KeyedItem {
 
     getAllNodeRelNodePatterns = () => {
         var allNodeRelNodePatterns = this.patternParts.map(patternPart => {
-            var pathPattern = patternPart.pathPattern;
+            var pathPattern = patternPart.getPathPattern();
             if (pathPattern) {
                 return pathPattern.getAllNodeRelNodePatterns();
             } else {

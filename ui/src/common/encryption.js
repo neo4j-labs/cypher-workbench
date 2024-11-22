@@ -175,9 +175,11 @@ export const getUserNameAndPasswordLocally = async (databaseId) => {
             }
         }
     } catch (error) {
-        console.log('Error decrypting: ', error);
-        var errorMessage = `Error retrieving credentials '${error}'`;
-        alert(errorMessage);
+        console.log('Error decrypting credentials: ', error);
+        // var errorMessage = `Error retrieving credentials '${error}'`;
+        // alert(errorMessage);
+        console.log(`Removing encrypted username and password for database '${databaseId}'`);
+        removeUsernameAndPasswordLocally(databaseId)        
     }
     return {
         username: '',

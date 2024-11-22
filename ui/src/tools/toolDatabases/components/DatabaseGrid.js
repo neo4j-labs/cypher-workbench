@@ -47,26 +47,37 @@ export default class DatabaseGrid extends Component {
 
     render () {
         const { dbConnections } = this.state;
-        const { filterValue } = this.props;
+        const { filterValue, showPublicCards } = this.props;
 
-        var filteredDbConnections = [];
+        var filteredDbConnections = dbConnections;
+
+        filteredDbConnections = filteredDbConnections
+          .filter(dbConnection => 
+              dbConnection.isPrivate || (!dbConnection.isPrivate && showPublicCards))
+
         if (filterValue) {
-          filteredDbConnections = dbConnections.filter(dbConnection => {
-            var { name, url, databaseName } = dbConnection;
-            const filterRegex = new RegExp(filterValue, 'i');
-            name = name || '';
-            url = url || '';
-            databaseName = databaseName || '';
-            return (name.match(filterRegex) 
-                  || url.match(filterRegex)
-                  || databaseName.match(filterRegex));
-          })
-        } else {
-          filteredDbConnections = dbConnections;
+          filteredDbConnections = filteredDbConnections
+            .filter(dbConnection => {
+                var { name, url, databaseName } = dbConnection;
+                const filterRegex = new RegExp(filterValue, 'i');
+                name = name || '';
+                url = url || '';
+                databaseName = databaseName || '';
+                return (name.match(filterRegex) 
+                      || url.match(filterRegex)
+                      || databaseName.match(filterRegex));
+              })
         }
+        filteredDbConnections.sort((a,b) => {
+          let aName = a.name?.toLowerCase() || '';
+          let bName = b.name?.toLowerCase() || '';
+          if (aName === bName) return 0;
+          if (aName < bName) return -1;
+          return 1;
+        })
 
         return (
-            <div style={{padding:'10px'}}>
+            <div style={{padding:'10px', height: 'calc(100vh - 130px)', overflowY: 'scroll'}}>
               {(filteredDbConnections.length > 0) ?
                   <GridContainer>
                       {filteredDbConnections.map(dbConnection => (

@@ -58,6 +58,11 @@ import GraphCanvasControl from "../../components/canvas/GraphCanvasControl";
 import { CANVAS_FEATURES } from "../../components/canvas/d3/graphCanvas";
 import { tryAgain } from "../common/util";
 
+import ModelDialogHelper, { 
+  handleLoadModelDialogClose,
+  showLoadModelDialog 
+} from '../common/model/loadModelDialogHelper';
+
 import {
   anyFeatureLicensed,
   isFeatureLicensed,
@@ -75,8 +80,6 @@ import { OutlinedStyledButton } from "../../components/common/Components";
 import {
   getUserSettings,
   loadRemoteDataModel,
-  listRemoteDataModelMetadata,
-  searchRemoteDataModelMetadata,
   updateUserRolesGraphDoc,
   getUserRolesForGraphDoc,
   NETWORK_STATUS,
@@ -488,6 +491,7 @@ export default class CypherSuite extends Component {
     this.cypherEditorRef = React.createRef();
     this.resultsTableRef = React.createRef();
     this.validationTableRef = React.createRef();
+    this.modelDialogHelperRef = React.createRef();
 
     this.graphDebugDataProvider = new GraphDebugDataProvider({
       id: DomIds.CypherSuiteGraphDebug,
@@ -565,7 +569,6 @@ export default class CypherSuite extends Component {
     activityIndicator: false,
     showSaveDialog: false,
     showLoadDialog: false,
-    showLoadModelDialog: false,
     saveFormMode: "",
     editMetadata: {},
     metadataMap: {},
@@ -681,11 +684,6 @@ export default class CypherSuite extends Component {
     this.setState({
       mode: DisplayMode.Normal
     })
-  }
-
-  isDebugCanvasActive = () => {
-    const { mode } = this.state;
-    return mode === DisplayMode.Debug;
   }
 
   toggleShowDebugCanvas = () => {
@@ -1108,9 +1106,9 @@ export default class CypherSuite extends Component {
   }
 
   executeCypherAndShowResults = (cypher, isDebug, callback) =>
-    this.updateResultsPanel(cypher, isDebug, callback);
+    this.runQuery(cypher, isDebug, callback);
 
-  updateResultsPanel = (cypherQueryToRun, isDebug, callback) => {
+  runQuery = (cypherQueryToRun, isDebug, callback) => {
     var { cypherQuery } = this.state;
     cypherQueryToRun = cypherQueryToRun ? cypherQueryToRun : cypherQuery;
 
@@ -1128,7 +1126,7 @@ export default class CypherSuite extends Component {
       }
     }
 
-    this.executeCypher.updateResultsPanel(cypherQueryToRun, lastReturnClause, (results) => {
+    this.executeCypher.runQuery(cypherQueryToRun, {}, lastReturnClause, (results) => {
       this.resultsTableRef.current.setData(results, isDebug);
       if (callback) {
         callback();
@@ -1142,6 +1140,14 @@ export default class CypherSuite extends Component {
     try {
       var { returnClauses, returnVariables } = cypherStringConverter.convertToClausesAndVariables(cypherQuery);
 
+      returnClauses = returnClauses.reduce((acc, x) => {
+          if (x.getOrderedClauses) {
+            return acc.concat(x.getOrderedClauses());
+          } else {
+            return acc.concat([x]);
+          }
+      }, [])
+
       var blocks = returnClauses.map(clause => {
         return {
           getDebugCypherSnippets: (variableScope) => {
@@ -1153,6 +1159,8 @@ export default class CypherSuite extends Component {
               } else {
                 return clause.clauseInfo.getDebugCypherSnippets();
               }
+            } else if (clause.getDebugCypherSnippets) {
+                return clause.getDebugCypherSnippets();
             } else {
               return null;
             }
@@ -1164,6 +1172,8 @@ export default class CypherSuite extends Component {
               } else {
                 return clause.clauseInfo.toCypherString();
               }
+            } else if (clause.toCypherString) {
+              return clause.toCypherString();
             } else {
               return `${clause.keyword} ${clause.clauseInfo}`;
             }
@@ -2170,36 +2180,6 @@ export default class CypherSuite extends Component {
     }
   };
 
-  getModelMetadataMap = (callback) => {
-    const {
-      searchText,
-      myOrderBy,
-      orderDirection,
-    } = this.state.loadModelDialog;
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(
-            response,
-            "searchDataModelsX",
-            callback
-          );
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX", callback);
-      });
-    }
-  };
-
   handleMetadataResponse = (response, key, callback) => {
     if (response.success) {
       var data = response.data;
@@ -2228,76 +2208,10 @@ export default class CypherSuite extends Component {
     }
   };
 
-  handleModelMetadataResponse = (response, key, callback) => {
-    if (response.success) {
-      var data = response.data;
-      var modelMetadataMap = {};
-      //console.log(data);
-      var dataModels = data && data[key] ? data[key] : [];
-      dataModels.forEach((dataModel) => {
-        modelMetadataMap[dataModel.key] = dataModel.metadata;
-      });
-      this.setState(
-        {
-          modelMetadataMap: modelMetadataMap,
-        },
-        () => {
-          if (callback) {
-            callback();
-          }
-        }
-      );
-    } else {
-      var errorStr = "" + response.error;
-      if (errorStr.match(/Network error/)) {
-        this.communicationHelper.setNetworkStatus(NETWORK_STATUS.OFFLINE);
-      }
-      alert(response.error);
-    }
-  };
-
-  performModelSearch = (searchText, myOrderBy, orderDirection) => {
-    this.setState({
-      loadModelDialog: {
-        ...this.state.loadModelDialog,
-        searchText: searchText,
-        myOrderBy: myOrderBy,
-        orderDirection: orderDirection,
-      },
-    });
-
-    if (searchText) {
-      this.setStatus("Searching...", true);
-      searchRemoteDataModelMetadata(
-        searchText,
-        myOrderBy,
-        orderDirection,
-        (response) => {
-          this.setStatus("", false);
-          this.handleModelMetadataResponse(response, "searchDataModelsX");
-        }
-      );
-    } else {
-      this.setStatus("Loading...", true);
-      listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
-        this.setStatus("", false);
-        this.handleModelMetadataResponse(response, "listDataModelsX");
-      });
-    }
-  };
-
   showLoadDialog = () => {
     this.getMetadataMap(() => {
       this.setState({
         showLoadDialog: true,
-      });
-    });
-  };
-
-  showLoadModelDialog = () => {
-    this.getModelMetadataMap(() => {
-      this.setState({
-        showLoadModelDialog: true,
       });
     });
   };
@@ -2327,16 +2241,6 @@ export default class CypherSuite extends Component {
         }
       }
     );
-  };
-
-  handleLoadModelDialogClose = (callback) => {
-    this.setState({
-      showLoadModelDialog: false,
-    }, () => {
-      if (callback && typeof(callback) === 'function') {
-        callback();
-      }
-    });
   };
 
   new = () => {
@@ -2563,7 +2467,7 @@ export default class CypherSuite extends Component {
 
   loadRemoteModel = (modelInfo) => {
     this.setStatus("Loading Model...", true);
-    this.handleLoadModelDialogClose(() => {
+    handleLoadModelDialogClose(this.modelDialogHelperRef, () => {
       if (modelInfo && modelInfo.key) {
         loadRemoteDataModel(modelInfo.key, false, (dataModelResponse) => {
           //console.log(dataModelResponse);
@@ -3325,7 +3229,6 @@ export default class CypherSuite extends Component {
       cypherBlocks,
       showSaveDialog,
       showLoadDialog,
-      showLoadModelDialog,
       saveFormMode,
       editMetadata,
       metadataMap,
@@ -3427,7 +3330,7 @@ export default class CypherSuite extends Component {
                 <OutlinedStyledButton
                   onClick={() => {
                     if (SecurityRole.canEdit()) {
-                      this.showLoadModelDialog();
+                      showLoadModelDialog(this.modelDialogHelperRef);
                     } else {
                       alert(SecurityMessages.NoPermissionToEdit, ALERT_TYPES.WARNING);
                     }
@@ -3783,15 +3686,10 @@ export default class CypherSuite extends Component {
           booleanKeys={[]}
           showActions={false}
         />
-        <LoadModelForm
-          maxWidth={"lg"}
-          open={showLoadModelDialog}
-          onClose={this.handleLoadModelDialogClose}
+        <ModelDialogHelper 
+          ref={this.modelDialogHelperRef}
+          setStatus={this.setStatus}
           load={this.loadRemoteModel}
-          cancel={this.handleLoadModelDialogClose}
-          disableDelete={true}
-          performModelSearch={this.performModelSearch}
-          modelMetadataMap={modelMetadataMap}
         />
         <GeneralDialog
           open={generalDialog.open}

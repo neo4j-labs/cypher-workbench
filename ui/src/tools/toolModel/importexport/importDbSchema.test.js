@@ -285,7 +285,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "DBConnection",
 				"constraints": [
-					"CONSTRAINT ON ( dbconnection:DBConnection ) ASSERT dbconnection.id IS UNIQUE"
+					"Constraint( id=141, name='constraint_a5b8379', type='UNIQUENESS', schema=(:DBConnection {id}), ownedIndex=140 )"
 				]
 			}
 		},
@@ -303,7 +303,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "User",
 				"constraints": [
-					"CONSTRAINT ON ( user:User ) ASSERT user.email IS UNIQUE"
+					"Constraint( id=143, name='constraint_3a8336b6', type='UNIQUENESS', schema=(:User {email}), ownedIndex=142 )"
 				]
 			}
 		},
@@ -322,7 +322,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "Customer",
 				"constraints": [
-					"CONSTRAINT ON ( customer:Customer ) ASSERT customer.key IS UNIQUE"
+					"Constraint( id=133, name='constraint_b3e00c86', type='UNIQUENESS', schema=(:Customer {key}), ownedIndex=132 )"
 				]
 			}
 		},
@@ -340,7 +340,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "UserSettings",
 				"constraints": [
-					"CONSTRAINT ON ( usersettings:UserSettings ) ASSERT usersettings.email IS UNIQUE"
+					"Constraint( id=111, name='constraint_9442c22c', type='UNIQUENESS', schema=(:UserSettings {email}), ownedIndex=110 )"
 				]
 			}
 		},
@@ -358,7 +358,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "RelationshipType",
 				"constraints": [
-					"CONSTRAINT ON ( relationshiptype:RelationshipType ) ASSERT relationshiptype.key IS UNIQUE"
+					"Constraint( id=135, name='constraint_63a8c2f8', type='UNIQUENESS', schema=(:RelationshipType {key}), ownedIndex=134 )"
 				]
 			}
 		},
@@ -376,7 +376,6 @@ const rawDbSchemaOuput = `
 				],
 				"name": "UseCase",
 				"constraints": [
-					"CONSTRAINT ON ( usecase:UseCase ) ASSERT usecase.name IS UNIQUE"
 				]
 			}
 		},
@@ -394,7 +393,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "PropertyDefinition",
 				"constraints": [
-					"CONSTRAINT ON ( propertydefinition:PropertyDefinition ) ASSERT propertydefinition.key IS UNIQUE"
+					"Constraint( id=99, name='constraint_23e5e096', type='UNIQUENESS', schema=(:PropertyDefinition {key}), ownedIndex=98 )"
 				]
 			}
 		},
@@ -412,7 +411,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "NodeAssertTest",
 				"constraints": [
-					"CONSTRAINT ON ( nodeasserttest:NodeAssertTest ) ASSERT exists(nodeasserttest.nodeTestProp)"
+					"Constraint( id=10001, name='constraint_aabbccdd', type='NODE PROPERTY EXISTENCE', schema=(:NodeAssertTest {nodeTestProp}), ownedIndex=10001 )"
 				]
 			}
 		},
@@ -430,7 +429,6 @@ const rawDbSchemaOuput = `
 				],
 				"name": "Industry",
 				"constraints": [
-					"CONSTRAINT ON ( industry:Industry ) ASSERT industry.name IS UNIQUE"
 				]
 			}
 		},
@@ -448,7 +446,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "DataModelMetadata",
 				"constraints": [
-					"CONSTRAINT ON ( datamodelmetadata:DataModelMetadata ) ASSERT datamodelmetadata.key IS UNIQUE"
+					"Constraint( id=137, name='constraint_b2f8dcc', type='UNIQUENESS', schema=(:DataModelMetadata {key}), ownedIndex=136 )"
 				]
 			}
 		},
@@ -466,7 +464,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "NodeLabel",
 				"constraints": [
-					"CONSTRAINT ON ( nodelabel:NodeLabel ) ASSERT nodelabel.key IS UNIQUE"
+					"Constraint( id=101, name='constraint_d471e728', type='NODE KEY', schema=(:NodeLabel {key}), ownedIndex=100 )"
 				]
 			}
 		},
@@ -484,7 +482,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "DataModel",
 				"constraints": [
-					"CONSTRAINT ON ( datamodel:DataModel ) ASSERT datamodel.key IS UNIQUE"
+					"Constraint( id=105, name='constraint_f7ecef6a', type='UNIQUENESS', schema=(:DataModel {key}), ownedIndex=104 )"
 				]
 			}
 		},
@@ -503,7 +501,6 @@ const rawDbSchemaOuput = `
 				],
 				"name": "Author",
 				"constraints": [
-					"CONSTRAINT ON ( author:Author ) ASSERT author.key IS UNIQUE"
 				]
 			}
 		},
@@ -521,7 +518,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "NodeKeyTest",
 				"constraints": [
-					"CONSTRAINT ON ( nodekeytest:NodeKeyTest ) ASSERT (nodekeytest.prop1, nodekeytest.prop2) IS NODE KEY"
+					"Constraint( id=10002, name='constraint_ddccbbaa', type='NODE KEY', schema=(:NodeKeyTest {prop1, prop2}), ownedIndex=10002 )"
 				]
 			}
 		},
@@ -539,7 +536,7 @@ const rawDbSchemaOuput = `
 				],
 				"name": "Tag",
 				"constraints": [
-					"CONSTRAINT ON ( tag:Tag ) ASSERT tag.tag IS UNIQUE"
+					"Constraint( id=97, name='constraint_3ed5bdd3', type='UNIQUENESS', schema=(:Tag {key}), ownedIndex=96 )"
 				]
 			}
 		}
@@ -903,22 +900,20 @@ test('import raw db.schema', () => {
     //console.log(apocMetaSchemaOutput);
     var schemaJSON = JSON.parse(rawDbSchemaOuput);
     var dataModel = getDataModelFromRawDbSchema(schemaJSON);
+	// console.log(getNodeLabels(dataModel));
 
-    expect(getNodeLabels(dataModel)).toStrictEqual(['DBConnection',
-        'User',
-        'Customer',
-        'UserSettings',
-        'RelationshipType',
-        'UseCase',
-        'PropertyDefinition',
-        'NodeAssertTest',
-        'Industry',
-        'DataModelMetadata',
-        'NodeLabel',
-        'DataModel',
-        'Author',
-        'NodeKeyTest',
-        'Tag']);
+	expect(getNodeLabels(dataModel)).toStrictEqual([
+	  'DBConnection',       'User',
+      'Customer',           'UserSettings',
+      'RelationshipType',   'UseCase',
+      'PropertyDefinition', 'NodeAssertTest',
+      'Industry',           'DataModelMetadata',
+      'NodeLabel',          'DataModel',
+      'Author',             'NodeKeyTest',
+      'Tag'
+	]);
+
+	// console.log(dataModel.getNodeLabelByLabel('DataModel'));
 
     // verify properties
     verifyNodeLabelProperties(dataModel, 'DataModel', { key: "String" });
@@ -934,17 +929,17 @@ test('import raw db.schema', () => {
     var nodeAssertTest = dataModel.getNodeLabelByLabel('NodeAssertTest');
 
     var nodeTestProp1 = nodeKeyTest.getPropertyByName('prop1');
-    verifyProperty (nodeTestProp1, 'prop1', 'String', null, false);
-    expect(nodeTestProp1.mustExist).toBe(false);
+    verifyProperty (nodeTestProp1, 'prop1', 'String', null, true);
+    expect(nodeTestProp1.mustExist).toBe(true);
     var nodeTestProp2 = nodeKeyTest.getPropertyByName('prop2');
-    verifyProperty (nodeTestProp2, 'prop2', 'String', null, false);
-    expect(nodeTestProp2.mustExist).toBe(false);
+    verifyProperty (nodeTestProp2, 'prop2', 'String', null, true);
+    expect(nodeTestProp2.mustExist).toBe(true);
 
     var nodeTestProp = nodeAssertTest.getPropertyByName('nodeTestProp');
     verifyProperty (nodeTestProp, 'nodeTestProp', 'String', null, false);
-    expect(nodeTestProp.mustExist).toBe(false);
+    expect(nodeTestProp.mustExist).toBe(true);
 
-    // verify relationships
+    // // verify relationships
     var relationshipTypes = dataModel.getRelationshipTypesForNodeLabelByKey(dataModelNodeType.key);
     //console.log(relationshipTypes);
     expect(relationshipTypes.length).toBe(7);
@@ -959,3 +954,35 @@ test('import raw db.schema', () => {
     expect(hasRelationshipType.endNodeLabel.label).toBe('RelationshipType');
 
 });
+
+/* Notes / Cypher to help formulate test data
+WITH [
+	'NodeLabel','DataModel','Author','NodeKeyTest',
+	'Tag','DataModelMetadata','Industry',
+	'NodeAssertTest','PropertyDefinition','UseCase',
+	'RelationshipType','UserSettings','Customer',
+	'User','DBConnection'
+] as allowedLabels
+
+CALL db.schema.visualization() YIELD nodes
+UNWIND nodes as node
+WITH allowedLabels, apoc.any.properties(node) as properties
+WITH allowedLabels, properties.name as name, properties['constraints'] as constraints
+WHERE size(constraints) > 0
+  AND name IN allowedLabels
+RETURN name, constraints
+ORDER BY name
+
+"Customer"	["Constraint( id=133, name='constraint_b3e00c86', type='UNIQUENESS', schema=(:Customer {key}), ownedIndex=132 )"]
+"DBConnection"	["Constraint( id=141, name='constraint_a5b8379', type='UNIQUENESS', schema=(:DBConnection {id}), ownedIndex=140 )"]
+"DataModel"	["Constraint( id=105, name='constraint_f7ecef6a', type='UNIQUENESS', schema=(:DataModel {key}), ownedIndex=104 )"]
+"DataModelMetadata"	["Constraint( id=137, name='constraint_b2f8dcc', type='UNIQUENESS', schema=(:DataModelMetadata {key}), ownedIndex=136 )"]
+"NodeLabel"	["Constraint( id=101, name='constraint_d471e728', type='NODE KEY', schema=(:NodeLabel {key}), ownedIndex=100 )"]
+"PropertyDefinition"	["Constraint( id=99, name='constraint_23e5e096', type='UNIQUENESS', schema=(:PropertyDefinition {key}), ownedIndex=98 )"]
+"RelationshipType"	["Constraint( id=135, name='constraint_63a8c2f8', type='UNIQUENESS', schema=(:RelationshipType {key}), ownedIndex=134 )"]
+"Tag"	["Constraint( id=97, name='constraint_3ed5bdd3', type='UNIQUENESS', schema=(:Tag {key}), ownedIndex=96 )"]
+"User"	["Constraint( id=143, name='constraint_3a8336b6', type='UNIQUENESS', schema=(:User {email}), ownedIndex=142 )"]
+"UserSettings"	["Constraint( id=111, name='constraint_9442c22c', type='UNIQUENESS', schema=(:UserSettings {email}), ownedIndex=110 )"]
+
+*/
+

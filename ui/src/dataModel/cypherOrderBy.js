@@ -1,3 +1,4 @@
+import SnippetSet from "./cypherSnippetSet";
 
 export const ORDER_DIRECTION = {
     ASC: 'ASC',
@@ -197,22 +198,30 @@ export class OrderByClause {
         return `ORDER BY ${str}`;
     }
 
-    getDebugCypherSnippets = () => {
-        var snippets = [];
+    getDebugCypherSnippetSet = (config = {}) => {
+        let snippetSet = new SnippetSet({
+            id: 'orderBy',
+            opener: (config.skipReturn) ? '' : 'ORDER BY ',
+            associatedCypherObject: this
+        });
 
-        for (var i = 1; i <= this.orderByItems.length; i++) {
-            var newSnippets = [];
-            newSnippets = newSnippets.concat(this.orderByItems.slice(0,i));
-            if (i < this.orderByItems.length) {
-                newSnippets.push(orderByItem(' // '));
-                newSnippets = newSnippets.concat(this.orderByItems.slice(i));
-            }
-            const cypherSnippet = this.toCypherString(newSnippets);
-            snippets.push(cypherSnippet);
-        }
+        if (this.orderByItems && this.orderByItems.length > 0) {
+            let snippetStrs = this.orderByItems.map((x,i) => {
+                let comma = (i > 0) ? ', ' : ''
+                return `${comma}${x.toCypherString()}`;
+            });
+            snippetSet.addOneOrMoreSnippets(snippetStrs);
+        } 
 
+        snippetSet.cypherSnippet = snippetSet.computeCypherSnippet();
+        return snippetSet;
+    }
+
+    getDebugCypherSnippets = (config = {}) => {
+        let snippetSet = this.getDebugCypherSnippetSet(config);
+        let snippets = snippetSet.getSnippets();
         return snippets;
-    }    
+    }
     
     fromSaveObject = (jsonObject) => {
         this.orderByItems = [];

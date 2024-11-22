@@ -9,7 +9,10 @@ import {
     saveNodeLabelDisplay,
     removeDataModel,
     listDataModels,
-    searchDataModels
+    listDataModelsAndAddExplicitMatches,
+    searchDataModels,
+    createModelFromCypher,
+    convertToGraphSchemaFormat
 } from "../models/datamodel";
 
 export default {
@@ -36,10 +39,13 @@ export default {
             return await searchForItem(args.searchText, 'UseCase', 'name', ['name'], context);
         },
         listDataModelsX: (obj, args, context, resolveInfo) => {
-            return listDataModels(args.myOrderBy, args.orderDirection, args.skip, args.limit, context);
+            return listDataModels(args.myOrderBy, args.orderDirection, args.includePublic, args.skip, args.limit, context);
+        },
+        listDataModelsAndAddExplicitMatches: (obj, args, context, resolveInfo) => {
+            return listDataModelsAndAddExplicitMatches(args.explicitKeysToSearchFor, args.myOrderBy, args.orderDirection, args.includePublic, args.skip, args.limit, context);
         },
         searchDataModelsX: (obj, args, context, resolveInfo) => {
-            return searchDataModels(args.searchText, args.myOrderBy, args.orderDirection, args.skip, args.limit, context);
+            return searchDataModels(args.searchText, args.myOrderBy, args.orderDirection, args.includePublic, args.skip, args.limit, context);
         }
     },
     Mutation: {
@@ -66,13 +72,19 @@ export default {
         saveNodeLabelDisplay: async (obj, args, context, resolveInfo) => {
             //console.log('save node label display');
             //console.log(args);
-            await  saveNodeLabelDisplay(args.nodeLabels,context);
+            await saveNodeLabelDisplay(args.nodeLabels,context);
             return true;
         },
         removeDataModel: async (obj, args, context, resolveInfo) => {
             //console.log('remove data model');
             //console.log(args);
             return await removeDataModel(args.dataModelKey,context);
-        }
+        },
+        createModelFromCypher: async (obj, args, context, resolveInfo) => {
+            return await createModelFromCypher(args.input, context);
+        },
+        convertToGraphSchemaFormat: async (obj, args, context, resolveInfo) => {
+            return await convertToGraphSchemaFormat(args.dataModelKey, context);
+        }    
     }
 }

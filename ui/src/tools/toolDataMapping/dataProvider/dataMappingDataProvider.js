@@ -13,10 +13,7 @@ import {
     Pattern,
     NodePattern, 
     RelationshipPattern, 
-    RELATIONSHIP_DIRECTION,
-    PatternElementChainLink,
-    PathPattern,
-    PatternPart
+    RELATIONSHIP_DIRECTION
 } from '../../../dataModel/cypherPattern';
 
 import { CypherVariableScope } from "../../../dataModel/cypherVariableScope";
@@ -844,9 +841,9 @@ export default class DataMappingDataProvider {
     buildSyncedData () {
         if (this.cypherPattern) {
             this.cypherPattern.patternParts
-            .filter(patternPart => patternPart.pathPattern)
+            .filter(patternPart => patternPart.getPathPattern())
             .map(patternPart => {
-                var pathPattern = patternPart.pathPattern;
+                var pathPattern = patternPart.getPathPattern();
                 var nodePattern = pathPattern.nodePattern;
                 var startNode = null;
                 var endNode = null;

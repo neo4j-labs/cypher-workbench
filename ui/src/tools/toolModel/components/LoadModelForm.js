@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {
-    Button, Dialog, DialogTitle, DialogActions, DialogContent,
-    FormControl, IconButton, InputLabel, InputAdornment, MenuItem, OutlinedInput,
+    Button, Checkbox, Dialog, DialogTitle, DialogActions, DialogContent,
+    FormControl, FormControlLabel, IconButton, InputLabel, InputAdornment, MenuItem, OutlinedInput,
     Select, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
@@ -56,6 +56,7 @@ export default class LoadModelForm extends Component {
             buttons: []
         },
         searchText: '',
+        includePublicModels: true,
         myOrderBy: 'DATE_UPDATED_DESC'
     }
 
@@ -145,24 +146,38 @@ export default class LoadModelForm extends Component {
         if (this.state.myOrderBy !== value) {
             this.setState({
                 myOrderBy: value
-            }, () => this.performSearch());
+            }, () => this.performSearchWithCurrentValue());
         }
     }
 
     handleSearchTextKeyPress = (e) => {
         if (e.key === "Enter") {
-            this.performSearch();
+            this.performSearchWithCurrentValue();
         }
     }
 
+    handlePublicModelCheckboxChange = () => {
+        const { includePublicModels } = this.state;
+        this.setState({
+            includePublicModels: !includePublicModels
+        }, () => {
+            this.performSearchWithCurrentValue();
+        })
+    }
+
+    performSearchWithCurrentValue = () => {
+        const { searchText } = this.state;
+        this.performSearch(searchText);
+    }
+
     performSearch = (searchTerm = null) => {
-        const { myOrderBy } = this.state;
+        const { includePublicModels, myOrderBy } = this.state;
         const myOrderByParams = ORDER_BY_PARAMS[myOrderBy];
-        this.props.performModelSearch(searchTerm ? searchTerm : '', myOrderByParams.myOrderBy, myOrderByParams.orderDirection);
+        this.props.performModelSearch(searchTerm ? searchTerm : '', includePublicModels, myOrderByParams.myOrderBy, myOrderByParams.orderDirection);
     }
 
     render () {
-        const { generalDialog, searchText, myOrderBy } = this.state;
+        const { generalDialog, includePublicModels, searchText, myOrderBy } = this.state;
         const { modelMetadataMap } = this.props;
 
         return (
@@ -173,6 +188,19 @@ export default class LoadModelForm extends Component {
                             {"Load Model"}
                         </div>
                         <div style={{float:'right', fontWeight: 400, marginTop: '0.2em'}}>
+                            <Tooltip enterDelay={600} arrow title="Public models you own are still shown even when unchecked">
+                                <FormControlLabel style={{marginTop: '4px'}}
+                                    control={
+                                        <Checkbox
+                                            checked={includePublicModels}
+                                            onChange={this.handlePublicModelCheckboxChange}
+                                            name="includePublicModels"
+                                            color="primary"
+                                        />
+                                    }
+                                    label="Include All Public Models"
+                                />
+                            </Tooltip>
                             <FormControl variant="outlined" style={{marginRight:'1em'}}>
                               <InputLabel htmlFor="model-search-textbox" style={{marginTop:'-0.2em'}}>Search</InputLabel>
                               <OutlinedInput
@@ -182,7 +210,7 @@ export default class LoadModelForm extends Component {
                                 onKeyPress={this.handleSearchTextKeyPress}
                                 endAdornment={
                                   <InputAdornment position="end">
-                                    <IconButton aria-label="search models" edge="end" onClick={() => this.performSearch(this.state.searchText)}>
+                                    <IconButton aria-label="search models" edge="end" onClick={() => this.performSearchWithCurrentValue()}>
                                       <SearchIcon />
                                     </IconButton>
                                   </InputAdornment>

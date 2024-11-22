@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 
 import {
+    Checkbox,
+    FormControlLabel, 
     TextField
 } from '@material-ui/core';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -17,7 +19,8 @@ export default class Databases extends Component {
         filterInput: '',
         isActive: false,
         isAddingDatabase: false,
-        needsFetched: true
+        needsFetched: true,
+        showPublicCards: false
     }
 
     constructor (props) {
@@ -120,8 +123,15 @@ export default class Databases extends Component {
         })
     }
 
+    toggleShowPublicCards = () => {
+        const { showPublicCards } = this.state;
+        this.setState({
+            showPublicCards: !showPublicCards
+        })
+    }
+
     render() {
-      var { filterInput, isActive, isAddingDatabase, needsFetched } = this.state;
+      var { filterInput, isActive, isAddingDatabase, needsFetched, showPublicCards } = this.state;
 
       const placeholder = 'Filter database cards';
 
@@ -134,7 +144,7 @@ export default class Databases extends Component {
               />
               {(isActive) &&
                 <>
-                    <div style={{display:'flex', flexFlow: 'row'}}>
+                    <div style={{display:'flex', flexFlow: 'row', alignItems: 'baseline'}}>
                         <TextField id="filterDatabases" label="Filter" autoComplete="off"
                             inputRef={this.textFocus.ref}
                             value={filterInput} onChange={this.setValue} 
@@ -146,12 +156,23 @@ export default class Databases extends Component {
                                 onClick={this.clearValue}>
                             </ClearIcon>
                         </div>
-
+                        <FormControlLabel style={{marginLeft: '10px'}}
+                            control={
+                            <Checkbox
+                                checked={showPublicCards}
+                                onChange={this.toggleShowPublicCards}
+                                name="showPublicCards"
+                                color="primary"
+                            />
+                            }
+                            label={"Show Public Cards"}
+                        />
                     </div>
 
                     <DatabaseGrid ref={this.databaseGridRef}
                         otherToolActionRequest={this.props.otherToolActionRequest}
                         filterValue={filterInput}
+                        showPublicCards={showPublicCards}
                         needsFetched={needsFetched} setNeedsFetched={this.setNeedsFetched} />
                 </>
               }

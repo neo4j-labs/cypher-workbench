@@ -18,6 +18,21 @@ const DataTypeToApocMetaDataType = {
     // TODO: add more types
 }
 
+export const TransformTypes = {
+    ArrayOpen: 'ArrayOpen',
+    ArrayItemOpen: 'ArrayItemOpen',
+    ArrayItemSeparator: 'ArrayItemSeparator',
+    ArrayClose: 'ArrayClose',
+    ObjectOpen: 'ObjectOpen',
+    ObjectKey: 'ObjectKey',
+    ObjectKeySeparator: 'ObjectKeySeparator',
+    ObjectValueSeparator: 'ObjectValueSeparator',
+    // process ObjectKey, ObjectKeySeparator, and ObjectValueSeparator all at once, if present, you don't need the other three
+    ObjectKeyValue: 'ObjectKeyValue',   
+    ObjectClose: 'ObjectClose',
+    Value: 'Value'
+}
+
 // Important: make sure each object constructor has the following
 /*
     this.myObjectName = '<class name>' 
@@ -473,7 +488,7 @@ const serializeValue = (value, objectKeyMap, objectIdMap, maxDepth, currentDepth
             .map(result => result.value)
         //console.log('array is: ', array);
         return { skip: false, value: array };
-    } else if (typeof(value) === 'object') {
+    } else if (value && typeof(value) === 'object') {
         var serializedValue;
         if (value === null) {   // yes, typeof(null) === 'object'
             serializedValue = null;
@@ -581,7 +596,7 @@ export const deserializeObject = (serializedObject, instanceMapper, deserialized
     if (objectSerializedId) {
         deserializedObjects[objectSerializedId] = objectToInstantiate;
     }
-    if (typeof(objectToWorkOn) === 'object') {
+    if (objectToWorkOn && typeof(objectToWorkOn) === 'object') {
         Object.keys(objectToWorkOn).map(key => {
             //console.log('deserializing key: ', key);
             var deserializeValueResult = deserializeValue(objectToWorkOn[key], objectKeyMap, instanceMapper, deserializedObjects);
@@ -607,7 +622,7 @@ export const deserializeValue = (value, objectKeyMap, instanceMapper, deserializ
             .filter(result => !result.skip)
             .map(result => result.value);
         return { skip: false, value: array };
-    } else if (typeof(value) === 'object') {
+    } else if (value && typeof(value) === 'object') {
         var deserializedValue;
         if (value === null) {   // yes, typeof(null) === 'object'
             deserializedValue = null;
@@ -628,3 +643,201 @@ export const deserializeValue = (value, objectKeyMap, instanceMapper, deserializ
     }
 }
 
+export const findValues = (item, key) => {
+    let foundValues = [];
+    if (item && key) {
+        if (Array.isArray(item)) {
+            item.forEach(x => {
+                let newValues = findValues(x, key);
+                foundValues = foundValues.concat(newValues);
+            });
+        } else if (item && typeof(item) === 'object') {
+            Object.keys(item).forEach(objectKey => {
+                if (key === objectKey) {
+                    foundValues.push(item[key]);
+                } else {
+                    let newValues = findValues(item[objectKey], key);
+                    foundValues = foundValues.concat(newValues);
+                }
+            });
+        } 
+    }
+    return foundValues;
+}
+
+export const findObjectsContainingKeys = (item, key) => {
+    let foundObjects = [];
+    if (item && key) {
+        if (Array.isArray(item)) {
+            item.forEach(x => {
+                let newValues = findObjectsContainingKeys(x, key);
+                foundObjects = foundObjects.concat(newValues);
+            });
+        } else if (item && typeof(item) === 'object') {
+            Object.keys(item).forEach(objectKey => {
+                if (key === objectKey) {
+                    foundObjects.push(item);
+                } else {
+                    let newValues = findObjectsContainingKeys(item[objectKey], key);
+                    foundObjects = foundObjects.concat(newValues);
+                }
+            });
+        } 
+    }
+    return foundObjects;
+}
+
+export const findObjectsOfACertainClass = (item, classToCheck) => {
+    let foundObjects = [];
+    if (item && classToCheck) {
+        if (Array.isArray(item)) {
+            item.forEach(x => {
+                let newValues = findObjectsOfACertainClass(x, classToCheck);
+                foundObjects = foundObjects.concat(newValues);
+            });
+        } else if (item && typeof(item) === 'object') {
+            if (item instanceof classToCheck) {
+                foundObjects.push(item);
+            }
+            Object.keys(item).forEach(objectKey => {
+                let newValues = findObjectsOfACertainClass(item[objectKey], classToCheck);
+                foundObjects = foundObjects.concat(newValues);
+            });
+        } 
+    }
+    return foundObjects;
+}
+
+
+export const findObjectsContainingAllKeys = (item, keys) => {
+    let foundObjects = [];
+    if (item && keys) {
+        if (Array.isArray(item)) {
+            item.forEach(x => {
+                let newValues = findObjectsContainingAllKeys(x, keys);
+                foundObjects = foundObjects.concat(newValues);
+            });
+        } else if (item && typeof(item) === 'object') {
+            let keysFound = [];
+            Object.keys(item).forEach(objectKey => {
+                if (keys.includes(objectKey)) {
+                    keysFound.push(objectKey);
+                } else {
+                    let newValues = findObjectsContainingAllKeys(item[objectKey], keys);
+                    foundObjects = foundObjects.concat(newValues);
+                }
+            });
+            if (keysFound.length === keys.length) {
+                foundObjects.push(item);
+            }
+        } 
+    }
+    return foundObjects;
+}
+
+export const transformObjectsContainingAllKeys = (item, keys, transformFunc) => {
+    let newItem = item;
+    if (item && keys) {
+        if (Array.isArray(item)) {
+            // console.log('item is array: ', item)
+            newItem = item.map(x => transformObjectsContainingAllKeys(x, keys, transformFunc));
+        } else if (item && typeof(item) === 'object') {
+            // console.log('item is object: ', item)
+            newItem = item;
+            let keysFound = [];
+            Object.keys(item).forEach(objectKey => {
+                if (keys.includes(objectKey)) {
+                    keysFound.push(objectKey);
+                } else {
+                    let newValue = transformObjectsContainingAllKeys(item[objectKey], keys, transformFunc);
+                    // newItem[objectKey] = newValue;  // <-- this breaks when returning React elements in dev mode
+                    newItem = Object.assign({}, newItem, {[objectKey]: newValue});
+                }
+            });
+            if (keysFound.length === keys.length) {
+                newItem = transformFunc(item);
+            }
+        } 
+    }
+    return newItem;
+
+}
+
+export const performFullTransform = (item, transformMap, indentLevel) => {
+    indentLevel = indentLevel === undefined ? 0 : indentLevel;
+    let newItem = null;
+    if (Array.isArray(item)) {
+        newItem = [];
+        newItem.push(transformMap[TransformTypes.ArrayOpen]({indentLevel}));
+        item.forEach((arrayEl, index) => {
+            let transformedEl = performFullTransform(arrayEl, transformMap, indentLevel+1);
+            if (Array.isArray(transformedEl)) {
+                newItem = newItem.concat(transformedEl);
+            } else {
+                newItem.push(transformMap[TransformTypes.ArrayItemOpen]({indentLevel:indentLevel+1}));
+                newItem.push(transformedEl);
+            }
+            let isLastItem = index === (item.length-1) ? true : false;
+            newItem.push(transformMap[TransformTypes.ArrayItemSeparator]({isLastItem}));
+        });
+        newItem.push(transformMap[TransformTypes.ArrayClose]({indentLevel}));
+    } else if (item && typeof(item) === 'object') {
+        // look in transformMap for entries that have the signature { requiredKeys: [], func: ... 
+        let customTransformKeys = Object.keys(transformMap).filter(key => {
+            let value = transformMap[key];
+            return value.requiredKeys && value.func ? true : false;
+        });
+
+        let itemKeys = Object.keys(item);
+        let customTransformKey = customTransformKeys.find(key => {
+            let keysToCheck = transformMap[key].requiredKeys;
+            let matchingKeys = keysToCheck.filter(keyToCheck => itemKeys.includes(keyToCheck));
+            return matchingKeys.length === keysToCheck.length;
+        })
+        // console.log('customTransform: ', customTransform);
+
+        if (customTransformKey) {
+            let customTransform = transformMap[customTransformKey];
+            // to transform things like nodes, rels, and paths
+            newItem = customTransform.func({
+                item, 
+                indentLevel
+            });
+        } else {
+            newItem = [];
+            newItem.push(transformMap[TransformTypes.ObjectOpen]({indentLevel}));
+
+            itemKeys.forEach((key, index) => {
+                let value = item[key];
+                let isLastItem = index === (itemKeys.length-1) ? true : false;
+
+                let objectKeyValueTransform = transformMap[TransformTypes.ObjectKeyValue];
+                if (objectKeyValueTransform) {
+                    let transformedEl = performFullTransform(value, transformMap, indentLevel+1);
+
+                    newItem.push(objectKeyValueTransform({
+                        indentLevel:indentLevel+1, key, item: transformedEl, isLastItem
+                    }));
+                } else {
+                    newItem.push(transformMap[TransformTypes.ObjectKey]({indentLevel:indentLevel+1, key}));
+                    newItem.push(transformMap[TransformTypes.ObjectKeySeparator]());
+        
+                    let transformedEl = performFullTransform(value, transformMap, indentLevel+1);
+                    if (Array.isArray(transformedEl)) {
+                        newItem = newItem.concat(transformedEl);
+                    } else {
+                        newItem.push(transformedEl);
+                    }
+                    newItem.push(transformMap[TransformTypes.ObjectValueSeparator]({isLastItem}));
+                }
+            });
+            newItem.push(transformMap[TransformTypes.ObjectClose]({indentLevel}));
+        }
+    } else {
+        newItem = transformMap[TransformTypes.Value]({
+            item, 
+            indentLevel
+        });
+    }
+    return newItem;
+}

@@ -3,18 +3,17 @@
 // CALL db.constraints() YIELD description
 // RETURN description
 // `;
-export const GetConstraintsDescription = `
-SHOW CONSTRAINTS YIELD labelsOrTypes, properties
-`
+
+// TODO: change enhanceDataModelWithConstraintsAndIndexes to use this new format
+export const GetConstraintsDescription = `SHOW CONSTRAINTS`;
 
 // different versions of Neo4j respond with different columns, so we will need to figure stuff out during results processing
 // export const GetIndexes = `
 // CALL db.indexes()
 // `
-export const GetIndexes = `
-SHOW INDEXES YIELD labelsOrTypes, properties
-`
 
+// TODO: change enhanceDataModelWithConstraintsAndIndexes to use this new format
+export const GetIndexes = `SHOW INDEXES`;
 
 export const CountNodesByLabel = `
 WITH {
@@ -29,8 +28,6 @@ CALL apoc.cypher.run(countQuery, {}) YIELD value
 RETURN value.nodeLabel as nodeLabel, value.numNodes as numNodes
 `;
 
-// for Neo4j 5 replacing with count { ... } in getOutboundRelationshipCount
-// RETURN size((n)-[:\`$relType\`]->()) as numRels
 export const CountRelationshipTypesSpecifyDataModel = `
 /* Specify data model and estimate relationships */
 WITH $dataModel as dataModel, {
@@ -100,8 +97,6 @@ WITH nodeLabel, apoc.map.fromPairs(collect([relationshipType,estimatedRelationsh
 RETURN nodeLabel, estimatedRelCounts
 `;
 
-// for Neo4j 5 replacing with count { ... } in getOutboundRelationshipCount
-// RETURN size((n)-[:\`$relType\`]->()) as numRels
 export const CountRelationshipTypesUseApocMetaSchema = `
 /* Estimate relationship counts via relationship types using apoc.meta.schema */
 WITH {
@@ -115,7 +110,7 @@ WITH {
 		LIMIT toInteger($limit)
 	",
 	getOutboundRelationshipCount: "
-	    RETURN count { ((n)-[:\`$relType\`]->() } as numRels
+	    RETURN size((n)-[:\`$relType\`]->()) as numRels
 	"
 } as cypherQueries, $limit as limit
 

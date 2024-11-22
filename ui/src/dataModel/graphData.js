@@ -751,13 +751,6 @@ export class GraphData {
                                                 && relationship.type === relType));
         return array;                                 
     }
-
-    getInboundRelationshipsForNodeByType (node, relType) {
-        var array = this.getRelationshipArray();
-        array = array.filter(relationship => (relationship.endNode === node
-                                                && relationship.type === relType));
-        return array;                                 
-    }
     
     /* fetch relationships where the start and end nodes are the same */
     getNodesThatHaveSelfConnectedRelationships () {

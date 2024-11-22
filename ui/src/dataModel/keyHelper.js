@@ -145,7 +145,7 @@ export class KeyHelper {
 
     // NOTE: local keys have become problematic when trying to do things across more than 1
     //   graph document. We are encountering key collisions. A solution (for now) is to 
-    //   put which node labels are from remote documents and not convert those to local keys 
+    //   put which node labesl are from remote documents and not convert those to local keys 
     /*
     getLocalKeyAndAddIt = (key) => {
         var localKey = this.getLocalKey(key);

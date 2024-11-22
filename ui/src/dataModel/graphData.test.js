@@ -18,46 +18,34 @@ function resetDataChangeFlags (graphData) {
 function getGraphDataWithNodes (nodeKeys) {
     var graphData = new GraphData();
     nodeKeys.map(key => {
-        var existingNode = graphData.getNodeByKey(key);        
-        if (!existingNode) {
-            var node = graphData.createNode({
-                key: key
-            });
-            graphData.addNode(node);
-        }
+        var node = graphData.createNode({
+            key: key
+        });
+        graphData.addNode(node);
     });
     resetDataChangeFlags(graphData);
     return graphData;
 }
 
-export function getGraphDataWithRelationships (relationshipArray) {
+function getGraphDataWithRelationships (relationshipArray) {
     var graphData = new GraphData({ id: 'test_graph' });
     relationshipArray.map(entry => {
-        var startNode = graphData.getNodeByKey(entry.startNode);        
-        if (!startNode) {
-            startNode = graphData.createNode({
-                key: entry.startNode
-            });
-            graphData.addNode(startNode);
-        }
-        var endNode = graphData.getNodeByKey(entry.endNode);        
-        if (!endNode) {
-            endNode = graphData.createNode({
-                key: entry.endNode
-            });
-            graphData.addNode(endNode);
-        }
+        var startNode = graphData.createNode({
+            key: entry.startNode
+        });
+        var endNode = graphData.createNode({
+            key: entry.endNode
+        });
         var properties = {
-            key: (entry.relKey) ? entry.relKey : entry.startNode + '_' + entry.type + '_' + entry.endNode,
+            key: entry.startNode + '_' + entry.type + '_' + entry.endNode,
             type: entry.type,
             startNode: startNode,
             endNode: endNode
         }
-        var relationship = graphData.getRelationshipByKey(properties.key);
-        if (!relationship) {
-            relationship = graphData.createRelationship(properties);
-            graphData.addRelationship(relationship);
-        }
+        var relationship = graphData.createRelationship(properties);
+        graphData.addNode(startNode);
+        graphData.addNode(endNode);
+        graphData.addRelationship(relationship);
     })
     resetDataChangeFlags(graphData);
     return graphData;

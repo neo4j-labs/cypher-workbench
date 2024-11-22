@@ -4,6 +4,7 @@ import { ALERT_TYPES, USER_ROLE } from '../../../common/Constants';
 import {
     grabModelLock,
     listRemoteDataModelMetadata,
+    listRemoteDataModelMetadataAndAddExplicitMatches,
     searchRemoteDataModelMetadata,
     saveRemoteDataModel,
     NETWORK_STATUS
@@ -340,18 +341,28 @@ export class ModelPersistence extends Component {
         }
     }
 
+    getModelMetadataMapAndAddExplicitMatches = (explicitKeysToSearchFor, callback) => {
+        var loadDialog = this.props.getStateItem(PERSISTENCE_STATE_ITEMS.LoadDialog);
+        const { includePublic, myOrderBy, orderDirection } = loadDialog;
+        this.parentContainer.setStatus('Loading...', true);
+        listRemoteDataModelMetadataAndAddExplicitMatches(explicitKeysToSearchFor, includePublic, myOrderBy, orderDirection, (response) => {
+            this.parentContainer.setStatus('', false);
+            this.parentContainer.handleMetadataResponse(response, 'listDataModelsAndAddExplicitMatches', callback);
+        });
+    }
+
     getModelMetadataMap = (callback) => {
         var loadDialog = this.props.getStateItem(PERSISTENCE_STATE_ITEMS.LoadDialog);
-        const { searchText, myOrderBy, orderDirection } = loadDialog;
+        const { searchText, includePublic, myOrderBy, orderDirection } = loadDialog;
         if (searchText) {
             this.parentContainer.setStatus('Searching...', true);
-            searchRemoteDataModelMetadata(searchText, myOrderBy, orderDirection, (response) => {
+            searchRemoteDataModelMetadata(searchText, includePublic, myOrderBy, orderDirection, (response) => {
                 this.parentContainer.setStatus('', false);
                 this.parentContainer.handleMetadataResponse(response, 'searchDataModelsX', callback);
             });
         } else {
             this.parentContainer.setStatus('Loading...', true);
-            listRemoteDataModelMetadata(myOrderBy, orderDirection, (response) => {
+            listRemoteDataModelMetadata(includePublic, myOrderBy, orderDirection, (response) => {
                 this.parentContainer.setStatus('', false);
                 this.parentContainer.handleMetadataResponse(response, 'listDataModelsX', callback);
             });

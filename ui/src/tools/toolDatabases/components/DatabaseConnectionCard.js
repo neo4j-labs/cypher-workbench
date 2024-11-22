@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import {CircularProgress, Button, Tooltip, IconButton} from '@material-ui/core';
@@ -199,11 +199,13 @@ const useStyles = makeStyles({
 })
 
 const DatabaseConnectionCard = ({otherToolActionRequest, dbConnection, refetch}) => {
+
     const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
     const [isEditingDatabase, setIsEditingDatabase] = useState(false);
     const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState(DB_CONNECTION_STATUS.NOT_CONNECTED);
+    const [buttonIcon, setButtonIcon] = useState(<></>)
     const classes = useStyles();
     let {id, name, url, databaseName, encrypted, proxyThroughAppServer, dbInfo, users, isPrivate} = dbConnection;
     databaseName = (databaseName) ? databaseName : '';
@@ -214,6 +216,23 @@ const DatabaseConnectionCard = ({otherToolActionRequest, dbConnection, refetch})
 
     let currentUser = users.filter(x => x.email === auth.getLoggedInUserInfo().email)[0];
     //setUserRoles(userRolesObj);
+
+    const computeButtonIcon = (connectionStatus) => {
+        if (connectionStatus === DB_CONNECTION_STATUS.TRYING_TO_CONNECT) {
+            return <CircularProgress className={classes.circularProgress}/>
+        } else if (connectionStatus === DB_CONNECTION_STATUS.CONNECTION_GOOD){
+            return <CheckIcon className={classes.testIcon}/>
+        } else if (connectionStatus === DB_CONNECTION_STATUS.CONNECTION_BAD){
+            return <CloseIcon className={classes.testBadIcon}/>
+        } else {
+            return <PlaylistAddCheckIcon className={classes.buttonIcon}/>
+        }
+    }
+
+    useEffect(() => {
+        let icon = computeButtonIcon(connectionStatus);
+        setButtonIcon(icon);
+    }, [connectionStatus])
 
     const upsertUser = (email, role) => {
         // prevent the creator role from being modied
@@ -312,18 +331,6 @@ const DatabaseConnectionCard = ({otherToolActionRequest, dbConnection, refetch})
         });
     }
 
-    const buttonIcon = (connectionStatus) => {
-            if (connectionStatus === DB_CONNECTION_STATUS.TRYING_TO_CONNECT) {
-                return <CircularProgress className={classes.circularProgress}/>
-            } else if (connectionStatus === DB_CONNECTION_STATUS.CONNECTION_GOOD){
-                return <CheckIcon className={classes.testIcon}/>
-            } else if (connectionStatus === DB_CONNECTION_STATUS.CONNECTION_BAD){
-                return <CloseIcon className={classes.testBadIcon}/>
-            } else {
-                return <PlaylistAddCheckIcon className={classes.buttonIcon}/>
-            }
-    }
-
     const status = parseDBInfo(dbInfo);
 
     let publicPrivateText = (isPrivate) ? "Private" : "Public";
@@ -342,45 +349,53 @@ const DatabaseConnectionCard = ({otherToolActionRequest, dbConnection, refetch})
 
     return (
         <div style={{ width: 350}}>
-            <DatabaseSharing
-                maxWith={'md'}
-                open={isShareDialogOpen}
-                onClose={() => setIsShareDialogOpen(false)}
-                currentUser={currentUser}
-                userRoles={userRoles}
-                upsertUser={upsertUser}
-                removeUser={removeUser}
-                save={saveShare}
-            />
-            <EditDatabaseConnectionModal
-                isOpen={isEditingDatabase}
-                onClose={() => setIsEditingDatabase(!isEditingDatabase)}
-                dbConnection={dbConnection}
-                refetch={refetch}
-            />
-            <MessageModal
-                isOpen={isPermissionsModalOpen}
-                onClose={() => {
-                    setIsPermissionsModalOpen(!isPermissionsModalOpen)
-                }}
-                title={"Insufficient Permissions"}
-                message={"You don't have permission to do that."}
-            />
-            <DeleteModal
-                isOpen={isDeleteWarningOpen}
-                isEditing={false}
-                headerContent="Delete Connection"
-                content="Are you sure you want to delete this database connection? This is not reversible."
-                onClose={() => setIsDeleteWarningOpen(!isDeleteWarningOpen)}
-                onDelete={() => {
-                    runMutation(DELETE_DB_CONNECTION, {id: id}, () => {
-                        refetch();
-                        removeUsernameAndPasswordLocally(id);
-                    }, (error) => {
-                        alert(error);
-                    });
-                }}
-            />
+            {isShareDialogOpen &&
+                <DatabaseSharing
+                    maxWith={'md'}
+                    open={isShareDialogOpen}
+                    onClose={() => setIsShareDialogOpen(false)}
+                    currentUser={currentUser}
+                    userRoles={userRoles}
+                    upsertUser={upsertUser}
+                    removeUser={removeUser}
+                    save={saveShare}
+                />
+            }
+            {isEditingDatabase &&
+                <EditDatabaseConnectionModal
+                    isOpen={isEditingDatabase}
+                    onClose={() => setIsEditingDatabase(!isEditingDatabase)}
+                    dbConnection={dbConnection}
+                    refetch={refetch}
+                />
+            }
+            {isPermissionsModalOpen &&
+                <MessageModal
+                    isOpen={isPermissionsModalOpen}
+                    onClose={() => {
+                        setIsPermissionsModalOpen(!isPermissionsModalOpen)
+                    }}
+                    title={"Insufficient Permissions"}
+                    message={"You don't have permission to do that."}
+                />
+            }
+            {isDeleteWarningOpen && 
+                <DeleteModal
+                    isOpen={isDeleteWarningOpen}
+                    isEditing={false}
+                    headerContent="Delete Connection"
+                    content="Are you sure you want to delete this database connection? This is not reversible."
+                    onClose={() => setIsDeleteWarningOpen(!isDeleteWarningOpen)}
+                    onDelete={() => {
+                        runMutation(DELETE_DB_CONNECTION, {id: id}, () => {
+                            refetch();
+                            removeUsernameAndPasswordLocally(id);
+                        }, (error) => {
+                            alert(error);
+                        });
+                    }}
+                />
+            }
             <Paper>
                 <ContentWrapper>
                     <TopGroup>
@@ -450,9 +465,7 @@ const DatabaseConnectionCard = ({otherToolActionRequest, dbConnection, refetch})
                                 <OutlinedStyledButton className={classes.button}
                                     onClick={testConnection}
                                 >
-                                    {
-                                    buttonIcon(connectionStatus)
-                                    }
+                                    {buttonIcon}
                                     <span>Test</span>                                
                                 </OutlinedStyledButton>
                             </Tooltip>

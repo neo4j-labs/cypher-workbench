@@ -177,9 +177,9 @@ test("getExportPayload - simple query - check datatype", () => {
 test ('data science query', () => {
     var cypher = `
     CALL gds.graph.streamRelationshipProperties(
-        'Foo',                      
+        'PersonInteracts',                      
         ['weight'],                        
-        ['BAR']                                     
+        ['INTERACTS']                                     
       )
       YIELD
         sourceNodeId, targetNodeId, relationshipType, relationshipProperty, propertyValue
@@ -195,7 +195,7 @@ test ('data science query', () => {
     });
 
     var expectedCypher = `
-    CALL gds.graph.streamRelationshipProperties('Foo', ['weight'], ['BAR']) YIELD sourceNodeId, targetNodeId, relationshipType, relationshipProperty, propertyValue
+    CALL gds.graph.streamRelationshipProperties('PersonInteracts', ['weight'], ['INTERACTS']) YIELD sourceNodeId, targetNodeId, relationshipType, relationshipProperty, propertyValue
       RETURN gds.util.asNode(sourceNodeId).name as source, gds.util.asNode(targetNodeId).name as target, relationshipType as relationshipType, relationshipProperty as relationshipProperty, propertyValue as propertyValue
       ORDER BY source, target    
     `;

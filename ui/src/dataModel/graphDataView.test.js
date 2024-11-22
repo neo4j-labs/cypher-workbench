@@ -1,7 +1,6 @@
 
 import { GraphData } from './graphData';
 import { GraphDataView } from './graphDataView';
-import { getGraphDataWithRelationships } from './graphData.test';
 import { deserializeObject, serializeObject } from './graphUtil';
 
 function resetDataChangeFlags (graphDataView) {
@@ -25,72 +24,25 @@ function getGraphDataViewWithNodes (nodeKeys) {
 function getGraphDataViewWithRelationships (relationshipArray) {
     var graphDataView = new GraphDataView();
     relationshipArray.map(entry => {
-        var startNode = graphDataView.getNodeByKey(entry.startNode);
-        if (!startNode) {
-            startNode = graphDataView.createNodeDisplay({
-                key: entry.startNode
-            });
-            graphDataView.addNode(startNode);
-        }
-        var endNode = graphDataView.getNodeByKey(entry.endNode);
-        if (!endNode) {
-            var endNode = graphDataView.createNodeDisplay({
-                key: entry.endNode
-            });
-            graphDataView.addNode(endNode);
-        }
+        var startNode = graphDataView.createNodeDisplay({
+            key: entry.startNode
+        });
+        var endNode = graphDataView.createNodeDisplay({
+            key: entry.endNode
+        });
         var properties = {
             key: entry.startNode + '_' + entry.type + '_' + entry.endNode,
             startDisplayNode: startNode,
             endDisplayNode: endNode
         }
-        var relationship = graphDataView.getRelationshipByKey(properties.key);
-        if (!relationship) {
-            relationship = graphDataView.createRelationshipDisplay(properties);
-            graphDataView.addRelationship(relationship);
-        }
+        var relationship = graphDataView.createRelationshipDisplay(properties);
+        graphDataView.addNode(startNode);
+        graphDataView.addNode(endNode);
+        graphDataView.addRelationship(relationship);
     })
     resetDataChangeFlags(graphDataView);
     return graphDataView;
 }
-
-function getGraphDataViewWithRelationshipsBasedOnGraphData (relationshipArray) {
-    var graphData = getGraphDataWithRelationships(relationshipArray);
-
-    var graphDataView = new GraphDataView();
-    relationshipArray.map(entry => {
-        var startNode = graphDataView.getNodeByKey(entry.startNode);
-        if (!startNode) {
-            startNode = graphDataView.createNodeDisplay({
-                key: entry.startNode,
-                node: graphData.getNodeByKey(entry.startNode)
-            });
-            graphDataView.addNode(startNode);
-        }
-        var endNode = graphDataView.getNodeByKey(entry.endNode);
-        if (!endNode) {
-            endNode = graphDataView.createNodeDisplay({
-                key: entry.endNode,
-                node: graphData.getNodeByKey(entry.endNode)
-            });
-            graphDataView.addNode(endNode);
-        }
-        var properties = {
-            key: (entry.relKey) ? entry.relKey : entry.startNode + '_' + entry.type + '_' + entry.endNode,
-            relationship: graphData.getRelationshipByKey(entry.relKey),
-            startDisplayNode: startNode,
-            endDisplayNode: endNode
-        }
-        var relationship = graphDataView.getRelationshipByKey(properties.key);
-        if (!relationship) {
-            relationship = graphDataView.createRelationshipDisplay(properties);
-            graphDataView.addRelationship(relationship);
-        }
-    })
-    resetDataChangeFlags(graphDataView);
-    return { graphData, graphDataView };
-}
-
 
 test('make new graph data view', () => {
     var graphDataView = new GraphDataView();
@@ -251,42 +203,6 @@ test('test getConnectedNodes', () => {
     expect(nodeBConnections.length).toBe(1);
     expect(nodeBConnections[0]).toBe(nodeA);
 
-});
-
-test('test outbound and inbound rel counts', () => {
-    var { graphData, graphDataView } = getGraphDataViewWithRelationshipsBasedOnGraphData([
-        {startNode: 'A', relKey: 1, type: 'TO', endNode: 'B'},
-        {startNode: 'A', relKey: 5, type: 'FOO', endNode: 'B'},
-        {startNode: 'A', relKey: 2, type: 'TO', endNode: 'C'},
-        {startNode: 'A', relKey: 3, type: 'TO', endNode: 'D'},
-        {startNode: 'B', relKey: 4, type: 'TO', endNode: 'D'}
-    ]);
-    //console.log('graphData: ', graphData);
-    //console.log('graphDataView: ', graphDataView);
-
-    var nodeA = graphDataView.getNodeByKey('A');
-    var outboundRels = graphDataView.getOutboundRelationshipsForNodeByType(nodeA, 'TO');
-    expect(outboundRels.length).toBe(3);
-    var inboundRels = graphDataView.getInboundRelationshipsForNodeByType(nodeA, 'TO');
-    expect(inboundRels.length).toBe(0);
-
-    var nodeB = graphDataView.getNodeByKey('B');
-    outboundRels = graphDataView.getOutboundRelationshipsForNodeByType(nodeB, 'TO');
-    expect(outboundRels.length).toBe(1);
-    inboundRels = graphDataView.getInboundRelationshipsForNodeByType(nodeB, 'TO');
-    expect(inboundRels.length).toBe(1);
-
-    var nodeC = graphDataView.getNodeByKey('C');
-    outboundRels = graphDataView.getOutboundRelationshipsForNodeByType(nodeC, 'TO');
-    expect(outboundRels.length).toBe(0);
-    inboundRels = graphDataView.getInboundRelationshipsForNodeByType(nodeC, 'TO');
-    expect(inboundRels.length).toBe(1);
-
-    var nodeD = graphDataView.getNodeByKey('D');
-    outboundRels = graphDataView.getOutboundRelationshipsForNodeByType(nodeD, 'TO');
-    expect(outboundRels.length).toBe(0);
-    inboundRels = graphDataView.getInboundRelationshipsForNodeByType(nodeD, 'TO');
-    expect(inboundRels.length).toBe(2);
 });
 
 test('test convert to graphData', () => {    

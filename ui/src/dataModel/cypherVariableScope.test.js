@@ -48,7 +48,7 @@ const makeTestPattern = (variableScope) => {
     })
 
     var patternPart = new PatternPart({
-        pathPattern: pathPattern,
+        pathPatterns: [pathPattern],
         variableScope: variableScope
     })
 

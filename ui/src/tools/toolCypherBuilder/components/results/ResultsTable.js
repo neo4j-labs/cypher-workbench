@@ -21,6 +21,8 @@ import { LAYOUTS } from '../../../../components/canvas/d3/layoutHelper';
 import { COLORS } from "../../../../common/Constants";
 import { stopListeningTo, listenTo } from "../../../../dataModel/eventEmitter";
 import { getDynamicConfigValue } from '../../../../dynamicConfig';
+import { Integer } from 'neo4j-driver';
+import { findObjectsContainingKeys } from '../../../../dataModel/graphUtil';
 
 const pxVal = (px) => typeof(px) === 'string' ? parseInt(px.replace(/px$/,'')) : px;
 
@@ -63,6 +65,73 @@ const PLACEHOLDER_NODE_STYLE = {
     strokeWidth: 2
 }
 
+export const isNode = (value) => value && typeof(value === 'object') 
+    && value.labels && Array.isArray(value.labels);
+
+// duck-typing because remote connections don't create a 'Relationship' javascript object, 
+//  only driver connections in the browser do, and we need to handle both
+export const isRelationship = (value) => 
+        value && typeof(value === 'object') 
+              && (value.start instanceof Integer || typeof(value.start) === 'number')
+              && (value.start instanceof Integer || typeof(value.end) === 'number');
+
+export const isPath = (value) => value && typeof(value === 'object') 
+    && value.start && value.end && Array.isArray(value.segments);
+
+export const getNodeHeaders = (headers, rows) => {
+    var nodeHeaders = [];
+    if (rows && rows.length > 0 && rows[0]) {
+        const firstRow = rows[0];
+        nodeHeaders = headers.filter(header => isNode(firstRow[header]));
+    }
+    return nodeHeaders;
+}
+
+export const getRelationshipHeaders = (headers, rows) => {
+    var relationshipHeaders = [];
+    if (rows && rows.length > 0 && rows[0]) {
+        const firstRow = rows[0];
+        relationshipHeaders = headers.filter(header => isRelationship(firstRow[header]));
+    }
+    return relationshipHeaders;
+}
+
+export const getPathHeaders = (headers, rows) => {
+    var pathHeaders = [];
+    if (rows && rows.length > 0 && rows[0]) {
+        const firstRow = rows[0];
+        pathHeaders = headers.filter(header => isPath(firstRow[header]));
+    }
+    return pathHeaders;
+}
+
+export const analyzeHeaders = (headers, rows) => {
+    var nodeHeaders = [];
+    var relationshipHeaders = [];
+    var pathHeaders = [];
+    var nestedHeaders = [];
+    if (rows && rows.length > 0 && rows[0]) {
+        const firstRow = rows[0];
+        headers.forEach(header => {
+            let value = firstRow[header];
+            let nestedValues = findObjectsContainingKeys(value, 'identity');
+            if (isNode(value)) {
+                nodeHeaders.push(header);
+            } else if (isRelationship(value)) {
+                relationshipHeaders.push(header);
+            } else if (isPath(value)) {
+                pathHeaders.push(header);
+            } else if (nestedValues.some(x => isNode(x) || isRelationship(x))) {
+                nestedHeaders.push(header);
+            }
+        });
+    }
+    return {
+        nodeHeaders, relationshipHeaders, pathHeaders, nestedHeaders
+    };
+}
+
+
 export default class ResultsTable extends Component {
 
     state = {
@@ -86,29 +155,6 @@ export default class ResultsTable extends Component {
 
     // duck-typing because remote connections don't create a 'Node' javascript object, 
     //  only driver connections in the browser do, and we need to handle both
-    isNode = (value) => value && typeof(value === 'object') && value.labels && Array.isArray(value.labels);
-
-    // duck-typing because remote connections don't create a 'Relationship' javascript object, 
-    //  only driver connections in the browser do, and we need to handle both
-    isRelationship = (value) => value && typeof(value === 'object') && typeof(value.start) === 'number' && typeof(value.end) === 'number';
-
-    getNodeHeaders = (headers, rows) => {
-        var nodeHeaders = [];
-        if (rows && rows.length > 0 && rows[0]) {
-            const firstRow = rows[0];
-            nodeHeaders = headers.filter(header => this.isNode(firstRow[header]));
-        }
-        return nodeHeaders;
-    }
-
-    getRelationshipHeaders = (headers, rows) => {
-        var relationshipHeaders = [];
-        if (rows && rows.length > 0 && rows[0]) {
-            const firstRow = rows[0];
-            relationshipHeaders = headers.filter(header => this.isRelationship(firstRow[header]));
-        }
-        return relationshipHeaders;
-    }
 
     addPlaceholderNode = (syncedGraphDataAndView, nodeId, initialX, initialY, graphCanvas) => {
         var displayNode = syncedGraphDataAndView.createNode({
@@ -130,12 +176,8 @@ export default class ResultsTable extends Component {
     }
 
     isPlaceholderNode = (displayNode) => {
-        if (displayNode) {
-            var property = displayNode.getNode().getPropertyByKey(Placeholder.Key);
-            return (property && property.value === Placeholder.Value);
-        } else {
-            return false;
-        }
+        var property = displayNode.getNode().getPropertyByKey(Placeholder.Key);
+        return (property && property.value === Placeholder.Value);
     }
 
     getNodeStyle = ({ key, labels, dataModel }) => {
@@ -176,8 +218,8 @@ export default class ResultsTable extends Component {
             selectedDataModel = parentContainer.getDataModel();
         }
 
-        const nodeHeaders = this.getNodeHeaders(headers, rows);
-        const relationshipHeaders = this.getRelationshipHeaders(headers, rows);
+        const nodeHeaders = getNodeHeaders(headers, rows);
+        const relationshipHeaders = getRelationshipHeaders(headers, rows);
         var graphCanvas = null;
 
         var initialX = 100, initialY = 150;
@@ -193,120 +235,78 @@ export default class ResultsTable extends Component {
         const allNodeKeysFromRows = new Set();
         const allRelKeysFromRows = new Set();
 
-        // TODO - make this configurable
-        //const MAX_FAN_OUT = 3;
-
-        // var nodeRelCountMap = {};
-        // rows.forEach(row => {
-        //     relationshipHeaders.forEach(header => {
-        //         const relInfo = row[header];
-
-        //         var displayStartNode = syncedGraphDataAndView.getNodeByKey(relInfo.start);
-        //         var displayEndNode = syncedGraphDataAndView.getNodeByKey(relInfo.end);
-        //         var outboundRels = [];
-        //         var inboundRels = [];
-        //         if (displayStartNode) {
-        //             outboundRels = syncedGraphDataAndView.getOutboundRelationshipsForNodeByType(displayStartNode, relInfo.type);
-        //         }
-        //         if (displayEndNode) {
-        //             inboundRels = syncedGraphDataAndView.getInboundRelationshipsForNodeByType(displayEndNode, relInfo.type);
-        //         }
-
-        //         if (outboundRels.length > 0) {
-        //             var count1 = nodeRelCountMap[relInfo.start];
-        //             if (!count1) {
-        //                 nodeRelCountMap[relInfo.start] = 1;
-        //             } else {
-        //                 nodeRelCountMap[relInfo.start] = count1 + 1;
-        //             }
-        //         }
-
-        //         if (inboundRels.length > 0 || this.isPlaceholderNode(displayEndNode)) {
-        //             var count2 = nodeRelCountMap[relInfo.end];
-        //             if (!count2) {
-        //                 nodeRelCountMap[relInfo.end] = 1;
-        //             } else {
-        //                 nodeRelCountMap[relInfo.end] = count2 + 1;
-        //             }
-        //         }
-        //     })
-        // });
-
         // handle nodes
         rows.forEach(row => {
             nodeHeaders.forEach(header => {
                 const nodeInfo = row[header];
 
-                //if (nodeRelCountMap[nodeInfo.identity] > 0 || Object.keys(nodeRelCountMap).length === 0) {
-                    allNodeKeysFromRows.add(nodeInfo.identity);
+                allNodeKeysFromRows.add(nodeInfo.identity);
 
-                    const graphNodeProps = {
-                        neoInternalId: nodeInfo.identity,
-                        key: nodeInfo.identity,
-                        labels: nodeInfo.labels
-                    };
-    
-                    const displayNodeProps = {
-                        key: nodeInfo.identity,
-                        x: initialX,
-                        y: initialY,
-                        ...this.getNodeStyle({
-                            key: nodeInfo.key,
-                            labels: nodeInfo.labels,
-                            dataModel: selectedDataModel
-                        })
-                    }
-    
-                    var displayNode = syncedGraphDataAndView.getNodeByKey(displayNodeProps.key);
-                    var graphNode = null;
-    
-                    var updateProperties = false;
-                    if (!displayNode) {
-                        displayNode = syncedGraphDataAndView.createNode(graphNodeProps, displayNodeProps);
-                        syncedGraphDataAndView.addNode(displayNode);
-                        updateProperties = true;
-                    } else {
-                        // we are doing this to re-layout everything fresh every time
-                        if (this.isPlaceholderNode(displayNode)) {
-    
-                            graphNode = displayNode.getNode();
-                            // moving the removal of the placeholder node after the relationship check later
-                            //graphNode.removeProperty(Placeholder.Key)
-                            graphNode.labels = graphNodeProps.labels;
-    
-                            var nodeStyle = this.getNodeStyle({
-                                key: displayNode.key,
-                                labels: graphNode.labels,
-                                dataModel: selectedDataModel
-                            });
-                            
-                            updateProperties = true;
-                            //displayNode.stroke = nodeStyle.stroke;
-    
-                            displayNode.fontSize = nodeStyle.fontSize;
-                            displayNode.strokeWidth = nodeStyle.strokeWidth;
-                            displayNode.setSize(nodeStyle.size);
-                            // this sets stroke and fontColor
-                            displayNode.setColor(nodeStyle.color);
-                            
-                            if (graphCanvas) {
-                                graphCanvas.reRenderNode(displayNode);
-                            }
-                        } 
-                        displayNode.setX(initialX);
-                        displayNode.setY(initialY);
-                    }
-                    if (updateProperties) {
+                const graphNodeProps = {
+                    neoInternalId: nodeInfo.identity,
+                    key: nodeInfo.identity,
+                    labels: nodeInfo.labels
+                };
+
+                const displayNodeProps = {
+                    key: nodeInfo.identity,
+                    x: initialX,
+                    y: initialY,
+                    ...this.getNodeStyle({
+                        key: nodeInfo.key,
+                        labels: nodeInfo.labels,
+                        dataModel: selectedDataModel
+                    })
+                }
+
+                var displayNode = syncedGraphDataAndView.getNodeByKey(displayNodeProps.key);
+                var graphNode = null;
+
+                var updateProperties = false;
+                if (!displayNode) {
+                    displayNode = syncedGraphDataAndView.createNode(graphNodeProps, displayNodeProps);
+                    syncedGraphDataAndView.addNode(displayNode);
+                    updateProperties = true;
+                } else {
+                    // we are doing this to re-layout everything fresh every time
+                    if (this.isPlaceholderNode(displayNode)) {
+
                         graphNode = displayNode.getNode();
-                        if (nodeInfo.properties) {
-                            Object.keys(nodeInfo.properties).forEach(key => {
-                                graphNode.addProperty(key, nodeInfo.properties[key]);
-                            });
+                        graphNode.removeProperty(Placeholder.Key)
+                        graphNode.labels = graphNodeProps.labels;
+
+                        var nodeStyle = this.getNodeStyle({
+                            key: displayNode.key,
+                            labels: graphNode.labels,
+                            dataModel: selectedDataModel
+                        });
+                        
+                        updateProperties = true;
+                        //displayNode.stroke = nodeStyle.stroke;
+
+                        displayNode.fontSize = nodeStyle.fontSize;
+                        displayNode.strokeWidth = nodeStyle.strokeWidth;
+                        displayNode.setSize(nodeStyle.size);
+                        // this sets stroke and fontColor
+                        displayNode.setColor(nodeStyle.color);
+                        
+                        if (graphCanvas) {
+                            graphCanvas.reRenderNode(displayNode);
                         }
+                    } 
+                    displayNode.setX(initialX);
+                    displayNode.setY(initialY);
+                }
+                if (updateProperties) {
+                    graphNode = displayNode.getNode();
+                    if (nodeInfo.properties) {
+                        Object.keys(nodeInfo.properties).forEach(key => {
+                            graphNode.addProperty(key, nodeInfo.properties[key]);
+                        });
                     }
-                //}
-            });
-        });
+                }
+            })
+        })
 
         // remove any nodes that are no longer part of the result set
         syncedGraphDataAndView.getNodeArray()
@@ -318,56 +318,45 @@ export default class ResultsTable extends Component {
             relationshipHeaders.forEach(header => {
                 const relInfo = row[header];
 
+                allRelKeysFromRows.add(relInfo.identity);
+
                 var displayStartNode = syncedGraphDataAndView.getNodeByKey(relInfo.start);
                 var displayEndNode = syncedGraphDataAndView.getNodeByKey(relInfo.end);
 
-                var outboundRels = syncedGraphDataAndView.getOutboundRelationshipsForNodeByType(displayStartNode, relInfo.type);
-                var inboundRels = syncedGraphDataAndView.getInboundRelationshipsForNodeByType(displayEndNode, relInfo.type);
+                if (!displayStartNode) {
+                    displayStartNode = this.addPlaceholderNode(syncedGraphDataAndView, 
+                            relInfo.start, initialX, initialY, graphCanvas)
+                }
 
-                //if (outboundRels.length < MAX_FAN_OUT || this.isPlaceholderNode(displayEndNode)) {
-                    allRelKeysFromRows.add(relInfo.identity);
+                if (!displayEndNode) {
+                    displayEndNode = this.addPlaceholderNode(syncedGraphDataAndView, 
+                            relInfo.end, initialX, initialY, graphCanvas)
+                }
 
-                    // removing place holder status
-                    if (this.isPlaceholderNode(displayEndNode)) {
-                        var graphNode = displayEndNode.getNode();
-                        graphNode.removeProperty(Placeholder.Key);
-                    }
+                const graphRelProps = {
+                    key: relInfo.identity,
+                    type: relInfo.type,
+                    startNode: displayStartNode.getNode(),
+                    endNode: displayEndNode.getNode()
+                };
 
-                    if (!displayStartNode) {
-                        displayStartNode = this.addPlaceholderNode(syncedGraphDataAndView, 
-                                relInfo.start, initialX, initialY, graphCanvas)
+                const displayRelProps = {
+                    key: relInfo.identity,
+                    startDisplayNode: displayStartNode,
+                    endDisplayNode: displayEndNode
+                }
+
+                var existingRel = syncedGraphDataAndView.getRelationshipByKey(displayRelProps.key);
+                if (!existingRel) {
+                    var displayRel = syncedGraphDataAndView.createRelationship(graphRelProps, displayRelProps);
+                    var graphRel = displayRel.getRelationship();
+                    if (relInfo.properties) {
+                        Object.keys(relInfo.properties).forEach(key => {
+                            graphRel.addProperty(key, relInfo.properties[key]);
+                        });
                     }
-    
-                    if (!displayEndNode) {
-                        displayEndNode = this.addPlaceholderNode(syncedGraphDataAndView, 
-                                relInfo.end, initialX, initialY, graphCanvas)
-                    }
-    
-                    const graphRelProps = {
-                        key: relInfo.identity,
-                        type: relInfo.type,
-                        startNode: displayStartNode.getNode(),
-                        endNode: displayEndNode.getNode()
-                    };
-    
-                    const displayRelProps = {
-                        key: relInfo.identity,
-                        startDisplayNode: displayStartNode,
-                        endDisplayNode: displayEndNode
-                    }
-    
-                    var existingRel = syncedGraphDataAndView.getRelationshipByKey(displayRelProps.key);
-                    if (!existingRel) {
-                        var displayRel = syncedGraphDataAndView.createRelationship(graphRelProps, displayRelProps);
-                        var graphRel = displayRel.getRelationship();
-                        if (relInfo.properties) {
-                            Object.keys(relInfo.properties).forEach(key => {
-                                graphRel.addProperty(key, relInfo.properties[key]);
-                            });
-                        }
-                        syncedGraphDataAndView.addRelationship(displayRel);
-                    }
-                //} 
+                    syncedGraphDataAndView.addRelationship(displayRel);
+                }
             })
         })
 
@@ -513,7 +502,7 @@ export default class ResultsTable extends Component {
             this.setState({
                 cypherQuery: value
             }, () => {
-                //this.updateResultsPanel(value);            
+                //this.runQuery(value);            
             });
         }
     }
@@ -658,6 +647,48 @@ export default class ResultsTable extends Component {
         });
     }
 
+    shouldAddReturn = (cypher, currentKeyword) => {
+        if (currentKeyword === 'RETURN') {
+            return false;
+        } else if (['ORDER BY','LIMIT','SKIP'].includes(currentKeyword)) {
+            let cypherLines = cypher.split('\n');
+            let keywords = cypherLines.map(line => this.getLineKeyword(line));
+            let returnIndex = keywords.lastIndexOf('RETURN');
+            let withIndex = keywords.lastIndexOf('WITH');
+            if (returnIndex === -1) {
+                return true;
+            } else if (withIndex > returnIndex) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    handleUnion = (cypher) => {
+        if (cypher) {
+            let cypherLines = cypher.split('\n');
+            let unionIndex = cypherLines
+                .map(line => this.getLineKeyword(line))
+                .findIndex(keyword => ['UNION', 'UNION ALL'].includes(keyword))
+            if (unionIndex >= 0) {
+                let beforeLines = cypherLines.slice(0,unionIndex+1);
+                let afterLines = cypherLines.slice(unionIndex+1);
+                let beforeCypher = beforeLines.map(x => `// ${x}`).join('\n');
+                let afterCypher = '';
+                if (unionIndex === (cypherLines.length - 1)) {
+                    afterCypher = `WITH 'Debug now will return only the second part of the UNION (ALL) until you reach the end' as message`;
+                } else {
+                    afterCypher = afterLines.join('\n');
+                }
+                return `${beforeCypher}\n${afterCypher}`;
+            }
+        } 
+        return cypher;
+    }
+
     executeDebugQuery = (callback) => {
         var { debugSteps, limit } = this.state;
         var { parentContainer } = this.props;
@@ -670,45 +701,23 @@ export default class ResultsTable extends Component {
 
             var activeStep = debugSteps.getActiveStep();
             var activeStepCypher = (activeStep) ? activeStep.getCypher() : '';
-            var keyword = '';            
-            if (activeStepCypher) {
-                keyword = this.getLineKeyword(activeStepCypher);
-            }
-
-            var { parentContainer } = this.props;
-            var limitMultiplier = 1;
-            if (parentContainer.isDebugCanvasActive && parentContainer.isDebugCanvasActive()) {
-                if (keyword.match(/MATCH/i)) {
-                    limitMultiplier = Math.floor(activeStep.getInternalActiveStepIndex() / 2);
-                    if (limitMultiplier < 1) {
-                        limitMultiplier = 1;
-                        this.setState({
-                            limitMultiplier: limitMultiplier
-                        });
-                    }
-                } else {
-                    limitMultiplier = (this.state.limitMultiplier) ? this.state.limitMultiplier : 1;
-                }
-            }
             var limit = parseInt(limit);
-            var additionalLimit = 0;
-            if (limitMultiplier > 1) {
-                additionalLimit = 10;
-            }
-            limit = limit * limitMultiplier + additionalLimit;
-            if (limit > 300) {
-                limit = 300;
-            }
-            console.log(`limitMultiplier is: ${limitMultiplier}, limit is: ${limit}`);
             var cypherLimit = '';
             if (!isNaN(limit)) {
                 cypherLimit = `\nLIMIT ${limit}`;
             }
 
             if (cypherToRun) {
-                var shouldAddReturn = (['RETURN','ORDER BY','LIMIT','SKIP'].includes(keyword) === false);
+                var keyword = '';
+                if (activeStepCypher) {
+                    keyword = this.getLineKeyword(activeStepCypher);
+                }
+                let shouldAddReturn = this.shouldAddReturn(cypherToRun, keyword);
                 var shouldAddLimit = (keyword !== 'LIMIT')
 
+                if (shouldAddReturn) {
+                    cypherToRun = this.handleUnion(cypherToRun);
+                }                
                 cypherToRun = (shouldAddReturn) ? `${cypherToRun}${CYPHER_RETURN}` : cypherToRun;
                 cypherToRun = (shouldAddLimit) ? `${cypherToRun}${cypherLimit}` : cypherToRun;
             }

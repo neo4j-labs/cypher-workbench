@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import PropTypes from "prop-types";
 import {makeStyles} from "@material-ui/core/styles";
 import {getUserNameAndPasswordLocally, storeUserNameAndPasswordLocally} from "../../../common/encryption";
@@ -46,16 +46,21 @@ const useStyles = makeStyles({
 });
 
 const EditDatabaseConnectionModal = ({isOpen, onClose, dbConnection, refetch }) => {
-    const [formState, setFormState] = useState({
-        name : dbConnection.name,
-        databaseName: dbConnection.databaseName,
-        url: dbConnection.url,
-        isPublic : !dbConnection.isPrivate,
-        proxyThroughAppServer: dbConnection.proxyThroughAppServer || false,
-        encrypted: dbConnection.encrypted,
-        password: '',
-        user: ''
-    });
+    // console.log('dbConnection: ', dbConnection);
+    const getFormState = (dbConnection) => {
+        return {
+            name : dbConnection.name,
+            databaseName: dbConnection.databaseName,
+            url: dbConnection.url,
+            isPublic : !dbConnection.isPrivate,
+            proxyThroughAppServer: dbConnection.proxyThroughAppServer || false,
+            encrypted: dbConnection.encrypted,
+            password: '',
+            user: ''
+        }    
+    }
+
+    const [formState, setFormState] = useState(getFormState(dbConnection));
     const [isUpdatingCredentials, setIsUpdatingCredentials] = useState(false);
     const [showUrlError, setShowUrlError] = useState(false);
     const [showDatabaseNameError, setShowDatabaseNameError] = useState(false);
@@ -64,6 +69,10 @@ const EditDatabaseConnectionModal = ({isOpen, onClose, dbConnection, refetch }) 
     const [showPasswordError, setShowPasswordError] = useState(false);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
     const classes = useStyles();
+
+    useEffect(() => {
+        setFormState(getFormState(dbConnection))
+    }, [dbConnection])
 
     const updateCredentials = async () => {
         // we need to pull them in because they weren't loaded previously
@@ -81,7 +90,7 @@ const EditDatabaseConnectionModal = ({isOpen, onClose, dbConnection, refetch }) 
     // Handles multiple form inputs
     const handleChange = (e) => {
         let { name, value } = e.target;
-        console.log(name, value)
+        // console.log(name, value)
         if(value === "true" || value === "false"){
             setFormState({...formState, [name]: e.target.checked})
         } else {
@@ -287,7 +296,9 @@ const EditDatabaseConnectionModal = ({isOpen, onClose, dbConnection, refetch }) 
                         <Button
                             variant='contained'
                             color='primary'
-                            onClick={() => setIsUpdatingCredentials(!isUpdatingCredentials)}
+                            onClick={() => {
+                                setIsUpdatingCredentials(!isUpdatingCredentials)
+                            }}
                             fullWidth
                         >
                             Update Credentials

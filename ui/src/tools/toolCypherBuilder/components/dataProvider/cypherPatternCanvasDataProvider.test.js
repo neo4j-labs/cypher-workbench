@@ -43,7 +43,7 @@ var getCypherPattern = function () {
     })
 
     var patternPart = new PatternPart({
-        pathPattern: pathPattern 
+        pathPatterns: [pathPattern]
     })
 
     var pattern = new Pattern({

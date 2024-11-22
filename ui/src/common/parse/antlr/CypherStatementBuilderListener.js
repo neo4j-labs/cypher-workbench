@@ -8,6 +8,7 @@ export default class CypherStatementBuilderListener extends CypherListener {
 
     constructor (mainParseType) {
         super();
+        this.cypherOption = null;
         this.mainParseType = mainParseType;        
     }
 
@@ -36,11 +37,25 @@ export default class CypherStatementBuilderListener extends CypherListener {
     }
 
     getCypherStatement = function () {
-        return this.parseStack[0];
+        let statement = this.parseStack[0];
+        if (statement && this.cypherOption) {
+            statement.cypherOption = this.cypherOption;
+        } 
+        return statement;
     }
 
     clear = function () {
         this.parseStack = [];
+    }
+
+    getTokens = function (ctx) {
+        var childCount = ctx.getChildCount();
+        var tokens = [];
+        for (var i = 0; i < childCount; i++) {
+            var token = ctx.getChild(i).getText();
+            tokens.push(token);
+        }
+        return tokens;
     }
 
     getNonSpaceTokens = function (ctx) {
@@ -53,6 +68,17 @@ export default class CypherStatementBuilderListener extends CypherListener {
             }
         }
         return nonSpaceTokens;
+    }
+
+    getStringFromTokens = function (ctx, index) {
+        var childCount = ctx.getChildCount();
+        var text = '';
+        index = (index === null || index === undefined) ? 0 : index;
+        for (var i = index; i < childCount; i++) {
+            var token = ctx.getChild(i).getText();
+            text += token;
+        }
+        return text;
     }
 
     stripQuotes = function (str) {
@@ -102,6 +128,11 @@ export default class CypherStatementBuilderListener extends CypherListener {
     
     enterOC_InQueryCall = function(ctx) {
         var inQueryCall = new CypherStatement.InQueryCall();
+        var firstWord = ctx.getChild(0).getText();
+        if (firstWord.toLowerCase() === 'optional') {
+            inQueryCall.optionalCall = true;
+        }
+                
         var something = this.peek();
         if (something.addReadingClause) {
             something.addReadingClause(inQueryCall);
@@ -125,6 +156,11 @@ export default class CypherStatementBuilderListener extends CypherListener {
     exitOC_StandaloneCall = function(ctx) {
         this.pop();
     };
+
+    enterOC_CypherOption = function(ctx) {
+        var nonSpaceTokens = this.getNonSpaceTokens(ctx);
+        this.cypherOption = nonSpaceTokens.join(' ');
+    }
     
     enterOC_Query = function(ctx) {
         var query = new CypherStatement.Query();
@@ -160,6 +196,11 @@ export default class CypherStatementBuilderListener extends CypherListener {
     enterOC_SubQuery = function(ctx) {
         //console.log("enter subquery")
         var subQuery = new CypherStatement.SubQuery();
+        var firstWord = ctx.getChild(0).getText();
+        if (firstWord.toLowerCase() === 'optional') {
+            subQuery.optionalCall = true;
+        }
+
         var something = this.peek();
         if (something.addReadingClause) {
             something.addReadingClause(subQuery);
@@ -176,6 +217,30 @@ export default class CypherStatementBuilderListener extends CypherListener {
         //console.log("exit subquery")
         this.pop();
     };
+
+    enterOC_SubQueryVariableScope = function (ctx) {
+        // find SubQuery further up the parse chain
+        for (let i = 0; i <= this.parseStack.length; i++) {
+            var something = this.peek(i);
+            //console.log('enterOC_SubQueryDirective something is: ', something);
+            if (something && something.setSubQueryDirective) {
+                something.subSubQueryVariableScope(this.getNonSpaceTokens(ctx).join(''))
+                break;
+            }
+        }
+    }    
+
+    enterOC_SubQueryDirective = function (ctx) {
+        // find SubQuery further up the parse chain
+        for (let i = 0; i <= this.parseStack.length; i++) {
+            var something = this.peek(i);
+            //console.log('enterOC_SubQueryDirective something is: ', something);
+            if (something && something.setSubQueryDirective) {
+                something.setSubQueryDirective(this.getNonSpaceTokens(ctx).join(' '))
+                break;
+            }
+        }
+    }
     
     enterOC_ImplicitProcedureInvocation = function(ctx) {
         var something = this.peek();
@@ -329,9 +394,9 @@ export default class CypherStatementBuilderListener extends CypherListener {
             match.optionalMatch = true;
         }
         var something = this.peek();
-        if (something.addReadingClause) {
+        if (something && something.addReadingClause) {
             something.addReadingClause(match);
-        } else {
+        } else if (this.mainParseType !== 'Match') {
             console.log("warning: no appropriate parent object for Match. parent =");
             console.log(something);
         }
@@ -339,7 +404,9 @@ export default class CypherStatementBuilderListener extends CypherListener {
     };
     
     exitOC_Match = function(ctx) {
-        this.pop();
+        if (this.mainParseType !== 'Match') {
+            this.pop();
+        }
     };
     
     getUpdatingClause = function () {
@@ -420,10 +487,25 @@ export default class CypherStatementBuilderListener extends CypherListener {
     };
     
     enterOC_Where = function(ctx) {
-        var where = new CypherStatement.Where();
         var something = this.peek();
-        something.where = ctx.getChild(2).getText();
+        if (!something) {
+            // for cases where we are testing Where clauses by themselves
+            something = new CypherStatement.Where();
+            this.push(something);
+        }
+
+        if (something && something.setWhere) {
+            //something.setWhere(ctx.getChild(2).getText());
+            something.setWhere(this.getStringFromTokens(ctx, 2));
+        }
     };
+
+    exitOC_Where = function(ctx) {
+        var something = this.peek();
+        if (something && something instanceof CypherStatement.Where && this.mainParseType !== 'Where') {
+            this.pop();
+        }
+    }
     
     enterOC_AnonymousPatternPart = function(ctx) {
         var anonymousPatternPart = new CypherStatement.AnonymousPatternPart();
@@ -441,7 +523,47 @@ export default class CypherStatementBuilderListener extends CypherListener {
             this.pop();
         }
     };
-    
+
+    enterOC_ShortestPathPattern = function(ctx) {
+        var shortestPathPattern = new CypherStatement.ShortestPathPattern();
+        var something = this.peek();
+        if (something) {
+            something.shortestPathPattern = shortestPathPattern;
+            var nonSpaceTokens = this.getNonSpaceTokens(ctx);
+            let isFunction = nonSpaceTokens[1] === '(' ? true : false;
+            let firstToken = nonSpaceTokens[0];
+            let firstTokenUpperCase = firstToken.toUpperCase();
+            
+            if (isFunction) {
+                shortestPathPattern.isFunction = true;
+                shortestPathPattern.shortestPath = firstToken;
+            } else if (firstTokenUpperCase === 'ANY') {
+                if (nonSpaceTokens[1]?.toUpperCase() === 'SHORTEST') {
+                    shortestPathPattern.shortestPath = 'ANY SHORTEST';
+                } else {
+                    shortestPathPattern.shortestPath = 'ANY';
+                }
+            } else if (firstTokenUpperCase === 'ALL') {
+                shortestPathPattern.shortestPath = 'ALL SHORTEST';
+            } else {    // SHORTEST k ( GROUPS )
+                let thirdToken = (nonSpaceTokens.length >= 3) ? nonSpaceTokens[2].toUpperCase() : ''
+                if (thirdToken === 'GROUPS') {
+                    shortestPathPattern.shortestPath = nonSpaceTokens.slice(0,3).join(' ');
+                } else {
+                    shortestPathPattern.shortestPath = nonSpaceTokens.slice(0,2).join(' ');
+                }
+            }
+
+        }
+        this.push(shortestPathPattern);        
+    }
+
+    exitOC_ShortestPathPattern = function(ctx) {
+        if (this.mainParseType !== 'ShortestPathPattern') {
+            //console.log('exitOC_AnonymousPatternPart popping')
+            this.pop();
+        }
+    }
     
     enterOC_Pattern = function(ctx) {
         var pattern = new CypherStatement.Pattern();
@@ -458,6 +580,12 @@ export default class CypherStatementBuilderListener extends CypherListener {
     
     enterOC_PatternPart = function(ctx) {
         var patternPart = new CypherStatement.PatternPart();
+        // console.log('enterOC_PatternPart tokens: ', this.getTokens(ctx))
+        // trying to preserve a little of what the user typed
+        let secondTokenIsEquals = this.getTokens(ctx)[1] === '='
+        // console.log('secondTokenIsEquals: ', secondTokenIsEquals)
+        patternPart.spaceBeforeEquals = secondTokenIsEquals ? false : true;
+
         var something = this.peek();
         if (something.addPatternPart) {
             something.addPatternPart(patternPart);
@@ -474,17 +602,55 @@ export default class CypherStatementBuilderListener extends CypherListener {
     enterOC_PatternElement = function(ctx) {
         var patternElement = new CypherStatement.PatternElement();
         var something = this.peek();
-        if (something instanceof CypherStatement.PatternPart) {
-            something.patternElement = patternElement;
-        } else if (something instanceof CypherStatement.AnonymousPatternPart) {
-            something.patternElement = patternElement;
+        if (something && something.setPatternElement) {
+            something.setPatternElement(patternElement);
+        } else if (something && something.addPatternElement) {
+            something.addPatternElement(patternElement);
         }
         this.push(patternElement);
     };
-    
+
     exitOC_PatternElement = function(ctx) {
         this.pop();
     };
+
+    /*
+    enterOC_OpenParen = function (ctx) {
+        var something = this.peek();
+        if (something && something.setOpenParen) {
+            something.setOpenParen(true);
+        }
+    }
+
+    enterOC_CloseParen = function (ctx) {
+        var something = this.peek();
+        if (something && something.setCloseParen) {
+            something.setCloseParen(true);
+        }
+    }
+    */
+
+    enterOC_QuantifiedPathPattern = function (ctx) {
+        var quantifiedPathPattern = new CypherStatement.QuantifiedPathPattern();
+        var something = this.peek();
+        //console.log('enterOC_QuantifiedPathPattern: ', this.getStringFromTokens(ctx));
+        if (something && something.setQuantifiedPathPattern) {
+            //console.log('enterOC_QuantifiedPathPattern: setting setQuantifiedPathPattern');
+            something.setQuantifiedPathPattern(quantifiedPathPattern);
+        }
+        this.push(quantifiedPathPattern);
+    }
+
+    exitOC_QuantifiedPathPattern = function(ctx) {
+        this.pop();
+    }
+
+    enterOC_PathPatternQuantifier = function(ctx) {
+        var something = this.peek();
+        if (something && something.setPatternQuantifier) {
+            something.setPatternQuantifier(this.getNonSpaceTokens(ctx).join(''));
+        }
+    }
     
     enterOC_NodePattern = function(ctx) {
         var nodePattern = new CypherStatement.NodePattern();
@@ -496,6 +662,15 @@ export default class CypherStatementBuilderListener extends CypherListener {
     exitOC_NodePattern = function(ctx) {
         this.pop();
     };
+
+    enterOC_NodeLabels = function (ctx) {
+        var something = this.peek();
+        if (something.setNodeLabelString) {
+            let nonSpaceTokens = this.getNonSpaceTokens(ctx);
+            //console.log('non space tokens: ', nonSpaceTokens);
+            something.setNodeLabelString(nonSpaceTokens.join(''));
+        }
+    }
     
     enterOC_PatternElementChain = function(ctx) {
         var patternElementChain = new CypherStatement.PatternElementChainLink();
@@ -513,20 +688,9 @@ export default class CypherStatementBuilderListener extends CypherListener {
     enterOC_RelationshipPattern = function(ctx) {
         var relationshipPattern = new CypherStatement.RelationshipPattern();
     
-        /*
-        var childCount = ctx.getChildCount();
-        console.log('childCount: ', childCount);
-        for (var i = 0; i < childCount; i++) {
-            console.log('child ' + i + ': ', ctx.getChild(i).getText());
-        };*/
-        const firstChild = ctx.getChild(0).getText();
-        const lastChild = ctx.getChild(ctx.getChildCount()-1).getText();
-        relationshipPattern.leftArrowDirection = (firstChild === '<') 
-            ? CypherStatement.ARROW_DIRECTION.LEFT : CypherStatement.ARROW_DIRECTION.DASH;
-    
-        relationshipPattern.rightArrowDirection = (lastChild === '>') 
-            ? CypherStatement.ARROW_DIRECTION.RIGHT : CypherStatement.ARROW_DIRECTION.DASH;
-    
+        relationshipPattern.leftArrowDirection = CypherStatement.ARROW_DIRECTION.DASH;
+        relationshipPattern.rightArrowDirection = CypherStatement.ARROW_DIRECTION.DASH;
+
         var patternElementChain = this.peek();
         patternElementChain.relationshipPattern = relationshipPattern;
         this.push(relationshipPattern);
@@ -535,11 +699,39 @@ export default class CypherStatementBuilderListener extends CypherListener {
     exitOC_RelationshipPattern = function(ctx) {
         this.pop();
     };
+
+    enterOC_RelationshipTypes = function(ctx) {
+        var something = this.peek();
+        if (something.setRelationshipTypeString) {
+            let nonSpaceTokens = this.getNonSpaceTokens(ctx);
+            //console.log('non space tokens: ', nonSpaceTokens);
+            something.setRelationshipTypeString(nonSpaceTokens.join(''));
+        }
+    }
+
+    enterOC_LeftArrowHead = function(ctx) {
+        var relationshipPattern = this.peek();
+        if (relationshipPattern) {
+            relationshipPattern.leftArrowDirection = CypherStatement.ARROW_DIRECTION.LEFT;
+        }        
+    }
+
+    enterOC_RightArrowHead = function(ctx) {
+        var relationshipPattern = this.peek();
+        if (relationshipPattern) {
+            relationshipPattern.rightArrowDirection = CypherStatement.ARROW_DIRECTION.RIGHT;
+        }
+    }
     
     enterOC_RelTypeName = function(ctx) {
         var relationshipPattern = this.peek();
         relationshipPattern.addType(ctx.getChild(0).getText());
     };
+
+    enterOC_RangeLiteral = function(ctx) {
+        var relationshipPattern = this.peek();
+        relationshipPattern.setRangeLiteral(this.getNonSpaceTokens(ctx).join(''));
+    }
     
     enterOC_Variable = function(ctx) {
         //console.log('variable: ' + ctx.getChild(0).getText());
@@ -556,6 +748,13 @@ export default class CypherStatementBuilderListener extends CypherListener {
             }
         }
     };
+
+    enterOC_PathPatternQualifier = function(ctx) {
+        var something = this.peek();
+        if (something && something.setPatternQuantifier) {
+            something.setPatternQuantifier(this.getNonSpaceTokens(ctx).join(''));
+        }
+    }
     
     /*
     enterOC_PropertyKeyName = function(ctx) {
@@ -662,7 +861,7 @@ export default class CypherStatementBuilderListener extends CypherListener {
         }*/
     
         // for NodePattern and RelationshipPattern
-        if (beforeSomething.addProperty && this.currentPropertyKey) {
+        if (beforeSomething && beforeSomething.addProperty && this.currentPropertyKey) {
             // TODO: switch from value to expression
             var value = ctx.getChild(0).getText();
             //console.log(`has addProperty: adding key ${this.currentPropertyKey} and value ${value}`);
@@ -672,7 +871,7 @@ export default class CypherStatementBuilderListener extends CypherListener {
             //console.log(`is MapLiteral: adding key ${this.currentPropertyKey} and value`, expression);
             something.addMapEntry(this.currentPropertyKey, expression, this.inMerge)
             this.currentPropertyKey = null;
-        } else if (something.setParsedExpression) {
+        } else if (something && something.setParsedExpression) {
             something.setParsedExpression(expression);
         } else {
             //console.log('unhandled case in Expression, something is: ', something.myName);
@@ -799,7 +998,10 @@ export default class CypherStatementBuilderListener extends CypherListener {
     };
     
     exitOC_With = function(ctx) {
-        this.pop();
+        if (this.mainParseType !== 'With') {
+            this.pop();
+        }
+
         var something = this.peek();
         if (something instanceof CypherStatement.MultiPartQueryPart) {
             // the multi part query part is finished
@@ -964,7 +1166,8 @@ export default class CypherStatementBuilderListener extends CypherListener {
     
     enterOC_Skip = function(ctx) {
         var something = this.peek();
-        // 2 because first 2 tokens are 'SKIP' and ' '
+        // 2 because first 2 tokens are 'SKIP or OFFSET' and ' '
+        something.skipKeyword = ctx.getChild(0).getText();
         something.skip = ctx.getChild(2).getText();
     };
     

@@ -22,11 +22,30 @@ export const DataChangeType = {
     DataModelPropertyChange: "DataModelPropertyChange"
 }
 
+export const LLMString = {
+    JustNodeLabel: "JustNodeLabel",
+    NodeLabelAndProperties: "NodeLabelAndProperties"
+}
+
 export const ArrowsCypher = {
     JustVariable: "JustVariable",
     VariableAndNodeLabels: "VariableAndNodeLabels",
     VariableNodeLabelsAndProperties: "VariableNodeLabelsAndProperties"
 }
+
+export const CypherType = {
+    Create: "Create",
+    Merge: "Merge",
+    Match: "Match"
+}
+
+export const Neo4jVersion = {
+    v5: "5",
+    v4_4: "4.4",
+    v4_3: "4.3"
+}
+
+export const Neo4jVersionValues = new Set(Object.values(Neo4jVersion));
 
 export default function DataModel () {
 
@@ -391,6 +410,11 @@ export default function DataModel () {
             var cypher = "MERGE (pd:_NS_PropertyDefinition {id:'" + id + "'})";
             cypher += "\nSET pd += {name:'" + this.name + "', "
                     + "\ndatatype:'" + this.datatype + "'};";
+            return cypher;
+        }
+
+        this.getLLMStyleString = function () {
+            var cypher = (this.datatype) ? `${smartQuote(this.name)}:'${this.datatype}'` : smartQuote(this.name);
             return cypher;
         }
 
@@ -826,6 +850,34 @@ export default function DataModel () {
             return cypher;
         }
 
+        this.getLLMStyleString = function (options, dataModel) {
+            options = options || {};
+            var propertyCypher = '';
+            if (options.nodeLabel === LLMString.NodeLabelAndProperties) {
+                if (this.properties && Object.keys(this.properties).length > 0) {
+                    var propertyCypherArray = Object.values(this.properties).map(property => property.getLLMStyleString());
+                    propertyCypher = '[' + propertyCypherArray.join(',') + ']';
+                }
+            }
+            var nodeLabels = [this.label];
+            if (dataModel && this.secondaryNodeLabelKeys.length > 0) {
+                this.secondaryNodeLabelKeys.map(key => {
+                    var nodeLabel = dataModel.getNodeLabelByKey(key);
+                    if (nodeLabel) {
+                        nodeLabels.push(nodeLabel.label);
+                    }
+                })
+            } 
+            var nodeLabelStrings = nodeLabels.map(x => smartQuote(x));
+            let cypher = '';
+            if (options.nodeLabel === LLMString.JustNodeLabel) {
+                cypher = `:${nodeLabelStrings.join(':')}`;
+            } else {
+                cypher = `(:${nodeLabelStrings.join(':')}): ${propertyCypher}`;
+            }
+            return cypher;
+        }
+
         this.getArrowsStyleCypher = function (variableAssignmentMap, options, dataModel) {
             if (variableAssignmentMap[this.key] === undefined || variableAssignmentMap[this.key] === null) {
                 var variables = Object.values(variableAssignmentMap).sort(function(a, b) { return (a-b) });
@@ -1169,6 +1221,20 @@ export default function DataModel () {
             Object.values(this.properties).map(property => cypher += '\n' + property.getCypherPersistenceStatement())
             cypher += '\n';
             cypher += this.getRelationshipTypePersistenceStatement();
+            return cypher;
+        }
+
+        this.getLLMStyleString = function (dataModel) {
+            var propertyCypher = '';
+            if (this.properties && Object.keys(this.properties).length > 0) {
+                var propertyCypherArray = Object.values(this.properties).map(property => property.getLLMStyleString());
+                propertyCypher = ' {' + propertyCypherArray.join(',') + '}';
+            }
+            var type = (this.type) ? this.type : 'NO_TYPE_DEFINED';
+            
+            var cypher = `(${this.startNodeLabel.getLLMStyleString({ nodeLabel: LLMString.JustNodeLabel }, dataModel)})` +
+                         `-[:${smartQuote(type)}${propertyCypher}]->` +
+                         `(${this.endNodeLabel.getLLMStyleString({ nodeLabel: LLMString.JustNodeLabel }, dataModel)})`
             return cypher;
         }
 
@@ -2081,8 +2147,38 @@ export default function DataModel () {
         return cypher;
     }
 
-    function getConstraintStatements () {
-        return getConstraintStatementsEx(nodeLabels, relationshipTypes);
+    function getConstraintStatements (options) {
+        return getConstraintStatementsEx(nodeLabels, relationshipTypes, options);
+    }
+
+    function toLLMModelText (dataModel, options) {
+
+        options = options || {};
+        let llmNodeLabelText = (options.llmNodeLabelText) ? 
+            options.llmNodeLabelText
+            :
+            `Node Labels and their properties:`;
+
+        let llmRelationshipTypeText = (options.llmRelationshipTypeText) ? 
+            options.llmRelationshipTypeText
+            :
+            `Relationship traversal paths and their properties:`;
+
+        var nodeLabelLLMText = Object.values(nodeLabels)
+            .filter(nodeLabel => !nodeLabel.isOnlySecondaryNodeLabel)
+            .map(nodeLabel => nodeLabel.getLLMStyleString({ nodeLabel: LLMString.NodeLabelAndProperties }, dataModel));
+        var relationshipTypeLLMText = Object.values(relationshipTypes).map(relationshipType => 
+                                    relationshipType.getLLMStyleString(dataModel));
+
+        let llmText = `${llmNodeLabelText}
+            ${nodeLabelLLMText.join('\n')}
+
+            ${llmRelationshipTypeText}
+            ${relationshipTypeLLMText.join('\n')}
+        `;
+
+        llmText = llmText.split('\n').map(line => line.trimStart()).join('\n');
+        return llmText;
     }
 
     function toArrowsStyleCypher (dataModel, options) {
@@ -2091,6 +2187,8 @@ export default function DataModel () {
         if (options.nodesInRelationships) {
             nodesInRelationships = options.nodesInRelationships;
         }
+        let cypherType = options.cypherType ? options.cypherType : CypherType.Create;
+
         var variableAssignmentMap = {};
         var nodeCypherArray = Object.values(nodeLabels)
             .filter(nodeLabel => !nodeLabel.isOnlySecondaryNodeLabel)
@@ -2098,11 +2196,26 @@ export default function DataModel () {
         var relationshipCypherArray = Object.values(relationshipTypes).map(relationshipType => 
                                     relationshipType.getArrowsStyleCypher(variableAssignmentMap, nodesInRelationships));
 
-        var nodeCypherString = nodeCypherArray.join(',\n');
-        var relationshipCypherString = relationshipCypherArray.join(',\n');
-        nodeCypherString = (relationshipCypherString) ? nodeCypherString + ',\n' : nodeCypherString;
+        let cypher = '';
+        let nodeCypherString = '';
+        let relationshipCypherString = '';
 
-        var cypher = 'CREATE \n' + nodeCypherString + relationshipCypherString;
+        switch (cypherType) {
+            case CypherType.Merge:
+                nodeCypherString = nodeCypherArray.map(x => `MERGE ${x}`).join('\n')
+                relationshipCypherString = relationshipCypherArray.map(x => `MERGE ${x}`).join('\n');
+                nodeCypherString = (relationshipCypherString) ? nodeCypherString + '\n' : nodeCypherString;
+                break;
+            case CypherType.Match:
+                // TODO
+                break;
+            case CypherType.Create:
+            default:
+                nodeCypherString = 'CREATE \n' + nodeCypherArray.join(',\n');
+                relationshipCypherString = relationshipCypherArray.join(',\n');
+                nodeCypherString = (relationshipCypherString) ? nodeCypherString + ',\n' : nodeCypherString;
+        }
+        cypher = nodeCypherString + relationshipCypherString;
         return cypher;
     }
 
@@ -2452,7 +2565,8 @@ export default function DataModel () {
         getAllCompositeIndexNames: getAllCompositeIndexNames,
         addValidationSectionToExclude: addValidationSectionToExclude,
         removeValidationSectionToExclude: removeValidationSectionToExclude,
-        getExcludeValidationSections: getExcludeValidationSections
+        getExcludeValidationSections: getExcludeValidationSections,
+        toLLMModelText: toLLMModelText
     }
 
 };

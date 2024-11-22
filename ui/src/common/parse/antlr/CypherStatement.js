@@ -20,6 +20,30 @@ var CypherStatement = (function () {
         Map: "Map"
     };
 
+    function stripQuotes (value) {
+        if (value && value.replace) {
+            value = value.replace(/^['"]/, '');
+            value = value.replace(/['"]$/, '');
+        }
+        return value;
+    }
+
+    function getDatatypeByValue (value) {
+        value = stripQuotes(value);
+        let matches = Object.keys(exports.DataTypes).filter(key => {
+            if (exports.DataTypes[key] == value) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+        if (matches[0]) {
+            return value;
+        } else {
+            return null;
+        }
+    }
+
     function peek (array, howMany) {
         howMany = (howMany) ? -(howMany) - 1 : -1;
         return array.slice(howMany)[0];
@@ -135,6 +159,7 @@ var CypherStatement = (function () {
         //CALL SP oC_ExplicitProcedureInvocation ( SP? YIELD SP oC_YieldItems )? ;
         this.myName = 'InQueryCall';
         this.explicitProcedureInvocation = undefined;
+        this.optionalCall = false;
         this.yieldItems = [];
 
         this.populateMatchGraph = function (graph, config) {
@@ -147,6 +172,7 @@ var CypherStatement = (function () {
             if (dontContinue(config, this)) return '';
             var str = '';
             if (this.explicitProcedureInvocation) {
+                str += this.optionalCall ? 'OPTIONAL ' : '';
                 str += 'CALL ';
                 str += this.explicitProcedureInvocation.toString(config);
             }
@@ -174,7 +200,7 @@ var CypherStatement = (function () {
         this.populateMatchGraph = function (graph, config, yieldItems) {
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             return this.procedureName;
         }
@@ -205,7 +231,7 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             //console.log('this.procedureName: ', this.procedureName);
             //console.log('this.arguments: ', this.arguments);
@@ -229,7 +255,7 @@ var CypherStatement = (function () {
         this.procedureResultField = undefined;
         this.variable = undefined;
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = '';
             if (this.procedureResultField) {
@@ -288,7 +314,7 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = '';
             str += this.loadCSV.toString(config);
@@ -597,7 +623,7 @@ var CypherStatement = (function () {
             var keyword = (this.unionAll) ? 'UNION ALL' : 'UNION';
             var unionStmt = '';
             if (this.singleQuery) {
-                unionStmt = `${this.singleQuery.toString()}`;
+                unionStmt = `${this.singleQuery.toString(config)}`;
             }
             return `\n${keyword}\n${unionStmt}`;
         }
@@ -629,6 +655,16 @@ var CypherStatement = (function () {
         this.returnBody = null;
         this.where = null;
 
+        // to handle these as standalone clauses (although they may be handled by the return body)
+        this.orderBy = null;
+        this.skip = null;
+        this.skipKeyword = null;        
+        this.limit = null;
+
+        this.setWhere = function (where) {
+            this.where = where;
+        }
+
         this.populateMatchGraph = function (graph, config) {
 
             defineScope(config);
@@ -647,6 +683,17 @@ var CypherStatement = (function () {
                 str += (config && config.htmlString) ? '\n<br/>' : '\n';
                 str += 'WHERE ' + this.where;
             }
+
+            if (this.orderBy !== null) {
+                str += `\nORDER BY ${this.orderBy}`;
+            }
+            if (this.skip !== null) {
+                str += `\n${this.skipKeyword} ${this.skip}`;
+            }
+            if (this.limit !== null) {
+                str += `\nLIMIT ${this.limit}`;
+            }
+
             return 'WITH ' + str;
         }
     }
@@ -735,6 +782,17 @@ var CypherStatement = (function () {
         this.myName = 'SubQuery';
         this.subQuery = null;
         this.return = null;
+        this.optionalCall = false;
+        this.subQueryVariableScope = null;  // (), (*), (a), (a,b)
+        this.subQueryDirective = null;
+
+        this.subSubQueryVariableScope = function(subQueryVariableScope) {
+            this.subQueryVariableScope = subQueryVariableScope;
+        }
+
+        this.setSubQueryDirective = function(subQueryDirective) {
+            this.subQueryDirective = subQueryDirective;
+        }
 
         this.populateMatchGraph = function (graph, config) {
             if (this.subQuery && this.subQuery.populateMatchGraph) {
@@ -747,13 +805,20 @@ var CypherStatement = (function () {
 
         this.toString = function (config) {
             if (dontContinue(config, this)) return '';
-            var str = 'CALL {\n';
+            var str = '';
+            str += this.optionalCall ? 'OPTIONAL ' : '';            
+            str += 'CALL ';
+            str += this.subQueryVariableScope ? `${this.subQueryVariableScope} ` : '';
+            str += '{\n';
             if (this.subQuery && this.subQuery.toString) {
                 str += this.subQuery.toString(config);
             }
             str += `\n}`;
+            if (this.subQueryDirective) {
+                str += ' ' + this.subQueryDirective;
+            }
             if (this.return) {
-                str += `\n${this.return.toString()}`;
+                str += `\n${this.return.toString(config)}`;
             }
             return str;
         }
@@ -764,6 +829,16 @@ var CypherStatement = (function () {
         this.pattern = null;
         this.where = null;
         this.optionalMatch = false;
+
+        // to handle these as standalone clauses
+        this.orderBy = null;
+        this.skip = null;
+        this.skipKeyword = null;        
+        this.limit = null;
+
+        this.setWhere = function (where) {
+            this.where = where;
+        }
 
         this.populateMatchGraph = function (graph, config) {
             if (this.pattern) {
@@ -777,11 +852,21 @@ var CypherStatement = (function () {
 
         this.toString = function (config) {
             if (dontContinue(config, this)) return '';
-            var str = this.pattern.toString(config);
+            var str = this.pattern.toString(config, '');
             if (this.where) {
                 str += (config && config.htmlString) ? '\n<br/>' : '\n';
                 str += 'WHERE ' + this.where;
             }
+            if (this.orderBy !== null) {
+                str += `\nORDER BY ${this.orderBy}`;
+            }
+            if (this.skip !== null) {
+                str += `\n${this.skipKeyword} ${this.skip}`;
+            }
+            if (this.limit !== null) {
+                str += `\nLIMIT ${this.limit}`;
+            }
+
             const keyword = (this.optionalMatch) ? 'OPTIONAL MATCH' : 'MATCH';
             return `${keyword} ${str}`;
         }
@@ -791,7 +876,11 @@ var CypherStatement = (function () {
         this.myName = 'Where';
         this.whereExpression = null;
 
-        this.toString = function (config) {
+        this.setWhere = function (where) {
+            this.whereExpression = where;
+        }
+
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             return 'WHERE ' + this.whereExpression;
         }
@@ -811,9 +900,9 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
-            var str = this.pattern.toString(config);
+            var str = this.pattern.toString(config, existingString);
             return 'CREATE ' + str;
         }
     }
@@ -834,12 +923,12 @@ var CypherStatement = (function () {
             // TODO: mergeAction
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
-            var str = this.patternPart.toString(config);
+            var str = this.patternPart.toString(config, existingString);
             if (this.mergeAction) {
                 str += (config && config.htmlString) ? '\n<br/>' : '\n';
-                str += this.mergeAction.toString(config);
+                str += this.mergeAction.toString(config, str);
             }
             return 'MERGE ' + str;
         }
@@ -850,16 +939,18 @@ var CypherStatement = (function () {
         this.onMatchSet = null;
         this.onCreateSet = null;
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = '';
             if (this.onMatchSet) {
                 str += (config && config.htmlString) ? '\n<br/>' : '\n';
-                str += ' ON MATCH ' + this.onMatchSet.toString(config);
+                str += ' ON MATCH ';
+                str += this.onMatchSet.toString(config, str);
             }
             if (this.onCreateSet) {
                 str += (config && config.htmlString) ? '\n<br/>' : '\n';
-                str += ' ON CREATE ' + this.onCreateSet.toString(config);
+                str += ' ON CREATE ';
+                str += this.onCreateSet.toString(config, str);
             }
         }
     }
@@ -882,7 +973,7 @@ var CypherStatement = (function () {
             if (dontContinue(config, this)) return '';
             var strArray = [];
             for (var i = 0; i < this.setItems.length; i++) {
-                strArray.push(this.setItems[i].toString(config));
+                strArray.push(this.setItems[i].toString(config, ''));
             }
             return 'SET ' + strArray.join(', ');
         }
@@ -1064,24 +1155,34 @@ var CypherStatement = (function () {
     exports.AnonymousPatternPart = function () {
         this.myName = 'AnonymousPatternPart';
         this.shortestPathPattern = null;
-        this.patternElement = null;
+        this.patternElements = [];
+
+        this.addPatternElement = function (patternElement) {
+            this.patternElements.push(patternElement);
+        }
 
         this.populateMatchGraph = function (graph, config) {
             if (this.shortestPathPattern) {
                 this.shortestPathPattern.populateMatchGraph(graph, config);
             }
-            if (this.patternElement) {
-                this.patternElement.populateMatchGraph(graph, config);
-            }
+            this.patternElements.forEach(patternElement => patternElement.populateMatchGraph(graph, config))
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
+            existingString = existingString || '';
             if (dontContinue(config, this)) return '';
-            // return this.shortestPathKeyword + '(' + this.patternElement.toString(config) + ')';
             if (this.shortestPathPattern) {
-                return this.shortestPathPattern.toString(config);
+                return this.shortestPathPattern.toString(config, existingString);
             } else {
-                return this.patternElement.toString(config);
+                let str = '';
+                let strArg = existingString;
+                for (var i = 0; i < this.patternElements.length; i++) {
+                    let patternElement = this.patternElements[i];
+                    str += str ? ' ' : '';
+                    strArg = str ? str : strArg;
+                    str += patternElement.toString(config, strArg);
+                }
+                return str;
             }
         }
     }
@@ -1100,14 +1201,17 @@ var CypherStatement = (function () {
             this.patternPart.push(patternPart);
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
-            var patternStrings = [];
+            var joinStr = (config && config.htmlString) ? ',\n<br/>' : ',\n';
+            var str = '';
+            var strArg = existingString;
             for (var i = 0; i < this.patternPart.length; i++) {
-                patternStrings.push(this.patternPart[i].toString(config));
+                str += str ? joinStr : '';
+                strArg = str ? str : strArg;
+                str += this.patternPart[i].toString(config, strArg);
             }
-            var joinStr = (config && config.htmlString) ? '\n<br/>' : '\n';
-            return patternStrings.join("," + joinStr);
+            return str;
         }
     }
 
@@ -1116,6 +1220,11 @@ var CypherStatement = (function () {
         this.variable = null;
         this.anonymousPatternPart = null;
         this.patternElement = null;    // for convenience, because I don't want to descend to anonymousPatternPart unless its a shortest path query
+        this.spaceBeforeEquals = false;
+
+        this.setPatternElement = function (patternElement) {
+            this.patternElement = patternElement;
+        }
 
         this.populateMatchGraph = function (graph, config) {
             if (this.anonymousPatternPart) {
@@ -1126,21 +1235,76 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
+            let str = '';
             if (this.anonymousPatternPart) {
-                var str = this.anonymousPatternPart.toString(config);
-                return (this.variable) ? this.variable + '=' + str : str;
+                str = this.anonymousPatternPart.toString(config, existingString);
+                let equals = this.spaceBeforeEquals ? ' =' : '='
+                str = (this.variable) ? this.variable + equals + str : str;
             } else {
-                return this.patternElement.toString(config);
+                str = this.patternElement.toString(config, existingString);
             }
+            return str;
         }
+    }
+
+    exports.ShortestPathPattern = function () {
+        this.myName = 'PatternElement';
+        this.patternElement = null;
+
+        this.shortestPath = null;
+        this.isFunction = false;
+
+        this.setPatternElement = function (patternElement) {
+            this.patternElement = patternElement;
+        }
+
+        this.populateMatchGraph = function (graph, config) {
+            if (this.patternElement) {
+                this.patternElement.populateMatchGraph(graph, config);
+            }
+        }        
+
+        this.toString = function (config, existingString) {
+            existingString = existingString || '';
+            if (dontContinue(config, this)) return '';
+            let str = existingString;
+            str += (this.isFunction) ? ` ${this.shortestPath}(` : ` ${this.shortestPath} `;
+            str += (this.patternElement) ? this.patternElement.toString(config, existingString) : '';
+            str += (this.isFunction) ? ')' : ''
+            return str;
+        }
+
     }
 
     exports.PatternElement = function () {
         this.myName = 'PatternElement';
         this.nodePattern = null;
         this.patternElementChain = [];
+        this.quantifiedPathPattern = null;
+        // this.patternElement = null;
+        // this.patternQuantifier = null;
+
+        // where clause is now allowed in Pattern Elements
+        // this.where = null;
+
+        // this.setWhere = function (where) {
+        //     this.where = where;
+        // }
+
+        // this.setPatternElement = function (patternElement) {
+        //     this.patternElement = patternElement;
+        // }
+
+        // // for certain syntax variants, in the Antlr grammar it's easier to put in here
+        // this.setPatternQuantifier = function (patternQuantifier) {
+        //     this.patternQuantifier = patternQuantifier;
+        // }
+
+        this.setQuantifiedPathPattern = function (quantifiedPathPattern) {
+            this.quantifiedPathPattern = quantifiedPathPattern;
+        }
 
         this.populateMatchGraph = function (graph, config) {
             if (this.nodePattern) {
@@ -1149,6 +1313,9 @@ var CypherStatement = (function () {
                 for (var i = 0; i < this.patternElementChain.length; i++) {
                     otherNode = this.patternElementChain[i].populateMatchGraph(graph, config, otherNode);
                 }
+            }
+            if (this.quantifiedPathPattern) {
+                this.quantifiedPathPattern.populateMatchGraph(graph, config);
             }
         }
 
@@ -1184,13 +1351,75 @@ var CypherStatement = (function () {
             this.patternElementChain.push(chainPart);
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = '';
             for (var i = 0; i < this.patternElementChain.length; i++) {
-                str += this.patternElementChain[i].toString(config);
+                let strArg = str ? str : existingString;
+                str += this.patternElementChain[i].toString(config, strArg);
             }
-            return this.nodePattern.toString(config) + str;
+            if (this.quantifiedPathPattern) {
+                //console.log('before quantifiedPathPattern str = ' + str)
+                str += this.quantifiedPathPattern.toString(config, str);
+            }
+            // if (this.patternElement) {
+            //     str += this.patternElement.toString(config, str);
+            // }
+            if (this.nodePattern) {
+                let maybeSpace = (str && str.match(/^\(/)) ? ' ' : '';
+                str = this.nodePattern.toString(config, existingString) + maybeSpace + str;
+            }
+            // if (this.where) {
+            //     str += ' WHERE ' + this.where;
+            // }
+            
+            // if (this.patternQuantifier) {
+            //     str += this.patternQuantifier;
+            // }
+            return str;
+        }
+    }
+
+    exports.QuantifiedPathPattern = function () {
+        this.myName = 'QuantifiedPathPattern';
+        this.patternElement = null;    
+        this.patternQuantifier = null;
+        this.where = null;
+
+        this.setWhere = function (where) {
+            this.where = where;
+        }
+
+        this.setPatternElement = function (patternElement) {
+            this.patternElement = patternElement;
+        }
+
+        this.setPatternQuantifier = function (patternQuantifier) {
+            this.patternQuantifier = patternQuantifier;
+        }
+
+        this.populateMatchGraph = function (graph, config) {
+            if (this.patternElement) {
+                this.patternElement.populateMatchGraph(graph, config);
+            }
+        }
+
+        this.toString = function (config, existingString) {
+            if (dontContinue(config, this)) return '';            
+            var str = (existingString) ? ' (' : '(';
+            if (this.patternElement) {
+                str += this.patternElement.toString(config, existingString);
+            }    
+
+            if (this.where) {
+                str += ' WHERE ' + this.where;
+            }
+
+            str += ')';
+            if (this.patternQuantifier) {
+                str += this.patternQuantifier;
+            }
+            return str;
         }
     }
 
@@ -1275,9 +1504,19 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
-            return this.relationshipPattern.toString(config) + this.nodePattern.toString(config);
+            let str = '';
+            if (this.relationshipPattern) {
+                str += this.relationshipPattern.toString(config, existingString);
+            }
+            if (this.nodePattern) {
+                if (str.match(/[}\)]$/) || str.match(/\)[\*\+]$/)) {
+                    str += ' ';
+                }
+                str += this.nodePattern.toString(config, str);
+            }
+            return str;
         }
     }
 
@@ -1326,7 +1565,14 @@ var CypherStatement = (function () {
     function parsePropertyValue (propertyValue) {
         var dataType = exports.DataTypes.String;
         var newPropertyValue = propertyValue;
-        if (propertyValue && propertyValue.match) {
+        let existingDataType = getDatatypeByValue(propertyValue);
+        if (existingDataType) {
+            return {
+                dataType: exports.DataTypes[existingDataType],
+                propertyValue: ''
+            }
+        }
+        else if (propertyValue && propertyValue.match) {
             // e.g. toInteger(row.age)
             var result = propertyValue.match(/(.+)\((.+)\)/);   // TODO: this should probably be moved down to the ANTLR level?
             if (result) {
@@ -1400,6 +1646,17 @@ var CypherStatement = (function () {
         this.properties = {};
         this.keyProperties = {};
 
+        // where clause is now allowed in Node Expressions
+        this.where = null;
+
+        // this is to handle the new syntax where you can have things like :Person&Actor&!Foo
+        this.nodeLabelString = null;
+        //this.nodeLabelTokens = [];
+
+        this.setWhere = function (where) {
+            this.where = where;
+        }
+
         this.populateMatchGraph = function (graph, config) {
 
             //var nodeLabelString = (this.nodeLabels.length) ? this.nodeLabels.join(':') : 'Anon';
@@ -1440,25 +1697,43 @@ var CypherStatement = (function () {
             }
         }
 
-        this.getLabelString = function () {
-            if (this.nodeLabels) {
-                return this.nodeLabels.join(':');
-            } else {
-                return '';
-            }
-        }
+        this.setNodeLabelString = function (nodeLabelString) {
+            this.nodeLabelString = nodeLabelString.substring(1);
 
-        this.toString = function (config) {
+            // if (nodeLabelTokens && nodeLabelTokens.length > 1) {
+            //     let tokens = nodeLabelTokens.slice(1);
+            //     console.log('tokens: ', tokens);
+            //     this.nodeLabelString = tokens.join('');
+            //     this.nodeLabelTokens = tokens;
+            // }
+        } 
+
+        // this.getLabelString = function () {
+        //     if (this.nodeLabels) {
+        //         return this.nodeLabels.join(':');
+        //     } else {
+        //         return '';
+        //     }
+        // }
+
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = (this.variable) ? getStringValue (config, this.variable, 'nodeLabelVariable') : '';
-            var nodeLabels = this.nodeLabels.join(':');
-            if (nodeLabels) {
-                str += ':' + getStringValue (config, nodeLabels, 'nodeLabel');
+            // var nodeLabels = this.nodeLabels.join(':');
+            // if (nodeLabels) {
+            //     str += ':' + getStringValue (config, nodeLabels, 'nodeLabel');
+            // }
+            if (this.nodeLabelString) {
+                str += ':' + getStringValue (config, this.nodeLabelString, 'nodeLabel');
             }
             if (config && config.skipProperties) {
                 // don't include properties
             } else {
                 str += getPropertiesString(this.properties);
+            }
+
+            if (this.where) {
+                str += ' WHERE ' + this.where;
             }
 
             return '(' + str + ')';
@@ -1473,9 +1748,45 @@ var CypherStatement = (function () {
         this.relationshipTypes = [];
         this.properties = {};
 
+        // this is to handle the new syntax where you can have things like :Person&Actor&!Foo
+        this.relationshipTypeString = null;
+
+        // where clause is now allowed in Relationship Expressions
+        this.where = null;
+
         /* these are for things like [:HAS_CHILD*1..3], where rangeLow = 1 and rangeHigh = 3 */
+        this.rangeLiteral = null;
         this.rangeLow = null;
         this.rangeHigh = null;
+        this.patternQuantifier = null;
+
+        this.quantifiedPathPattern = null;
+
+        this.setWhere = function (where) {
+            this.where = where;
+        }
+
+        this.setRangeLiteral = function (rangeLiteral) {
+            this.rangeLiteral = rangeLiteral;
+            let range = rangeLiteral.substring(1);
+            if (range) {
+                let tokens = range.split('..');
+                this.rangeLow = parseInt(tokens[0]);
+                this.rangeHigh = parseInt(tokens[1]);
+            }
+        }
+
+        this.setPatternQuantifier = function (patternQuantifier) {
+            this.patternQuantifier = patternQuantifier;
+        }
+
+        this.setQuantifiedPathPattern = function (quantifiedPathPattern) {
+            this.quantifiedPathPattern = quantifiedPathPattern;
+        }
+
+        this.setRelationshipTypeString = function (relationshipTypeString) {
+            this.relationshipTypeString = relationshipTypeString.substring(1);
+        }
 
         this.addType = function (type) {
             //console.log('adding type: ', type);
@@ -1494,24 +1805,45 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
-            var domId;
-            var str = this.leftArrowDirection + '[';
-            if (this.variable) {
-                str += getStringValue (config, this.variable, 'relationshipTypeVariable');
-            }
-            str += ':' + getStringValue (config, this.relationshipTypes.join('|'), 'relationshipType');
-            // TODO: rangeLow and rangeHigh
-
-            if (config && config.skipProperties) {
-                // don't include properties
+            if (this.quantifiedPathPattern) {
+                //console.log('RelationshipPattern this.quantifiedPathPattern existingString = ' + existingString);
+                return this.quantifiedPathPattern.toString(config, existingString);
             } else {
-                str += getPropertiesString(this.properties);
+                var str = this.leftArrowDirection + '[';
+                if (this.variable) {
+                    str += getStringValue (config, this.variable, 'relationshipTypeVariable');
+                }
+    
+                if (this.relationshipTypeString) {
+                    str += ':' + getStringValue (config, this.relationshipTypeString, 'relationshipType');
+                }
+                /*
+                var relationshipTypes = this.relationshipTypes.join('|');
+                if (relationshipTypes) {
+                    str += ':' + getStringValue (config, relationshipTypes, 'relationshipType');
+                }*/
+                if (this.rangeLiteral) {
+                    str += this.rangeLiteral;
+                }
+    
+                if (config && config.skipProperties) {
+                    // don't include properties
+                } else {
+                    str += getPropertiesString(this.properties);
+                }
+    
+                if (this.where) {
+                    str += ' WHERE ' + this.where;
+                }
+    
+                str += ']' + this.rightArrowDirection;
+                if (this.patternQuantifier) {
+                    str += this.patternQuantifier;
+                }
+                return str;
             }
-
-            str += ']' + this.rightArrowDirection;
-            return str;
         }
     }
 
@@ -1883,10 +2215,10 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = (this.disinct) ? 'DISTINCT ' : '';
-            str += this.returnBody.toString(config);
+            str += this.returnBody.toString(config, existingString);
             return 'RETURN ' + str;
         }
     }
@@ -1897,6 +2229,7 @@ var CypherStatement = (function () {
         this.returnItems = [];
         this.orderBy = null;
         this.skip = null;
+        this.skipKeyword = null;
         this.limit = null;
 
         this.populateMatchGraph = function (graph, config) {
@@ -1908,11 +2241,11 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var returnItemStrings = [];
             for (var i = 0; i < this.returnItems.length; i++) {
-                returnItemStrings.push(this.returnItems[i].toString(config));
+                returnItemStrings.push(this.returnItems[i].toString(config, existingString));
             }
             var str = returnItemStrings.join(', ');
             if (this.returnAsterisk) {
@@ -1927,7 +2260,7 @@ var CypherStatement = (function () {
                 str += `\nORDER BY ${this.orderBy}`;
             }
             if (this.skip !== null) {
-                str += `\nSKIP ${this.skip}`;
+                str += `\n${this.skipKeyword} ${this.skip}`;
             }
             if (this.limit !== null) {
                 str += `\nLIMIT ${this.limit}`;
@@ -1948,7 +2281,7 @@ var CypherStatement = (function () {
             this.sortItems.push(sortItem);
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             return this.sortItems.map(x => x.toString()).join(', ');
         }
@@ -1959,7 +2292,7 @@ var CypherStatement = (function () {
         this.expression = null;
         this.ascendingDescending = null;
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = this.expression;
             if (this.ascendingDescending) {
@@ -2006,7 +2339,7 @@ var CypherStatement = (function () {
             }
         }
 
-        this.toString = function (config) {
+        this.toString = function (config, existingString) {
             if (dontContinue(config, this)) return '';
             var str = this.expression;
             if (this.asVariable && this.expression != this.asVariable) {

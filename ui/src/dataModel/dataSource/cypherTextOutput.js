@@ -94,7 +94,7 @@ export const getNodePatternPart = ({sourceVariable, destinationVariable, nodeLab
     });
 
     var patternPart = new PatternPart({
-        pathPattern: pathPattern
+        pathPatterns: [pathPattern]
     });
 
     return patternPart;
@@ -128,7 +128,7 @@ export const getRelationshipPatternPart = ({sourceVariable, destinationVariable,
     });
 
     var patternPart = new PatternPart({
-        pathPattern: pathPattern
+        pathPatterns: [pathPattern]
     });
 
     return patternPart;

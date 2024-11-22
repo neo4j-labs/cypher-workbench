@@ -1,16 +1,96 @@
+import { Pattern } from "./cypherPattern";
+import { SnippetStringWithContext } from "./cypherSnippetSet";
 
 export const DebugStepResult = {
     SteppedOk: "SteppedOk",
     NoMoreSteps: "NoMoreSteps"
 }
 
-export const debugStep = (cypher, internalCypherDebugSnippets) => {
+// helper function to get debug snippets from clauses returned from cypherStringConverter
+//  getDebugCypherSnippets returns a string array
+export const getClauseDebugSnippets = (clause, variableScope, options = {}) => {
+    let config = { addMissingVars: options.addMissingVars, variableScope }
+    if (clause.clauseInfo && clause.clauseInfo.getDebugCypherSnippets) {
+      if (clause.clauseInfo instanceof Pattern) {
+        return clause.clauseInfo.getDebugCypherSnippets(config).map(x => `${clause.keyword} ${x}`);
+      } else {
+        return clause.clauseInfo.getDebugCypherSnippets(config);
+      }
+    } else if (clause.getDebugCypherSnippets) {
+        return clause.getDebugCypherSnippets(config);
+    } else {
+      return null;
+    }      
+}
+
+/* returns the snippetStringPairs, e.g. 
+    { 
+        snippetStr: <string>, 
+        snippet: <SnippetWrapper> {
+            snippetVal: <string>, 
+            associatedCypherObject: <NodePattern|RelationshipPattern|etc>
+        }
+    }
+
+  above method 'getClauseDebugSnippets' will pull out the snippetStr(s) only and
+  not give you any of the context
+*/
+export const getClauseDebugSnippetStringPairs = (clause, variableScope, options = {}) => {
+    let snippetSet = null;
+    let config = { addMissingVars: options.addMissingVars, variableScope }
+    if (clause.clauseInfo && clause.clauseInfo.getDebugCypherSnippetSet) {
+        snippetSet = clause.clauseInfo.getDebugCypherSnippetSet(config);
+    } else if (clause.getDebugCypherSnippetSet) {
+        snippetSet = clause.getDebugCypherSnippetSet(config);
+    } 
+
+    if (snippetSet) {
+        var snippetStringPairs = snippetSet.getSnippetsAsSnippetStringPairs();
+        return snippetStringPairs;
+    } else {
+        return null;
+    }
+}
+
+export const debugStep = (cypher, internalCypherDebugSnippets, associatedCypherObject) => {
     var debugSteps = null;
     if (internalCypherDebugSnippets) {
-        internalCypherDebugSnippets = internalCypherDebugSnippets.map(x => new DebugStep({ cypher: x }));
+        internalCypherDebugSnippets = internalCypherDebugSnippets.map(x => {
+            let debugStep = null;
+            if (x instanceof SnippetStringWithContext) {
+                let {
+                    snippetStr,
+                    explanatoryMarker
+                } = x;
+                debugStep = new DebugStep({ 
+                    cypher: snippetStr,
+                    explanatoryMarker,
+                    activatedCypherString: x.snippet.snippetVal,
+                    associatedCypherObject: x.getAssociatedCypherObject(),
+                })
+            } else {
+                // I expect this not to happen - however during debugging in Chrome
+                //   x.constructor.name below was SnippetStringWithContext, which should never
+                //   have happened, because I'm checking for x instanceof SnippetStringWithContext above
+                //   reloading the app fixed it, but not I'm suspicious...hopefully its just a bug
+                //   in Chrome's hot reload debugger
+                if (typeof(x) !== 'string') {
+                    console.log('typeof(x): ', typeof(x));
+                    console.log('x.constructor.name: ', x.constructor.name);
+                    console.log('x is not a string! x: ', x);
+                    throw new Error('x is not a string!');
+                }
+                debugStep = new DebugStep({ cypher: x })
+            }
+            return debugStep;
+        });
         debugSteps = new DebugSteps({ steps: internalCypherDebugSnippets, stepsAreAdditive: false });
     }
-    return new DebugStep({ cypher: cypher, internalSteps: debugSteps });
+    return new DebugStep({ 
+        cypher: cypher, 
+        internalSteps: debugSteps,
+        associatedCypherObject: associatedCypherObject 
+    });
 }
 
 export class DebugStep {
@@ -20,7 +100,12 @@ export class DebugStep {
         const { 
             cypher,
             internalSteps,
-            isBreakpoint
+            isBreakpoint,
+            activatedCypherString,
+            associatedCypherObject,
+            explanatoryMarker,
+            myIndex,
+            parentStep
         } = properties;
 
         if (internalSteps) {
@@ -29,10 +114,31 @@ export class DebugStep {
             }
         }
 
+        if (typeof(cypher) !== 'string') {
+            console.log('Cypher is not a string! Cypher: ', cypher);
+            throw new Error('Cypher is not a string!');
+        }
+
         this.cypher = cypher;
         this.internalSteps = (internalSteps) ? internalSteps : null;
+        if (this.internalSteps) {
+            this.internalSteps.steps?.forEach(internalStep => internalStep.setParentStep(this));
+        }
         this.isBreakpoint = (isBreakpoint) ? true : false;
+
+        this.myIndex = myIndex;
+        this.parentStep = parentStep;
+
+        this.activatedCypherString = activatedCypherString;
+        this.associatedCypherObject = associatedCypherObject;
+        this.explanatoryMarker = explanatoryMarker;
     }
+
+    getMyIndex = () => this.myIndex;
+    setMyIndex = (index) => this.myIndex = index;
+
+    getParentStep = () => this.parentStep;
+    setParentStep = (parentStep) => this.parentStep = parentStep;
 
     setIsBreakpoint = (isBreakpoint) => this.isBreakpoint = isBreakpoint;
 
@@ -85,7 +191,14 @@ export class DebugStep {
     getInternalActiveStepIndex = () => (this.internalSteps) ? this.internalSteps.activeStepIndex : -1;
     getNumberOfInternalSteps = () => (this.internalSteps) ? this.internalSteps.steps.length : 0;
 
-    firstStep = () => (this.internalSteps) ? this.internalSteps[0] : null;
+    getInternalActiveStep = () => {
+        let index = this.getInternalActiveStepIndex();
+        if (index !== -1) {
+            return this.getInternalStepAtIndex(index);
+        } else {
+            return null;
+        }
+    }
 
     stepForward = () => {
         if (this.internalSteps) {
@@ -113,6 +226,7 @@ export class DebugSteps {
         const { steps, stepsAreAdditive } = properties;
 
         this.steps = (steps) ? steps : [];
+        this.steps.forEach((step,i) => step.setMyIndex(i));
         this.lastStepWasInternal = false; 
 
         const badSteps = this.steps.filter(x => (!(x instanceof DebugStep)));
@@ -128,10 +242,36 @@ export class DebugSteps {
         if (!(step instanceof DebugStep)) {
             throw new Error("Step must be of type DebugStep");
         } 
+        let numSteps = this.steps.length;
+        step.setMyIndex(numSteps);
         this.steps.push(step);
     }
 
-    getActiveStep = () => (this.steps) ? this.steps[this.activeStepIndex] : null;
+    getActiveStep = () => (this.steps && this.activeStepIndex !== -1) ? this.steps[this.activeStepIndex] : null;
+    getActiveInternalStep = () => {
+        let activeStep = this.getActiveStep();
+        if (activeStep && activeStep.hasInternalSteps()) {
+            return activeStep.getInternalActiveStep();
+        } else {
+            return null;
+        }
+    }
+
+    getActiveIndexAndActiveInternalIndex = () => {
+        let activeStepIndex = this.activeStepIndex;
+        if (activeStepIndex === -1) {
+            return {
+                activeStepIndex: -1,
+                internalActiveStepIndex: -1
+            }
+        } else {
+            return {
+                activeStepIndex: activeStepIndex,
+                internalActiveStepIndex: this.getActiveStep().getInternalActiveStepIndex()
+            }
+        }
+    }
+
     firstStep = () => (this.steps) ? this.steps[0] : null;
     lastStep = () => (this.steps) ? this.steps[this.steps.length - 1] : null;
 
@@ -158,30 +298,57 @@ export class DebugSteps {
 
     resetActiveStepIndex = () => this.activeStepIndex = -1;
 
+    setBreakpointLine = ({oneBasedLineNumber, breakpointOn}) => {
+        // will need to count newlines based on line number breakpoint is on
+
+        let zeroBasedLineNumber = oneBasedLineNumber - 1;
+        // console.log('zeroBasedLineNumber: ', zeroBasedLineNumber)
+
+        let lineCount = 0;
+        for (let i = 0; i < this.steps.length; i++) {
+            let step = this.steps[i];
+
+            let cypher = step.getCypher();
+            lineCount += cypher.split('\n').length;
+
+            // console.log('lineCount: ', lineCount)
+            if (zeroBasedLineNumber < lineCount) {
+                // console.log('setIsBreakpoint breakpointOn: ', breakpointOn)
+                step.setIsBreakpoint(breakpointOn);
+                break;
+            }
+        }
+    }
+
     runToNextBreakpoint = () => {
         var startInternalIndex = -1;
         var startIndex = this.activeStepIndex;
         
         var activeStep = this.steps[this.activeStepIndex];
-        if (activeStep) {
-            //console.log('in active step')
-            var numInternalSteps = activeStep.getNumberOfInternalSteps();
-            if (numInternalSteps !== 0) {
-                //console.log('numInternalSteps: ', numInternalSteps)
-                // look at internal steps of active step to see if we are stopped on an internal breakpoint
-                //   if so, advance the internal index
-                startInternalIndex = activeStep.getInternalActiveStepIndex();
-                var internalStep = activeStep.getInternalStepAtIndex(startInternalIndex);
-                if (internalStep.isBreakpoint) {
-                    activeStep.internalSteps.stepForward();
-                    startInternalIndex += 1;
-                }
-            } else if (activeStep.isBreakpoint) {
-                // we are stopped on a breakpoint, so advance the index so we can go the next breakpoint
-                //console.log('activeStep.isBreakpoint = true')
-                startIndex += 1;
-            } 
-        }        
+        // if (activeStep) {
+        //     //console.log('in active step')
+        //     var numInternalSteps = activeStep.getNumberOfInternalSteps();
+        //     if (numInternalSteps !== 0) {
+        //         //console.log('numInternalSteps: ', numInternalSteps)
+        //         // look at internal steps of active step to see if we are stopped on an internal breakpoint
+        //         //   if so, advance the internal index
+        //         startInternalIndex = activeStep.getInternalActiveStepIndex();
+        //         var internalStep = activeStep.getInternalStepAtIndex(startInternalIndex);
+        //         if (internalStep && internalStep.isBreakpoint) {
+        //             activeStep.internalSteps.stepForward();
+        //             startInternalIndex += 1;
+        //         } else {
+        //             startIndex += 1;
+        //         }
+        //     } else if (activeStep.isBreakpoint) {
+        //         // we are stopped on a breakpoint, so advance the index so we can go the next breakpoint
+        //         //console.log('activeStep.isBreakpoint = true')
+        //         startIndex += 1;
+        //     } 
+        // }        
+        if (activeStep && activeStep.isBreakpoint) {
+            startIndex += 1;
+        }
 
         startIndex = (startIndex < 0) ? 0 : startIndex;
         //console.log('startIndex: ', startIndex);
