@@ -17,7 +17,6 @@ import { getCurrentConnectionInfo } from '../../../common/Cypher';
 import { rewriteIntegers } from '../database/databaseUtil';
 import { Integer } from 'neo4j-driver';
 
-
 export const nvlOptions = {
     renderer: 'canvas',
     //layout: LayoutOptions.ForceDirected,
@@ -588,17 +587,19 @@ export default class DebugCanvasPlainNvl extends Component {
     })
   }
 
-  getNodeRelId = (nodeRelInfo) => {
+  convertId = (idVal) => {
     let id = '';
-    if (typeof(nodeRelInfo.identity) === Integer) {
-      id = nodeRelInfo.identity.toString();
-    } else if (nodeRelInfo.identity.low !== undefined && nodeRelInfo.identity.high !== undefined) {
-      id = new Integer(nodeRelInfo.identity.low, nodeRelInfo.identity.high).toString();
+    if (typeof(idVal) === Integer) {
+      id = idVal.toString();
+    } else if (idVal.low !== undefined && idVal.high !== undefined) {
+      id = new Integer(idVal.low, idVal.high).toString();
     } else {
-      id = nodeRelInfo.identity;
+      id = idVal;
     }
     return id;
-  }
+  }  
+
+  getNodeRelId = (nodeRelInfo) => this.convertId(nodeRelInfo.identity);
 
   processNode = (nodeInfo, newNodes, dataNodes, {
       existingNodeIds, nodePaletteConfig, nodeLabelConfig, selectedDataModel 
@@ -653,16 +654,16 @@ export default class DebugCanvasPlainNvl extends Component {
 
     let rel = { 
         id: relId, 
-        from: `${relInfo.start}`, 
-        to: `${relInfo.end}`, 
+        from: this.convertId(relInfo.start), 
+        to: this.convertId(relInfo.end), 
         color: DEFAULT_REL_STYLE.color, 
         captions: [{value: relInfo.type}],
         selected: isNew
     }
 
     if (options.relationshipPlaceholderNodes) {
-      let startNodeId = `${relInfo.start}`;
-      let endNodeId = `${relInfo.end}`;
+      let startNodeId = this.convertId(relInfo.start);
+      let endNodeId = this.convertId(relInfo.end);
       let startNode = newNodes.find(x => x.id === startNodeId);
       if (!startNode) {
         startNode = this.getPlaceholderNode(startNodeId);
