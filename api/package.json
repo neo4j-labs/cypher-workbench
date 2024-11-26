@@ -1,0 +1,79 @@
+{
+  "name": "workbench-api",
+  "version": "0.0.1",
+  "description": "API app for cypher workbench",
+  "main": "src/index.js",
+  "scripts": {
+    "compile": "rm -rf .compiled && babel src --out-dir .compiled/src --source-maps",
+    "test": "jest",
+    "start": "./node_modules/.bin/nodemon --exec babel-node src/index.js",
+    "testApi": "node src/api/client/testApiClient.js",
+    "testReadCsv": "./node_modules/.bin/babel-node src/analyze/readCsv.js",
+    "createUser": "./node_modules/.bin/babel-node src/users/createUser.js",
+    "encryptV1": "./node_modules/.bin/babel-node src/users/encryptV1.js",
+    "decryptV1": "./node_modules/.bin/babel-node src/users/decryptV1.js",
+    "build": "babel src -d dist; cp .env dist",
+    "serve": "node dist/index.js"
+  },
+  "author": "Eric Monk",
+  "dependencies": {
+    "@babel/polyfill": "^7.10.1",
+    "@google-cloud/bigquery": "^5.10.0",
+    "@google-cloud/storage": "^5.18.1",
+    "@graphql-tools/load-files": "^6.5.3",
+    "@graphql-tools/merge": "^8.2.2",
+    "@neo4j/graphql": "3.4.0",
+    "@segment/analytics-node": "^0.0.1-beta.16",
+    "antlr4": "^4.13.1-patch-1",
+    "apollo-server": "^3.10.2",
+    "apollo-server-express": "^3.10.2",
+    "axios": "^0.21.4",
+    "buffer": "^5.7.1",
+    "chroma-js": "^2.4.2",
+    "crypto-js": "^3.1.9-1",
+    "dagre": "^0.8.4",
+    "dotenv": "^5.0.1",
+    "graphql": "^16.5.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-tools": "^8.2.0",
+    "graphql-type-json": "^0.3.2",
+    "jwks-rsa": "^1.12.3",
+    "luxon": "^3.3.0",
+    "neo4j-driver": "^4.4.2",
+    "node-fetch": "^2.6.7",
+    "papaparse": "^5.4.1",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.0",
+    "@babel/core": "^7.17.0",
+    "@babel/node": "^7.16.8",
+    "@babel/plugin-proposal-object-rest-spread": "^7.16.7",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/runtime": "^7.17.0",
+    "husky": "^1.2.0",
+    "jest": "^29.5.0",
+    "lint-staged": "^12.3.3",
+    "nodemon": "^2.0.15"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,json,css,md,graphql": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "dist",
+      "src/debug"
+    ]
+  }
+}

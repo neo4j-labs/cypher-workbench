@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/neo4j-driver@4.2.1/lib/browser/neo4j-web.js"></script>
+    <script>
+      var currentUrl = new URL(window.location.href);
+      var scriptToLoadUrl = `http://${currentUrl.host}/js/boltProxy.js`;
+      //console.log('scriptToLoadUrl: ', scriptToLoadUrl);
+      var boltProxyScript = document.createElement('script');
+      boltProxyScript.type = "module";
+      boltProxyScript.onload = function () {
+          /*
+          window.boltProxy.connectToNeo((results) => {
+            console.log('results: ', results);
+          }, (error) => {
+            console.log('error: ', error);
+          });
+          */
+      };
+      boltProxyScript.src = scriptToLoadUrl;
+      document.head.appendChild(boltProxyScript);
+    </script>
+    <title>HTTP Bolt Wrapper</title>
+  </head>
+  <body>
+      HTTP Bolt Wrapper
+  </body>
+</html>

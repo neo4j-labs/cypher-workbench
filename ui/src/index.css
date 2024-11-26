@@ -1,0 +1,402 @@
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+#boltWrapper {
+  display: block;
+  margin: 0;
+}
+
+#summary {
+  position: relative;
+  margin-left: 10px;
+}
+
+#workflow {
+  position: relative;
+  margin-left: 18px;
+}
+
+#copyright {
+  position: relative;
+  margin-left: 8px;
+  width: 120%;
+  margin-top:50px;
+  border: 3px solid #d7dad5;
+}
+.line{
+  border: 0;
+  background-color: rgb(223, 219, 219);
+  height: 3px;
+  cursor: pointer;
+  }
+
+body {
+  margin: 0;
+  height: 100vh;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.active {
+    stroke: black !important;
+    stroke-width: 8px !important;
+    fill: lightgray !important;
+}
+.nodeLabel {
+    color: blue;
+    cursor: pointer;
+}
+.relationshipType {
+    color: purple;
+    cursor: pointer;
+}
+.node {
+  color: blue;
+  cursor: pointer;
+}
+.relationship {
+  color: purple;
+  cursor: pointer;
+}
+.focusNode {
+    animation: pulse 250ms 1;
+}
+.chipSelected {
+  border: 3px solid #f39c12;
+  display: flex;
+  flex-flow: row;
+  margin: 5px;
+  padding: 3px;
+  font-size: 1.1em;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none
+}
+
+.focusCypherBlock {
+  animation: blockPulse 200ms 1;
+}
+
+.focusScenarioBlock {
+  animation: blockPulse 200ms 1;
+}
+
+.focusBlock {
+  animation: blockPulse 200ms 1;
+}
+
+.selectedBackground {
+  background:  #f39c12;
+}
+
+.accordionPanelSelected {
+  border: 3px solid #f39c12;
+}
+
+.accordionPanel {
+  border: none;
+}
+
+.chip {
+  border: 1px solid black;
+  display: flex;
+  flex-flow: row;
+  margin: 5px;
+  padding: 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.runCypherButton1 {
+  font-size: .65em;
+  margin-right: -.35em;
+}
+
+.runCypherButton2 {
+  font-size: .75em;
+  margin-left: -.35em;
+  margin-right: -.35em;
+}
+
+/*
+for pulse animation: https://www.florin-pop.com/blog/2019/03/css-pulse-effect/
+for color: https://flatuicolors.com/palette/defo
+*/
+@keyframes pulse {
+    0% {
+		/*transform: scale(1);*/
+		/*box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);*/
+        /*
+        -webkit-filter: drop-shadow( 0px 0px 0px rgba(243, 156, 18, 0.7));
+        filter: drop-shadow( 0px 0px 0px rgba(243, 156, 18, 0.7));
+        */
+        stroke-width: 7;
+        stroke: rgba(243, 156, 18, 0.2);
+	}
+	70% {
+		/*transform: scale(1.05);*/
+		/*box-shadow: 0 0 0 20px rgba(52, 152, 219, 0.0);*/
+        stroke-width: 9;
+        stroke: rgba(243, 156, 18, 0.8);
+        /*
+        -webkit-filter: drop-shadow( 0px 0px 3px rgba(243, 156, 18, 0.0));
+        filter: drop-shadow( 0px 0px 3px rgba(243, 156, 18, 0.0));
+        */
+	}
+    100% {
+		/*transform: scale(1.05);*/
+		/*box-shadow: 0 0 0 20px rgba(52, 152, 219, 0.0);*/
+        stroke-width: 7;
+        stroke: rgba(243, 156, 18, 1.0);
+        /*
+        -webkit-filter: drop-shadow( 0px 0px 3px rgba(243, 156, 18, 0.0));
+        filter: drop-shadow( 0px 0px 3px rgba(243, 156, 18, 0.0));
+        */
+	}
+}
+
+@keyframes blockPulse {
+  0% {
+      background: rgba(237, 138, 18, 0.1);
+  }
+  60% {
+      background: rgba(237, 138, 18, 0.3);
+  }
+  100% {
+      background: rgba(255, 255, 255, 1.0);
+  }
+}
+
+
+.highlightNode {
+    /* stroke: blue !important; */
+    /* stroke: rgba(52, 152, 219, 1.0) !important; */
+    stroke: #f39c12 !important;
+    stroke-width: 7px !important;
+    stroke-dasharray: 1,0 !important;
+    stroke-opacity: 1 !important;
+    fill-opacity: 1 !important;
+    /* fill: lightblue !important; */
+    /* opacity: .7 */
+}
+.highlightRel {
+    /* stroke: blue !important; */
+    stroke: #f39c12 !important;
+    stroke-width: 5px !important;
+    stroke-dasharray: 1,0 !important;
+    stroke-opacity: 1 !important;
+}
+.highlightText {
+  fill-opacity: 1 !important;
+}
+
+.highlightNodeAlt {
+  /* stroke: blue !important; */
+  /* stroke: rgba(52, 152, 219, 1.0) !important; */
+  stroke: #12eaf3 !important;
+  stroke-width: 8px !important;
+  stroke-dasharray: 18,6 !important;
+  stroke-opacity: 1 !important;
+  fill-opacity: 1 !important;
+  /* fill: lightblue !important; */
+  /* opacity: .7 */
+}
+.highlightRelAlt {
+  /* stroke: blue !important; */
+  stroke: #12eaf3 !important;
+  stroke-width: 6px !important;
+  stroke-dasharray: 15,6 !important;
+  stroke-opacity: 1 !important;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+.canvas {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  /* width: 1200px; */
+  /* height: 500px; */
+}
+.buttonBar {
+    font-family: Arial;
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    height: auto;
+}
+button {
+    margin: 3px;
+}
+
+/* https://spyrestudios.com/draw-with-css-using-css-to-draw-elements/ */
+.cylinder {
+  background: white;
+  width: 20px;
+  height: 17px;
+  border-radius: 100% / 40%;
+}
+.cylinder:after {
+  content:"";
+  position: absolute;
+  margin-left: -10px;
+  /* background: #EEE; */
+  border-radius: 100%;
+  z-index: 500;
+  width: 20px;
+  height: 7px;
+  top:  10px;
+}
+
+.mylabel {
+    margin: 3px;
+}
+.tabsAndDataSources {
+    display: flex;
+    flex-direction: row;
+}
+.datasource {
+  padding: 10px;
+  font-size: 14px;
+  font-family: Arial;
+}
+.subQueries {
+    border-collapse: collapse;
+}
+.subQueryRow td:first-child {
+    /* border-left: 1px solid lightgray; */
+}
+.subQueryRow td:last-child {
+    /* border-right: 1px solid lightgray; */
+}
+.subQueryRow td {
+    border-top: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+}
+.cypherArea {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+.cyphermain {
+  padding-top: 10px;
+  font-size: 14px;
+  font-family: Arial;
+  width: 50%;
+}
+.cypherfocus {
+  padding-top: 10px;
+  font-size: 14px;
+  font-family: Arial;
+  width: 40%;
+}
+.CodeMirror {
+    margin-left: 0px;
+    margin-right: 10px;
+    font-size: 14px;
+    border: 1px solid gray;
+}
+/*
+#cypherEditorResults .CodeMirror-cursors {
+  margin-left: 2.3em;
+}
+#cypherEditorResults .CodeMirror-line {
+  margin-left: 2.3em;
+}
+#cypherEditorResults pre {
+  margin-left: 2.3em;
+}
+*/
+
+/* https://stackoverflow.com/questions/35278269/set-gutter-width-in-codemirror */
+/*
+.CodeMirror-linenumber {
+  padding: 1px 8px 0 5px;
+  color: #c8d2d7;
+  font-size: 10px;
+}
+*/
+
+.nodeArc {
+  fill: #989098;
+  stroke: none;
+}
+.nodeArcHighlight {
+  fill: #CFCFCF !important;
+  stroke: none;
+}
+.hoverCircle {
+  cursor: e-resize;
+}
+.readyToConnect {
+    stroke: darkviolet !important;
+    stroke-width: 8px !important;
+    fill: thistle !important;
+}
+
+/* this is for the circle color picker - to put a border around the white color circle */
+.circle-picker > span:nth-child(2) > div > span > div {
+  border: 1px solid #ccc;
+}
+
+.solidSizeCircle {
+    border: none;
+    background-color: lightgray;
+    display: inline-block;
+    margin: 3px;
+    vertical-align: middle;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.outlineSizeCircle {
+    border: 3px solid lightgray;
+    background-color: none;
+    display: inline-block;
+    margin: 3px;
+    vertical-align: middle;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.sharingUserField {
+    width: 24em !important;
+    margin-right: 10px;
+}
+
+.textMenuReference {
+  font-weight: 500;
+  color: #2E8CC1;
+}
+
+.cypherEditor {
+  height: 100%;
+}
+
+#cypherDebugToolDebugEditor .cm-editor { 
+  /* height: calc(100vh - 320px); */
+  /* margin-left: 5px; */
+  border: 1px solid lightgray;
+  /* margin-right: 10px; */
+}
+
+/* code mirror changes */
+/* // https://discuss.codemirror.net/t/how-to-set-max-height-of-the-editor/2882 */
+.cm-editor { height: 100% }
+.cm-scroller { overflow: auto }

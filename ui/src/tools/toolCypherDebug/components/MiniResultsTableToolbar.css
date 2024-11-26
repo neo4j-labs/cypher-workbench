@@ -1,0 +1,8 @@
+
+.MuiInput-underline:has(#miniToolbarSelectDisplay):before {
+    border-bottom: none;
+}
+
+.MuiInput-underline:has(#miniToolbarSelectDisplay):after {
+    border-bottom: none;
+}

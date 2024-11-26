@@ -1,0 +1,46 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+*/node_modules
+*/.pnp
+.pnp.js
+
+# testing
+*/coverage
+
+# production
+*/build
+
+*.tar.gz
+
+# misc
+.DS_Store
+*.env
+*.env.development*
+*.env.my.development*
+*.env.test*
+*.env.production*
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+
+*.iml
+
+.idea/
+api/dist/
+api/.compiled
+databases/
+docker/api/api/
+docker/api/keep/
+docker/ui/ui/
+docker/ui/keep/
+docker/cypher_workbench/
+docker/database/
+docker/seedDatabase/
+docker/test/
+docker/dist/
+docker/ds_build/
+docker/build/
+api/datasources/

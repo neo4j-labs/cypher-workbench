@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  cypher-workbench-api:
+    image: cypher-workbench-api:${WORKBENCH_VERSION}_labs
+    # ports:    # ports is commented out because of the nginx /graphql proxy
+    #   # GRAPHQL_PORT set in envConfig.sh when running ./workbench_labs start
+    #  - "${GRAPHQL_PORT}:4000"
+    volumes:
+      - ./cw-config/cw-api:/app/license
+      - ./cw-config/cw-certificate:/app/ssh_keys
+    environment:
+      # license
+      - LICENSE_DIR=/app/license
+      # GRAPHQL_HOST set in envConfig.sh when running ./workbench_labs start
+      - HOST_NAME=${GRAPHQL_HOST}
+
+      # change these settings to connect to your Neo4j database
+      - NEO4J_URI=bolt://host.docker.internal:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+      #- NEO4J_DATABASE=cypherworkbenchlabs
+      - NEO4J_DATABASE=neo4j
+
+      # http(s) configuation - if GRAPHQL_PROTOCOL is https, in envConfig.sh, uncomment the CERTIFICATE_* environment variables 
+      - HOST_PROTOCOL=${GRAPHQL_PROTOCOL}
+      #- CERTIFICATE_DIR=/app/ssh_keys
+      #- CERTIFICATE_KEY=neo4j.com.key
+      #- CERTIFICATE_CRT=neo4j.com.crt      
+
+      # other settings
+      - NEO4J_ENCRYPTED=ENCRYPTION_OFF # do not change this setting unless you are trying to access a bolt:// connection that is secure and you are not using bolt+s or bolt+ssc
+      - GRAPHQL_LISTEN_PORT=4000  # listen port within docker container, can be exposed externally by 'ports' section above
+      - ENCRYPTION_KEY=workbenchEncryptionKey # if you change this make sure it matches the REACT_APP_ENCRYPTION_KEY value in env-config.js
+      - SEGMENT_WRITE_KEY=
+      - ALGO=RS256
+      - AUTH_METHOD=local # if you change this make sure it matches the REACT_APP_AUTH_METHOD value in env-config.js
+  cypher-workbench-ui:
+    image: cypher-workbench-ui:${WORKBENCH_VERSION}_labs
+    ports:
+      # WORKBENCH_PORT_EXTERNAL and WORKBENCH_PORT_INTERNAL set in envConfig.sh when running ./workbench_labs start
+      - "${WORKBENCH_PORT_EXTERNAL}:${WORKBENCH_PORT_INTERNAL}"
+    volumes:
+      # this lets env-config.js be mounted outside of the built docker container, so it can be modified without re-building the docker image
+      - ./cw-config/cw-ui:/usr/share/nginx/html/config
+      - ./cw-config/cw-ui-nginx:/usr/share/nginx/conf      
+    depends_on:
+      - "cypher-workbench-api"
+    command: ["nginx", "-c", "/usr/share/nginx/conf/nginx.conf", "-g", "daemon off;"]      
+

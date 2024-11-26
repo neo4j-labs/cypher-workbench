@@ -1,0 +1,279 @@
+:root {
+  --black: rgb(26, 26, 26);
+  --light-grey: rgb(239, 243, 247);
+  --grey: rgb(107, 114, 118);
+  --grey-opaque: rgb(180, 187, 191, 0.1);
+  --red: rgb(247, 60, 47);
+  --blue: rgb(0, 139, 193);
+  --blue-opaque: rgb(0, 139, 193, 0.1);
+  --green: rgb(98, 177, 67);
+  --green-opaque: rgb(98, 177, 67, 0.1);
+}
+
+/* SM UI OVERIDES */
+
+i.icon {
+  margin-left: 0px !important;
+  margin-right: 0px !important;
+}
+
+/* COLORS */
+
+.white {
+  color: white;
+}
+
+.white-background {
+  background-color: white;
+}
+
+.white-border {
+  border: 1px solid white;
+}
+
+.black {
+  color: var(--black);
+}
+
+.black-background {
+  background-color: var(--black);
+}
+
+.black-border {
+  border: 1px solid var(--black);
+}
+
+.light-gray-border-no-var {
+  border: 1px solid lightgray;
+}
+
+.light-grey {
+  color: var(--light-grey);
+}
+
+.light-grey-background {
+  background-color: var(--light-grey);
+}
+
+.light-grey-border {
+  border: 1px solid var(--light-grey);
+}
+
+.grey {
+  color: var(--grey);
+}
+
+.grey-background {
+  background-color: var(--grey);
+}
+
+.grey-border {
+  border: 1px solid var(--grey);
+}
+
+.grey-background-opaque {
+  background-color: var(--grey-opaque);
+}
+
+.red {
+  color: var(--red);
+}
+
+.red-background {
+  background-color: var(--red);
+}
+
+.red-border {
+  border: 1px solid var(--red) !important;
+}
+
+.blue {
+  color: var(--blue);
+}
+
+.blue-background {
+  background-color: var(--blue);
+}
+
+.blue-border {
+  border: 1px solid var(--blue);
+}
+
+.blue-background-opaque {
+  background-color: var(--blue-opaque);
+}
+
+.green {
+  color: var(--green);
+}
+
+.green-background {
+  background-color: var(--green);
+}
+
+.green-border {
+  border: 1px solid var(--green) !important;
+}
+
+.green-background-opaque {
+  background-color: var(--green-opaque);
+}
+
+/* SM UI BUTTON COLORS */
+
+.blue.button {
+  color: var(--blue);
+}
+
+.blue-background.button {
+  background-color: var(--blue);
+}
+
+/* SM UI ICON COLORS */
+
+i.white.icon {
+  color: white !important;
+}
+
+i.white-background.icon {
+  background-color: white !important;
+}
+
+i.grey.icon {
+  color: var(--grey) !important;
+}
+
+i.grey-background.icon {
+  background-color: var(--grey) !important;
+}
+
+i.blue.icon {
+  color: var(--blue) !important;
+}
+
+i.blue-background.icon {
+  background-color: var(--blue) !important;
+}
+
+i.green.icon.eoTbEs {
+  color: var(--green) !important;
+}
+
+i.green-background.icon {
+  background-color: var(--green) !important;
+}
+
+/* FONT */
+
+.text-mini {
+  font-size: 0.8em !important;
+}
+
+.text-small {
+  font-size: 1em !important;
+}
+
+.text-med {
+  font-size: 1.2em !important;
+}
+
+.text-large {
+  font-size: 1.7em !important;
+}
+
+.text-thin {
+  font-weight: 400 !important;
+}
+
+.text-normal {
+  font-weight: 500 !important;
+}
+
+.text-bold {
+  font-weight: 600 !important;
+}
+
+/* FORM FONT */
+
+.text-small.form {
+  font-size: 1em;
+}
+
+/* SPACING */
+
+.no-margin-right {
+  margin-right: 0px !important;
+}
+
+.margin-top-tiny {
+  margin-top: 7.5px;
+}
+
+.margin-right-tiny {
+  margin-right: 7.5px;
+}
+
+.margin-bottom-tiny {
+  margin-bottom: 7.5px;
+}
+
+.margin-left-tiny {
+  margin-left: 7.5px;
+}
+
+.margin-top-small {
+  margin-top: 15px;
+}
+
+.margin-right-small {
+  margin-right: 15px;
+}
+
+.margin-bottom-small {
+  margin-bottom: 15px;
+}
+
+.margin-left-small {
+  margin-left: 15px;
+}
+
+.margin-top-large {
+  margin-top: 50px;
+}
+
+.margin-right-large {
+  margin-right: 50px;
+}
+
+.margin-bottom-large {
+  margin-bottom: 50px;
+}
+
+.margin-left-large {
+  margin-left: 50px;
+}
+
+img.ui.avatar.image {
+  min-width: 30px;
+}
+
+.avatar-circle {
+    cursor: default;
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    background-color: royalblue;
+    min-width: 30px;
+    min-height: 30px;
+    margin-right: .25em;
+    display: inline-block;
+    border-radius: 500rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .hidden-on-mobile {
+    width: 0px;
+    height: 0px;
+    visibility: hidden;
+  }
+}
