@@ -28,7 +28,7 @@ You will need to setup an Aura instance or a Neo4j database to use as the backen
   * Aura users will already have this installed.
 
 ### Cypher initialization scripts
-Within the folder `docker/sw-config/sw-config/sw-db-setup/` you will find a few Cypher scripts:
+Within the folder `docker/cw-config/cw-config/cw-db-setup/` you will find a few Cypher scripts:
 
 * cypher_constraints_v4.3.cypher
 * cypher_constraints_v4.4_to_5.cypher
