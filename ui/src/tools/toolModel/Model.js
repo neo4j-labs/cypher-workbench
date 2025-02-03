@@ -96,6 +96,7 @@ import { ModelPersistence, PERSISTENCE_STATE_ITEMS } from '../common/model/model
 import {
     GraphDocChangeType,
   } from "../../dataModel/graphDataConstants";
+import { workbenchDataModelToImporterGraphModel } from '../../dataModel/graphModel/workbenchDataModelToImporterGraphModel';
   
 export const MODEL_ACTIONS = {
     IMPORT_DATABASE_MODEL: "ImportDatabaseModel"
@@ -1303,6 +1304,10 @@ export default class Model extends Component {
             needExportDivider = true;
             exportMenuItems.push({id: 'exportLLMModel', text: 'Export LLM Model'})
         }
+        if (isFeatureLicensed(FEATURES.MODEL.ExportModel)) {
+            needExportDivider = true;
+            exportMenuItems.push({id: 'exportDataImporter', text: 'Export for Data Importer'})
+        }
 
         //if (isFeatureLicensed(FEATURES.MODEL.ExportConstraints)) {
         if (this.isDataExportEnabled()) {
@@ -1361,6 +1366,17 @@ export default class Model extends Component {
                             //console.log(constraints);
                             fileName = this.getExportFileName('cw_llm_model', 'txt');
                             this.showExportText('Export LLM Model', llmModel, fileName);
+                        }
+                        break;
+                    case 'exportDataImporter':
+                        if (!this.isAModelSelected()) {
+                            alert(NO_ACTIVE_MODEL_MESSAGE, ALERT_TYPES.WARNING);
+                        } else {                        
+                            let dataImporterModel = workbenchDataModelToImporterGraphModel(dataModel);
+                            let dataImporterModelJson = JSON.stringify(dataImporterModel, null, 2);
+
+                            fileName = this.getExportFileName('cw_model', 'json', '_export_for_data_importer');
+                            this.showExportText('Export for Data Importer', dataImporterModelJson, fileName);
                         }
                         break;
                     case 'getDataExportJson':
@@ -1900,12 +1916,6 @@ export default class Model extends Component {
     }
 
     showExportModel () {
-        var modelJson = this.getExportData();
-        var fileName = this.getExportFileName('cw_export', 'json');
-        this.showExportText('Export Model', modelJson, fileName);
-    }
-
-    showExportLLMModel () {
         var modelJson = this.getExportData();
         var fileName = this.getExportFileName('cw_export', 'json');
         this.showExportText('Export Model', modelJson, fileName);

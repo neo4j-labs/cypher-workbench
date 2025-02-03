@@ -5,6 +5,13 @@
 // Indexes
 // *******
 
+// general syntax
+CREATE [index_type] INDEX [index_name] [IF NOT EXISTS]
+FOR {node_pattern | relationship_pattern}
+ON [EACH] property_or_token_lookup_pattern
+[OPTIONS “{“ option: value[, …] “}”]
+
+
 // Creating a range index
 CREATE [RANGE] INDEX [index_name] [IF NOT EXISTS]
 FOR (n:LabelName)
