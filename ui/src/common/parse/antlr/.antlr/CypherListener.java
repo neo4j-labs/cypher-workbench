@@ -1,4 +1,4 @@
-// Generated from /Users/ericmonk/neo/projects/solutions/cypher_workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
+// Generated from /Users/ericmonk/neo/projects/labs/internal-merge-cypher-workbench/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -506,6 +506,16 @@ public interface CypherListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitOC_SubQuery(CypherParser.OC_SubQueryContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CypherParser#oC_SubQueryVariableScope}.
+	 * @param ctx the parse tree
+	 */
+	void enterOC_SubQueryVariableScope(CypherParser.OC_SubQueryVariableScopeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CypherParser#oC_SubQueryVariableScope}.
+	 * @param ctx the parse tree
+	 */
+	void exitOC_SubQueryVariableScope(CypherParser.OC_SubQueryVariableScopeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link CypherParser#oC_SubQueryDirective}.
 	 * @param ctx the parse tree

@@ -1,4 +1,4 @@
-// Generated from /Users/ericmonk/neo/projects/labs/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
+// Generated from /Users/ericmonk/neo/projects/labs/internal-merge-cypher-workbench/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

@@ -128,7 +128,13 @@ export const getSchema = async ({ url, databaseName, encrypted,
     encryptedPassword, encryptedPasswordPublicKey
  }, context) => {
     // open neo database connection cypher
-    var driverConfig = {encrypted: encrypted};
+
+    var driverConfig = {};
+    if (!url.match(/bolt\+s/) && !url.match(/bolt\+ssc/)
+      && !url.match(/neo4j\+s/) && !url.match(/neo4j\+ssc/)) {
+         driverConfig.encrypted = encrypted;
+    }
+    
     var keysToFetch = [encryptedUserPublicKey, encryptedPasswordPublicKey];
     //console.log('keysToFetch: ', keysToFetch);
     const asymmetricDecryptionKeys = await getUserAsymmetricDecryptionKeys(keysToFetch, context.email);

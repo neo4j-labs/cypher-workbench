@@ -1,4 +1,4 @@
-// Generated from /Users/ericmonk/neo/projects/solutions/cypher_workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
+// Generated from /Users/ericmonk/neo/projects/labs/internal-merge-cypher-workbench/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -611,6 +611,18 @@ public class CypherBaseListener implements CypherListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitOC_SubQuery(CypherParser.OC_SubQueryContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterOC_SubQueryVariableScope(CypherParser.OC_SubQueryVariableScopeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitOC_SubQueryVariableScope(CypherParser.OC_SubQueryVariableScopeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

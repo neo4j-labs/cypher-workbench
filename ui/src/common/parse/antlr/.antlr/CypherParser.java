@@ -1,4 +1,4 @@
-// Generated from /Users/ericmonk/neo/projects/labs/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
+// Generated from /Users/ericmonk/neo/projects/labs/internal-merge-cypher-workbench/cypher-workbench/ui/src/common/parse/antlr/Cypher.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -256,6 +256,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Cypher; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Cypher(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Cypher(this);
+		}
 	}
 
 	public final OC_CypherContext oC_Cypher() throws RecognitionException {
@@ -340,6 +348,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_QueryOptions; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_QueryOptions(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_QueryOptions(this);
+		}
 	}
 
 	public final OC_QueryOptionsContext oC_QueryOptions() throws RecognitionException {
@@ -401,6 +417,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_AnyCypherOption; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_AnyCypherOption(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_AnyCypherOption(this);
+		}
 	}
 
 	public final OC_AnyCypherOptionContext oC_AnyCypherOption() throws RecognitionException {
@@ -466,6 +490,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CypherOption; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CypherOption(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CypherOption(this);
+		}
 	}
 
 	public final OC_CypherOptionContext oC_CypherOption() throws RecognitionException {
@@ -527,6 +559,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_VersionNumber; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_VersionNumber(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_VersionNumber(this);
+		}
 	}
 
 	public final OC_VersionNumberContext oC_VersionNumber() throws RecognitionException {
@@ -557,6 +597,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Explain; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Explain(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Explain(this);
+		}
 	}
 
 	public final OC_ExplainContext oC_Explain() throws RecognitionException {
@@ -587,6 +635,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Profile; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Profile(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Profile(this);
+		}
 	}
 
 	public final OC_ProfileContext oC_Profile() throws RecognitionException {
@@ -626,6 +682,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ConfigurationOption; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ConfigurationOption(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ConfigurationOption(this);
+		}
 	}
 
 	public final OC_ConfigurationOptionContext oC_ConfigurationOption() throws RecognitionException {
@@ -686,6 +750,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Statement; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Statement(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Statement(this);
+		}
 	}
 
 	public final OC_StatementContext oC_Statement() throws RecognitionException {
@@ -740,6 +812,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Query; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Query(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Query(this);
+		}
 	}
 
 	public final OC_QueryContext oC_Query() throws RecognitionException {
@@ -804,6 +884,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Use; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Use(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Use(this);
+		}
 	}
 
 	public final OC_UseContext oC_Use() throws RecognitionException {
@@ -852,6 +940,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RegularQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RegularQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RegularQuery(this);
+		}
 	}
 
 	public final OC_RegularQueryContext oC_RegularQuery() throws RecognitionException {
@@ -916,6 +1012,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_BulkImportQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_BulkImportQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_BulkImportQuery(this);
+		}
 	}
 
 	public final OC_BulkImportQueryContext oC_BulkImportQuery() throws RecognitionException {
@@ -968,6 +1072,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PeriodicCommitHint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PeriodicCommitHint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PeriodicCommitHint(this);
+		}
 	}
 
 	public final OC_PeriodicCommitHintContext oC_PeriodicCommitHint() throws RecognitionException {
@@ -1023,6 +1135,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LoadCSVQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LoadCSVQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LoadCSVQuery(this);
+		}
 	}
 
 	public final OC_LoadCSVQueryContext oC_LoadCSVQuery() throws RecognitionException {
@@ -1063,6 +1183,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Union; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Union(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Union(this);
+		}
 	}
 
 	public final OC_UnionContext oC_Union() throws RecognitionException {
@@ -1147,6 +1275,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SingleQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SingleQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SingleQuery(this);
+		}
 	}
 
 	public final OC_SingleQueryContext oC_SingleQuery() throws RecognitionException {
@@ -1229,6 +1365,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SinglePartQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SinglePartQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SinglePartQuery(this);
+		}
 	}
 
 	public final OC_SinglePartQueryContext oC_SinglePartQuery() throws RecognitionException {
@@ -1396,6 +1540,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_MultiPartQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_MultiPartQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_MultiPartQuery(this);
+		}
 	}
 
 	public final OC_MultiPartQueryContext oC_MultiPartQuery() throws RecognitionException {
@@ -1526,6 +1678,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_UpdatingClause; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_UpdatingClause(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_UpdatingClause(this);
+		}
 	}
 
 	public final OC_UpdatingClauseContext oC_UpdatingClause() throws RecognitionException {
@@ -1618,6 +1778,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ReadingClause; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ReadingClause(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ReadingClause(this);
+		}
 	}
 
 	public final OC_ReadingClauseContext oC_ReadingClause() throws RecognitionException {
@@ -1705,6 +1873,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Command; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Command(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Command(this);
+		}
 	}
 
 	public final OC_CommandContext oC_Command() throws RecognitionException {
@@ -1794,6 +1970,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CreateUniqueConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CreateUniqueConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CreateUniqueConstraint(this);
+		}
 	}
 
 	public final OC_CreateUniqueConstraintContext oC_CreateUniqueConstraint() throws RecognitionException {
@@ -1832,6 +2016,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CreateNodePropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CreateNodePropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CreateNodePropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_CreateNodePropertyExistenceConstraintContext oC_CreateNodePropertyExistenceConstraint() throws RecognitionException {
@@ -1870,6 +2062,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CreateRelationshipPropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CreateRelationshipPropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CreateRelationshipPropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_CreateRelationshipPropertyExistenceConstraintContext oC_CreateRelationshipPropertyExistenceConstraint() throws RecognitionException {
@@ -1908,6 +2108,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CreateIndex; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CreateIndex(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CreateIndex(this);
+		}
 	}
 
 	public final OC_CreateIndexContext oC_CreateIndex() throws RecognitionException {
@@ -1946,6 +2154,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_DropUniqueConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_DropUniqueConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_DropUniqueConstraint(this);
+		}
 	}
 
 	public final OC_DropUniqueConstraintContext oC_DropUniqueConstraint() throws RecognitionException {
@@ -1984,6 +2200,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_DropNodePropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_DropNodePropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_DropNodePropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_DropNodePropertyExistenceConstraintContext oC_DropNodePropertyExistenceConstraint() throws RecognitionException {
@@ -2022,6 +2246,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_DropRelationshipPropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_DropRelationshipPropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_DropRelationshipPropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_DropRelationshipPropertyExistenceConstraintContext oC_DropRelationshipPropertyExistenceConstraint() throws RecognitionException {
@@ -2060,6 +2292,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_DropIndex; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_DropIndex(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_DropIndex(this);
+		}
 	}
 
 	public final OC_DropIndexContext oC_DropIndex() throws RecognitionException {
@@ -2105,6 +2345,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Index; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Index(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Index(this);
+		}
 	}
 
 	public final OC_IndexContext oC_Index() throws RecognitionException {
@@ -2175,6 +2423,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_UniqueConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_UniqueConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_UniqueConstraint(this);
+		}
 	}
 
 	public final OC_UniqueConstraintContext oC_UniqueConstraint() throws RecognitionException {
@@ -2268,6 +2524,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodePropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodePropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodePropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_NodePropertyExistenceConstraintContext oC_NodePropertyExistenceConstraint() throws RecognitionException {
@@ -2366,6 +2630,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipPropertyExistenceConstraint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipPropertyExistenceConstraint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipPropertyExistenceConstraint(this);
+		}
 	}
 
 	public final OC_RelationshipPropertyExistenceConstraintContext oC_RelationshipPropertyExistenceConstraint() throws RecognitionException {
@@ -2466,6 +2738,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipPatternSyntax; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipPatternSyntax(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipPatternSyntax(this);
+		}
 	}
 
 	public final OC_RelationshipPatternSyntaxContext oC_RelationshipPatternSyntax() throws RecognitionException {
@@ -2658,6 +2938,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LoadCSV; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LoadCSV(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LoadCSV(this);
+		}
 	}
 
 	public final OC_LoadCSVContext oC_LoadCSV() throws RecognitionException {
@@ -2777,6 +3065,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Match; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Match(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Match(this);
+		}
 	}
 
 	public final OC_MatchContext oC_Match() throws RecognitionException {
@@ -2916,6 +3212,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Unwind; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Unwind(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Unwind(this);
+		}
 	}
 
 	public final OC_UnwindContext oC_Unwind() throws RecognitionException {
@@ -2980,6 +3284,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Merge; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Merge(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Merge(this);
+		}
 	}
 
 	public final OC_MergeContext oC_Merge() throws RecognitionException {
@@ -3050,6 +3362,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_MergeAction; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_MergeAction(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_MergeAction(this);
+		}
 	}
 
 	public final OC_MergeActionContext oC_MergeAction() throws RecognitionException {
@@ -3117,6 +3437,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Create; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Create(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Create(this);
+		}
 	}
 
 	public final OC_CreateContext oC_Create() throws RecognitionException {
@@ -3167,6 +3495,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CreateUnique; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CreateUnique(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CreateUnique(this);
+		}
 	}
 
 	public final OC_CreateUniqueContext oC_CreateUnique() throws RecognitionException {
@@ -3223,6 +3559,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Set; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Set(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Set(this);
+		}
 	}
 
 	public final OC_SetContext oC_Set() throws RecognitionException {
@@ -3320,6 +3664,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SetItem; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SetItem(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SetItem(this);
+		}
 	}
 
 	public final OC_SetItemContext oC_SetItem() throws RecognitionException {
@@ -3481,6 +3833,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Delete; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Delete(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Delete(this);
+		}
 	}
 
 	public final OC_DeleteContext oC_Delete() throws RecognitionException {
@@ -3585,6 +3945,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Remove; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Remove(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Remove(this);
+		}
 	}
 
 	public final OC_RemoveContext oC_Remove() throws RecognitionException {
@@ -3667,6 +4035,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RemoveItem; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RemoveItem(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RemoveItem(this);
+		}
 	}
 
 	public final OC_RemoveItemContext oC_RemoveItem() throws RecognitionException {
@@ -3731,6 +4107,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Foreach; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Foreach(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Foreach(this);
+		}
 	}
 
 	public final OC_ForeachContext oC_Foreach() throws RecognitionException {
@@ -3853,6 +4237,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_InQueryCall; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_InQueryCall(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_InQueryCall(this);
+		}
 	}
 
 	public final OC_InQueryCallContext oC_InQueryCall() throws RecognitionException {
@@ -3941,6 +4333,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SubQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SubQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SubQuery(this);
+		}
 	}
 
 	public final OC_SubQueryContext oC_SubQuery() throws RecognitionException {
@@ -4089,6 +4489,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SubQueryVariableScope; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SubQueryVariableScope(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SubQueryVariableScope(this);
+		}
 	}
 
 	public final OC_SubQueryVariableScopeContext oC_SubQueryVariableScope() throws RecognitionException {
@@ -4242,6 +4650,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SubQueryDirective; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SubQueryDirective(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SubQueryDirective(this);
+		}
 	}
 
 	public final OC_SubQueryDirectiveContext oC_SubQueryDirective() throws RecognitionException {
@@ -4345,6 +4761,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_StandaloneCall; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_StandaloneCall(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_StandaloneCall(this);
+		}
 	}
 
 	public final OC_StandaloneCallContext oC_StandaloneCall() throws RecognitionException {
@@ -4418,6 +4842,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_YieldItems; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_YieldItems(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_YieldItems(this);
+		}
 	}
 
 	public final OC_YieldItemsContext oC_YieldItems() throws RecognitionException {
@@ -4598,6 +5030,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_YieldItem; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_YieldItem(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_YieldItem(this);
+		}
 	}
 
 	public final OC_YieldItemContext oC_YieldItem() throws RecognitionException {
@@ -4664,6 +5104,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_With; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_With(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_With(this);
+		}
 	}
 
 	public final OC_WithContext oC_With() throws RecognitionException {
@@ -4783,6 +5231,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Return; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Return(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Return(this);
+		}
 	}
 
 	public final OC_ReturnContext oC_Return() throws RecognitionException {
@@ -4853,6 +5309,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ReturnBody; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ReturnBody(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ReturnBody(this);
+		}
 	}
 
 	public final OC_ReturnBodyContext oC_ReturnBody() throws RecognitionException {
@@ -4928,6 +5392,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ReturnItems; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ReturnItems(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ReturnItems(this);
+		}
 	}
 
 	public final OC_ReturnItemsContext oC_ReturnItems() throws RecognitionException {
@@ -5162,6 +5634,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ReturnItem; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ReturnItem(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ReturnItem(this);
+		}
 	}
 
 	public final OC_ReturnItemContext oC_ReturnItem() throws RecognitionException {
@@ -5226,6 +5706,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Order; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Order(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Order(this);
+		}
 	}
 
 	public final OC_OrderContext oC_Order() throws RecognitionException {
@@ -5296,6 +5784,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Skip; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Skip(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Skip(this);
+		}
 	}
 
 	public final OC_SkipContext oC_Skip() throws RecognitionException {
@@ -5343,6 +5839,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Limit; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Limit(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Limit(this);
+		}
 	}
 
 	public final OC_LimitContext oC_Limit() throws RecognitionException {
@@ -5384,6 +5888,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SortItem; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SortItem(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SortItem(this);
+		}
 	}
 
 	public final OC_SortItemContext oC_SortItem() throws RecognitionException {
@@ -5463,6 +5975,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Hint; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Hint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Hint(this);
+		}
 	}
 
 	public final OC_HintContext oC_Hint() throws RecognitionException {
@@ -5616,6 +6136,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_IdentifiedIndexLookup; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_IdentifiedIndexLookup(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_IdentifiedIndexLookup(this);
+		}
 	}
 
 	public final OC_IdentifiedIndexLookupContext oC_IdentifiedIndexLookup() throws RecognitionException {
@@ -5680,6 +6208,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_IndexQuery; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_IndexQuery(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_IndexQuery(this);
+		}
 	}
 
 	public final OC_IndexQueryContext oC_IndexQuery() throws RecognitionException {
@@ -5739,6 +6275,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_IdLookup; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_IdLookup(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_IdLookup(this);
+		}
 	}
 
 	public final OC_IdLookupContext oC_IdLookup() throws RecognitionException {
@@ -5806,6 +6350,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LiteralIds; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LiteralIds(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LiteralIds(this);
+		}
 	}
 
 	public final OC_LiteralIdsContext oC_LiteralIds() throws RecognitionException {
@@ -5883,6 +6435,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Where; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Where(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Where(this);
+		}
 	}
 
 	public final OC_WhereContext oC_Where() throws RecognitionException {
@@ -6047,6 +6607,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Pattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Pattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Pattern(this);
+		}
 	}
 
 	public final OC_PatternContext oC_Pattern() throws RecognitionException {
@@ -6126,6 +6694,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PatternPart; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PatternPart(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PatternPart(this);
+		}
 	}
 
 	public final OC_PatternPartContext oC_PatternPart() throws RecognitionException {
@@ -6204,6 +6780,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_AnonymousPatternPart; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_AnonymousPatternPart(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_AnonymousPatternPart(this);
+		}
 	}
 
 	public final OC_AnonymousPatternPartContext oC_AnonymousPatternPart() throws RecognitionException {
@@ -6306,6 +6890,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ShortestPathPattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ShortestPathPattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ShortestPathPattern(this);
+		}
 	}
 
 	public final OC_ShortestPathPatternContext oC_ShortestPathPattern() throws RecognitionException {
@@ -6509,6 +7101,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PatternElement; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PatternElement(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PatternElement(this);
+		}
 	}
 
 	public final OC_PatternElementContext oC_PatternElement() throws RecognitionException {
@@ -6599,6 +7199,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_OpenParen; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_OpenParen(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_OpenParen(this);
+		}
 	}
 
 	public final OC_OpenParenContext oC_OpenParen() throws RecognitionException {
@@ -6628,6 +7236,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CloseParen; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CloseParen(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CloseParen(this);
+		}
 	}
 
 	public final OC_CloseParenContext oC_CloseParen() throws RecognitionException {
@@ -6673,6 +7289,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodePattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodePattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodePattern(this);
+		}
 	}
 
 	public final OC_NodePatternContext oC_NodePattern() throws RecognitionException {
@@ -6812,6 +7436,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PatternElementChain; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PatternElementChain(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PatternElementChain(this);
+		}
 	}
 
 	public final OC_PatternElementChainContext oC_PatternElementChain() throws RecognitionException {
@@ -6886,6 +7518,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipPattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipPattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipPattern(this);
+		}
 	}
 
 	public final OC_RelationshipPatternContext oC_RelationshipPattern() throws RecognitionException {
@@ -7273,6 +7913,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipDetail; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipDetail(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipDetail(this);
+		}
 	}
 
 	public final OC_RelationshipDetailContext oC_RelationshipDetail() throws RecognitionException {
@@ -7434,6 +8082,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_QuantifiedPathPattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_QuantifiedPathPattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_QuantifiedPathPattern(this);
+		}
 	}
 
 	public final OC_QuantifiedPathPatternContext oC_QuantifiedPathPattern() throws RecognitionException {
@@ -7568,6 +8224,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PathPatternQuantifier; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PathPatternQuantifier(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PathPatternQuantifier(this);
+		}
 	}
 
 	public final OC_PathPatternQuantifierContext oC_PathPatternQuantifier() throws RecognitionException {
@@ -7887,6 +8551,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Properties; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Properties(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Properties(this);
+		}
 	}
 
 	public final OC_PropertiesContext oC_Properties() throws RecognitionException {
@@ -7940,6 +8612,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelType; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelType(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelType(this);
+		}
 	}
 
 	public final OC_RelTypeContext oC_RelType() throws RecognitionException {
@@ -7995,6 +8675,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypes; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypes(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypes(this);
+		}
 	}
 
 	public final OC_RelationshipTypesContext oC_RelationshipTypes() throws RecognitionException {
@@ -8116,6 +8804,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeTerm; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeTerm(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeTerm(this);
+		}
 	}
 
 	public final OC_RelationshipTypeTermContext oC_RelationshipTypeTerm() throws RecognitionException {
@@ -8155,6 +8851,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeOr; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeOr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeOr(this);
+		}
 	}
 
 	public final OC_RelationshipTypeOrContext oC_RelationshipTypeOr() throws RecognitionException {
@@ -8234,6 +8938,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeAnd; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeAnd(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeAnd(this);
+		}
 	}
 
 	public final OC_RelationshipTypeAndContext oC_RelationshipTypeAnd() throws RecognitionException {
@@ -8310,6 +9022,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeNot; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeNot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeNot(this);
+		}
 	}
 
 	public final OC_RelationshipTypeNotContext oC_RelationshipTypeNot() throws RecognitionException {
@@ -8404,6 +9124,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeContainer; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeContainer(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeContainer(this);
+		}
 	}
 
 	public final OC_RelationshipTypeContainerContext oC_RelationshipTypeContainer() throws RecognitionException {
@@ -8494,6 +9222,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeGroup; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeGroup(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeGroup(this);
+		}
 	}
 
 	public final OC_RelationshipTypeGroupContext oC_RelationshipTypeGroup() throws RecognitionException {
@@ -8577,6 +9313,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeNotNested; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeNotNested(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeNotNested(this);
+		}
 	}
 
 	public final OC_RelationshipTypeNotNestedContext oC_RelationshipTypeNotNested() throws RecognitionException {
@@ -8651,6 +9395,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipTypeAny; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipTypeAny(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipTypeAny(this);
+		}
 	}
 
 	public final OC_RelationshipTypeAnyContext oC_RelationshipTypeAny() throws RecognitionException {
@@ -8733,6 +9485,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabels; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabels(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabels(this);
+		}
 	}
 
 	public final OC_NodeLabelsContext oC_NodeLabels() throws RecognitionException {
@@ -8820,6 +9580,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelTerm; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelTerm(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelTerm(this);
+		}
 	}
 
 	public final OC_NodeLabelTermContext oC_NodeLabelTerm() throws RecognitionException {
@@ -8859,6 +9627,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelOr; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelOr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelOr(this);
+		}
 	}
 
 	public final OC_NodeLabelOrContext oC_NodeLabelOr() throws RecognitionException {
@@ -8938,6 +9714,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelAnd; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelAnd(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelAnd(this);
+		}
 	}
 
 	public final OC_NodeLabelAndContext oC_NodeLabelAnd() throws RecognitionException {
@@ -9014,6 +9798,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelNot; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelNot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelNot(this);
+		}
 	}
 
 	public final OC_NodeLabelNotContext oC_NodeLabelNot() throws RecognitionException {
@@ -9108,6 +9900,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelContainer; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelContainer(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelContainer(this);
+		}
 	}
 
 	public final OC_NodeLabelContainerContext oC_NodeLabelContainer() throws RecognitionException {
@@ -9198,6 +9998,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelGroup; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelGroup(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelGroup(this);
+		}
 	}
 
 	public final OC_NodeLabelGroupContext oC_NodeLabelGroup() throws RecognitionException {
@@ -9281,6 +10089,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelNotNested; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelNotNested(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelNotNested(this);
+		}
 	}
 
 	public final OC_NodeLabelNotNestedContext oC_NodeLabelNotNested() throws RecognitionException {
@@ -9355,6 +10171,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabelAny; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabelAny(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabelAny(this);
+		}
 	}
 
 	public final OC_NodeLabelAnyContext oC_NodeLabelAny() throws RecognitionException {
@@ -9428,6 +10252,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeLabel; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeLabel(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeLabel(this);
+		}
 	}
 
 	public final OC_NodeLabelContext oC_NodeLabel() throws RecognitionException {
@@ -9480,6 +10312,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RangeLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RangeLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RangeLiteral(this);
+		}
 	}
 
 	public final OC_RangeLiteralContext oC_RangeLiteral() throws RecognitionException {
@@ -9583,6 +10423,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LabelName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LabelName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LabelName(this);
+		}
 	}
 
 	public final OC_LabelNameContext oC_LabelName() throws RecognitionException {
@@ -9615,6 +10463,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelTypeName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelTypeName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelTypeName(this);
+		}
 	}
 
 	public final OC_RelTypeNameContext oC_RelTypeName() throws RecognitionException {
@@ -9647,6 +10503,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Expression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Expression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Expression(this);
+		}
 	}
 
 	public final OC_ExpressionContext oC_Expression() throws RecognitionException {
@@ -9690,6 +10554,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_OrExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_OrExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_OrExpression(this);
+		}
 	}
 
 	public final OC_OrExpressionContext oC_OrExpression() throws RecognitionException {
@@ -9756,6 +10628,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_XorExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_XorExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_XorExpression(this);
+		}
 	}
 
 	public final OC_XorExpressionContext oC_XorExpression() throws RecognitionException {
@@ -9822,6 +10702,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_AndExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_AndExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_AndExpression(this);
+		}
 	}
 
 	public final OC_AndExpressionContext oC_AndExpression() throws RecognitionException {
@@ -9885,6 +10773,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NotExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NotExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NotExpression(this);
+		}
 	}
 
 	public final OC_NotExpressionContext oC_NotExpression() throws RecognitionException {
@@ -9955,6 +10851,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ComparisonExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ComparisonExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ComparisonExpression(this);
+		}
 	}
 
 	public final OC_ComparisonExpressionContext oC_ComparisonExpression() throws RecognitionException {
@@ -10022,6 +10926,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_AddOrSubtractExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_AddOrSubtractExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_AddOrSubtractExpression(this);
+		}
 	}
 
 	public final OC_AddOrSubtractExpressionContext oC_AddOrSubtractExpression() throws RecognitionException {
@@ -10139,6 +11051,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_MultiplyDivideModuloExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_MultiplyDivideModuloExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_MultiplyDivideModuloExpression(this);
+		}
 	}
 
 	public final OC_MultiplyDivideModuloExpressionContext oC_MultiplyDivideModuloExpression() throws RecognitionException {
@@ -10286,6 +11206,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PowerOfExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PowerOfExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PowerOfExpression(this);
+		}
 	}
 
 	public final OC_PowerOfExpressionContext oC_PowerOfExpression() throws RecognitionException {
@@ -10362,6 +11290,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_UnaryAddOrSubtractExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_UnaryAddOrSubtractExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_UnaryAddOrSubtractExpression(this);
+		}
 	}
 
 	public final OC_UnaryAddOrSubtractExpressionContext oC_UnaryAddOrSubtractExpression() throws RecognitionException {
@@ -10487,6 +11423,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_StringListNullOperatorExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_StringListNullOperatorExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_StringListNullOperatorExpression(this);
+		}
 	}
 
 	public final OC_StringListNullOperatorExpressionContext oC_StringListNullOperatorExpression() throws RecognitionException {
@@ -10786,6 +11730,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RegularExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RegularExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RegularExpression(this);
+		}
 	}
 
 	public final OC_RegularExpressionContext oC_RegularExpression() throws RecognitionException {
@@ -10842,6 +11794,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PropertyOrLabelsExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PropertyOrLabelsExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PropertyOrLabelsExpression(this);
+		}
 	}
 
 	public final OC_PropertyOrLabelsExpressionContext oC_PropertyOrLabelsExpression() throws RecognitionException {
@@ -10932,6 +11892,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NodeProjection; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NodeProjection(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NodeProjection(this);
+		}
 	}
 
 	public final OC_NodeProjectionContext oC_NodeProjection() throws RecognitionException {
@@ -11119,6 +12087,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Atom; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Atom(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Atom(this);
+		}
 	}
 
 	public final OC_AtomContext oC_Atom() throws RecognitionException {
@@ -11756,6 +12732,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Literal; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Literal(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Literal(this);
+		}
 	}
 
 	public final OC_LiteralContext oC_Literal() throws RecognitionException {
@@ -11835,6 +12819,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_BooleanLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_BooleanLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_BooleanLiteral(this);
+		}
 	}
 
 	public final OC_BooleanLiteralContext oC_BooleanLiteral() throws RecognitionException {
@@ -11883,6 +12875,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ListLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ListLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ListLiteral(this);
+		}
 	}
 
 	public final OC_ListLiteralContext oC_ListLiteral() throws RecognitionException {
@@ -11998,6 +12998,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Reduce; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Reduce(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Reduce(this);
+		}
 	}
 
 	public final OC_ReduceContext oC_Reduce() throws RecognitionException {
@@ -12140,6 +13148,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PartialComparisonExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PartialComparisonExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PartialComparisonExpression(this);
+		}
 	}
 
 	public final OC_PartialComparisonExpressionContext oC_PartialComparisonExpression() throws RecognitionException {
@@ -12304,6 +13320,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ParenthesizedExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ParenthesizedExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ParenthesizedExpression(this);
+		}
 	}
 
 	public final OC_ParenthesizedExpressionContext oC_ParenthesizedExpression() throws RecognitionException {
@@ -12371,6 +13395,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RelationshipsPattern; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RelationshipsPattern(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RelationshipsPattern(this);
+		}
 	}
 
 	public final OC_RelationshipsPatternContext oC_RelationshipsPattern() throws RecognitionException {
@@ -12438,6 +13470,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_FilterExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_FilterExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_FilterExpression(this);
+		}
 	}
 
 	public final OC_FilterExpressionContext oC_FilterExpression() throws RecognitionException {
@@ -12499,6 +13539,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_IdInColl; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_IdInColl(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_IdInColl(this);
+		}
 	}
 
 	public final OC_IdInCollContext oC_IdInColl() throws RecognitionException {
@@ -12550,6 +13598,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_FunctionInvocation; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_FunctionInvocation(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_FunctionInvocation(this);
+		}
 	}
 
 	public final OC_FunctionInvocationContext oC_FunctionInvocation() throws RecognitionException {
@@ -12684,6 +13740,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_FunctionName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_FunctionName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_FunctionName(this);
+		}
 	}
 
 	public final OC_FunctionNameContext oC_FunctionName() throws RecognitionException {
@@ -12739,6 +13803,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ExplicitProcedureInvocation; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ExplicitProcedureInvocation(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ExplicitProcedureInvocation(this);
+		}
 	}
 
 	public final OC_ExplicitProcedureInvocationContext oC_ExplicitProcedureInvocation() throws RecognitionException {
@@ -12852,6 +13924,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ImplicitProcedureInvocation; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ImplicitProcedureInvocation(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ImplicitProcedureInvocation(this);
+		}
 	}
 
 	public final OC_ImplicitProcedureInvocationContext oC_ImplicitProcedureInvocation() throws RecognitionException {
@@ -12884,6 +13964,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ProcedureResultField; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ProcedureResultField(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ProcedureResultField(this);
+		}
 	}
 
 	public final OC_ProcedureResultFieldContext oC_ProcedureResultField() throws RecognitionException {
@@ -12919,6 +14007,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ProcedureName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ProcedureName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ProcedureName(this);
+		}
 	}
 
 	public final OC_ProcedureNameContext oC_ProcedureName() throws RecognitionException {
@@ -12956,6 +14052,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Namespace; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Namespace(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Namespace(this);
+		}
 	}
 
 	public final OC_NamespaceContext oC_Namespace() throws RecognitionException {
@@ -13012,6 +14116,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ListComprehension; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ListComprehension(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ListComprehension(this);
+		}
 	}
 
 	public final OC_ListComprehensionContext oC_ListComprehension() throws RecognitionException {
@@ -13115,6 +14227,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PatternComprehension; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PatternComprehension(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PatternComprehension(this);
+		}
 	}
 
 	public final OC_PatternComprehensionContext oC_PatternComprehension() throws RecognitionException {
@@ -13261,6 +14381,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PropertyLookup; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PropertyLookup(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PropertyLookup(this);
+		}
 	}
 
 	public final OC_PropertyLookupContext oC_PropertyLookup() throws RecognitionException {
@@ -13324,6 +14452,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CaseExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CaseExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CaseExpression(this);
+		}
 	}
 
 	public final OC_CaseExpressionContext oC_CaseExpression() throws RecognitionException {
@@ -13501,6 +14637,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_CaseAlternatives; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_CaseAlternatives(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_CaseAlternatives(this);
+		}
 	}
 
 	public final OC_CaseAlternativesContext oC_CaseAlternatives() throws RecognitionException {
@@ -13570,6 +14714,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Variable; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Variable(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Variable(this);
+		}
 	}
 
 	public final OC_VariableContext oC_Variable() throws RecognitionException {
@@ -13605,6 +14757,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_NumberLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_NumberLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_NumberLiteral(this);
+		}
 	}
 
 	public final OC_NumberLiteralContext oC_NumberLiteral() throws RecognitionException {
@@ -13668,6 +14828,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_MapLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_MapLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_MapLiteral(this);
+		}
 	}
 
 	public final OC_MapLiteralContext oC_MapLiteral() throws RecognitionException {
@@ -13822,6 +14990,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LegacyParameter; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LegacyParameter(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LegacyParameter(this);
+		}
 	}
 
 	public final OC_LegacyParameterContext oC_LegacyParameter() throws RecognitionException {
@@ -13979,6 +15155,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Parameter; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Parameter(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Parameter(this);
+		}
 	}
 
 	public final OC_ParameterContext oC_Parameter() throws RecognitionException {
@@ -14122,6 +15306,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PropertyExpression; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PropertyExpression(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PropertyExpression(this);
+		}
 	}
 
 	public final OC_PropertyExpressionContext oC_PropertyExpression() throws RecognitionException {
@@ -14187,6 +15379,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_PropertyKeyName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_PropertyKeyName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_PropertyKeyName(this);
+		}
 	}
 
 	public final OC_PropertyKeyNameContext oC_PropertyKeyName() throws RecognitionException {
@@ -14238,6 +15438,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_IntegerLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_IntegerLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_IntegerLiteral(this);
+		}
 	}
 
 	public final OC_IntegerLiteralContext oC_IntegerLiteral() throws RecognitionException {
@@ -14278,6 +15486,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_DoubleLiteral; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_DoubleLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_DoubleLiteral(this);
+		}
 	}
 
 	public final OC_DoubleLiteralContext oC_DoubleLiteral() throws RecognitionException {
@@ -14322,6 +15538,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SchemaName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SchemaName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SchemaName(this);
+		}
 	}
 
 	public final OC_SchemaNameContext oC_SchemaName() throws RecognitionException {
@@ -14416,6 +15640,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_ReservedWord; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_ReservedWord(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_ReservedWord(this);
+		}
 	}
 
 	public final OC_ReservedWordContext oC_ReservedWord() throws RecognitionException {
@@ -14471,6 +15703,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_SymbolicName; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_SymbolicName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_SymbolicName(this);
+		}
 	}
 
 	public final OC_SymbolicNameContext oC_SymbolicName() throws RecognitionException {
@@ -14630,6 +15870,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_KeywordsThatArePartOfFunctionNames; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_KeywordsThatArePartOfFunctionNames(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_KeywordsThatArePartOfFunctionNames(this);
+		}
 	}
 
 	public final OC_KeywordsThatArePartOfFunctionNamesContext oC_KeywordsThatArePartOfFunctionNames() throws RecognitionException {
@@ -14826,6 +16074,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_LeftArrowHead; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_LeftArrowHead(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_LeftArrowHead(this);
+		}
 	}
 
 	public final OC_LeftArrowHeadContext oC_LeftArrowHead() throws RecognitionException {
@@ -14864,6 +16120,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_RightArrowHead; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_RightArrowHead(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_RightArrowHead(this);
+		}
 	}
 
 	public final OC_RightArrowHeadContext oC_RightArrowHead() throws RecognitionException {
@@ -14902,6 +16166,14 @@ public class CypherParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_oC_Dash; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).enterOC_Dash(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CypherListener ) ((CypherListener)listener).exitOC_Dash(this);
+		}
 	}
 
 	public final OC_DashContext oC_Dash() throws RecognitionException {

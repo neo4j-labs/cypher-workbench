@@ -56,7 +56,6 @@ RETURN true as success
 `
 
 export const SaveDataModel = `
-/* data model */
 WITH $modelInfo as modelInfo, $email as email
 MATCH (u:User {email:email})
 MATCH (dataModel:DataModel {key: modelInfo.key})
@@ -76,10 +75,12 @@ SET dataModel += {
     isInstanceModel: modelInfo.isInstanceModel,
     excludeValidationSections: modelInfo.excludeValidationSections
 }
+
 ${RecordAccessTimeSnippet}
 WITH u, dataModel, modelInfo
 
 /* data model metadata */
+
 CALL apoc.do.when(NOT modelInfo.metadata IS NULL,
 "MATCH (dataModelMetadata:DataModelMetadata {key: metadata.key})
 SET dataModelMetadata += apoc.map.submap(metadata, apoc.coll.intersection(keys(metadata),
@@ -114,42 +115,57 @@ SET nl += apoc.map.submap(nodeLabel, apoc.coll.intersection(keys(nodeLabel),
 WITH *
 CALL apoc.create.addLabels([nl], [user.primaryOrganization]) YIELD node
 MERGE (dataModel)-[:HAS_NODE_LABEL]->(nl)
+
 WITH user, dataModel, nl,
 	CASE WHEN nodeLabel.upsertPropertyDefinitions IS NULL THEN []
   	  ELSE nodeLabel.upsertPropertyDefinitions END as upsertPropertyDefinitions,
-	CASE WHEN nodeLabel.removePropertyDefinitions IS NULL THEN []
-  	  ELSE nodeLabel.removePropertyDefinitions END as removePropertyDefinitions
+    CASE WHEN nodeLabel.removePropertyDefinitions IS NULL THEN []
+  	  ELSE [x IN nodeLabel.removePropertyDefinitions | x.key] END as removePropertyDefinitionKeys
+
+WITH collect({nodeLabel: nl, upsertPropertyDefinitions: upsertPropertyDefinitions}) as propsToUpsert,
+    apoc.coll.flatten(collect(removePropertyDefinitionKeys)) as removePropertyDefinitionKeys
+
+RETURN propsToUpsert, removePropertyDefinitionKeys
+","RETURN [] as propsToUpsert, [] as removePropertyDefinitionKeys",
+{user: u, dataModel: dataModel, upsertNodeLabels: upsertNodeLabels}) YIELD value
+
+WITH u, dataModel, modelInfo, removeNodeLabels, upsertRelationshipTypes, removeRelationshipTypes,
+    [x IN value.propsToUpsert WHERE size(x.upsertPropertyDefinitions) > 0 | x] as propsToUpsert,
+    value.removePropertyDefinitionKeys as removePropertyDefinitionKeys
 
 /* upsert node label properties */
-FOREACH (propDef IN upsertPropertyDefinitions |
-	MERGE (pd:PropertyDefinition {key: propDef.key})
+CALL apoc.do.when(size(propsToUpsert) > 0,
+    "
+    UNWIND propsToUpsert as nodeLabelAndUpsertProps
+    WITH user, nodeLabelAndUpsertProps.nodeLabel as nl, nodeLabelAndUpsertProps.upsertPropertyDefinitions as upsertPropertyDefinitions
+    UNWIND upsertPropertyDefinitions as propDef
+    MERGE (pd:PropertyDefinition {key: propDef.key})
 	SET pd += apoc.map.submap(propDef, apoc.coll.intersection(keys(propDef),
 										['name','datatype','referenceData','description','isPartOfKey',
 										'isArray','isIndexed','hasUniqueConstraint','mustExist']), [], false)
 	MERGE (nl)-[:HAS_PROPERTY]->(pd)
-)
-// I would do this in FOREACH, but FOREACH won't allow procedures to be called inside of it
-WITH *
-CALL apoc.do.when(size(upsertPropertyDefinitions) > 0,
-   'UNWIND upsertPropertyDefinitions as propDef
-    MATCH (n:PropertyDefinition {key: propDef.key})
-    WITH n, user
-    CALL apoc.create.addLabels([n], [user.primaryOrganization]) YIELD node
-    WITH collect(node) as _
-    RETURN 1',
-    'RETURN 0',
-    {user: user, upsertPropertyDefinitions: upsertPropertyDefinitions}) YIELD value
+    WITH pd, user
+    CALL apoc.create.addLabels([pd], [user.primaryOrganization]) YIELD node
+    WITH collect(pd) as _
+    RETURN 1
+    ",
+    "RETURN 0",
+    {user: u, propsToUpsert: propsToUpsert}) YIELD value
 
-WITH *
-UNWIND removePropertyDefinitions as propDef
-MATCH (pd:PropertyDefinition {key: propDef.key})
-DETACH DELETE pd
-WITH collect(pd) as deletedProperties
-RETURN 1
-","RETURN 0",
-{user: u, dataModel: dataModel, upsertNodeLabels: upsertNodeLabels}) YIELD value
+WITH u, dataModel, removePropertyDefinitionKeys, removeNodeLabels, upsertRelationshipTypes, removeRelationshipTypes
 
-WITH u, dataModel, removeNodeLabels, upsertRelationshipTypes, removeRelationshipTypes
+/* remove node label properties */
+CALL apoc.do.when(size(removePropertyDefinitionKeys) > 0,
+    "
+    UNWIND removePropertyDefinitionKeys as propDefKey
+    MATCH (pd:PropertyDefinition {key: propDefKey})
+    DETACH DELETE pd
+    WITH collect(propDefKey) as _
+    RETURN 1
+    ",
+    "RETURN 0",
+    {removePropertyDefinitionKeys: removePropertyDefinitionKeys}
+) YIELD value as _
 
 /* remove node labels */
 CALL apoc.do.when(size(removeNodeLabels) > 0,
@@ -198,36 +214,53 @@ DELETE r1, r2
 WITH user, dataModel, rt,
 	CASE WHEN relationshipType.upsertPropertyDefinitions IS NULL THEN []
   	  ELSE relationshipType.upsertPropertyDefinitions END as upsertPropertyDefinitions,
-	CASE WHEN relationshipType.removePropertyDefinitions IS NULL THEN []
-  	  ELSE relationshipType.removePropertyDefinitions END as removePropertyDefinitions
+    CASE WHEN relationshipType.removePropertyDefinitions IS NULL THEN []
+  	  ELSE [x IN relationshipType.removePropertyDefinitions | x.key] END as removePropertyDefinitionKeys
 
-/* upsert node label properties */
-FOREACH (propDef IN upsertPropertyDefinitions |
-	MERGE (pd:PropertyDefinition {key: propDef.key})
-	SET pd += apoc.map.submap(propDef, apoc.coll.intersection(keys(propDef),
-										['name','datatype','referenceData','description','isArray','mustExist']), [], false)
-	MERGE (rt)-[:HAS_PROPERTY]->(pd)
-)
-// I would do this in FOREACH, but FOREACH won't allow procedures to be called inside of it
-WITH *
-CALL apoc.do.when(size(upsertPropertyDefinitions) > 0,
-   'UNWIND upsertPropertyDefinitions as propDef
-    MATCH (n:PropertyDefinition {key: propDef.key})
-    WITH n, user
-    CALL apoc.create.addLabels([n], [user.primaryOrganization]) YIELD node
-    WITH collect(node) as _
-    RETURN 1',
-    'RETURN 0',
-    {user: user, upsertPropertyDefinitions: upsertPropertyDefinitions}) YIELD value
+WITH collect({relationshipType: rt, upsertPropertyDefinitions: upsertPropertyDefinitions}) as propsToUpsert,
+    apoc.coll.flatten(collect(removePropertyDefinitionKeys)) as removePropertyDefinitionKeys
 
-WITH *
-UNWIND removePropertyDefinitions as propDef
-MATCH (pd:PropertyDefinition {key: propDef.key})
-DETACH DELETE pd
-WITH collect(pd) as deletedProperties
-RETURN 1
-","RETURN 0",
+RETURN propsToUpsert, removePropertyDefinitionKeys
+","RETURN [] as propsToUpsert, [] as removePropertyDefinitionKeys",
 {user: u, dataModel: dataModel, upsertRelationshipTypes: upsertRelationshipTypes}) YIELD value
+
+WITH u, dataModel, relationshipTypeKeysToDelete,
+    [x IN value.propsToUpsert WHERE size(x.upsertPropertyDefinitions) > 0 | x] as propsToUpsert,
+    value.removePropertyDefinitionKeys as removePropertyDefinitionKeys
+
+/* upsert relationship type properties */
+CALL apoc.do.when(size(propsToUpsert) > 0,
+    "
+    UNWIND propsToUpsert as relationshipTypeAndUpsertProps
+    WITH user, relationshipTypeAndUpsertProps.relationshipType as rt, relationshipTypeAndUpsertProps.upsertPropertyDefinitions as upsertPropertyDefinitions
+    UNWIND upsertPropertyDefinitions as propDef
+    MERGE (pd:PropertyDefinition {key: propDef.key})
+	SET pd += apoc.map.submap(propDef, apoc.coll.intersection(keys(propDef),
+										['name','datatype','referenceData','description','isPartOfKey',
+										'isArray','isIndexed','hasUniqueConstraint','mustExist']), [], false)
+	MERGE (rt)-[:HAS_PROPERTY]->(pd)
+    WITH pd, user
+    CALL apoc.create.addLabels([pd], [user.primaryOrganization]) YIELD node
+    WITH collect(pd) as _
+    RETURN 1
+    ",
+    "RETURN 0",
+    {user: u, propsToUpsert: propsToUpsert}) YIELD value
+
+WITH u, dataModel, removePropertyDefinitionKeys, relationshipTypeKeysToDelete
+
+/* remove relationship type properties */
+CALL apoc.do.when(size(removePropertyDefinitionKeys) > 0,
+    "
+    UNWIND removePropertyDefinitionKeys as propDefKey
+    MATCH (pd:PropertyDefinition {key: propDefKey})
+    DETACH DELETE pd
+    WITH collect(propDefKey) as _
+    RETURN 1
+    ",
+    "RETURN 0",
+    {removePropertyDefinitionKeys: removePropertyDefinitionKeys}
+) YIELD value as _
 
 WITH u, dataModel, relationshipTypeKeysToDelete
 
@@ -245,7 +278,7 @@ WITH collect(distinct(rt)) as deletedRelationshipTypes
 RETURN 1
 ", "RETURN 0",
 {user: u, dataModel: dataModel, relationshipTypeKeysToDelete: relationshipTypeKeysToDelete}) YIELD value
-RETURN dataModel.key as key
+RETURN dataModel.key as key;
 `
 
 export const LoadDataModel = `
