@@ -8,7 +8,7 @@ Install dependencies:
 
 Run:
 ```
-npm install
+npm install --legacy-peer-deps
 ```
 
 ## Environment variables
