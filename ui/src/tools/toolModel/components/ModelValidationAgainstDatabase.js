@@ -493,6 +493,7 @@ export const getConstraintMaps = (descriptionArray) => {
     var relationshipTypeConstraintsMap = {};
 
     descriptionArray.map(details => {
+        // TODO: switch this to processConstraintRow
         const schemaModel = parseConstraintDescription(details);
         if (schemaModel) {
             const schemaNodeLabels = schemaModel.getNodeLabelArray().filter(x => x.label);

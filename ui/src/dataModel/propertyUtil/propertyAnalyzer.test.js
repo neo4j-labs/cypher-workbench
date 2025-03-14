@@ -3,6 +3,7 @@ import {
     analyzeValues, 
     getPropertyValueMap, 
     getRecommendedLabel, 
+    getRecommendedKey,
     isInteger,
     sortArray 
 } from './propertyAnalyzer';
@@ -125,4 +126,46 @@ test('get property value map', () => {
     ]
     let recommendedLabel = getRecommendedLabel(propContainers)
     expect(recommendedLabel).toBe('a')
+});
+
+test('get recommended key', () => {
+    let propContainers = [
+        {properties: {a: 'foo', b: 1, c: 'baz'}},
+        {properties: {a: 'bar', b: 2, c: 'baz'}},
+        {properties: {a: 'qux', b: 2, c: 'garply'}},
+        {properties: {a: 'quux', b: 3, c: 'grault'}},
+        {properties: {a: 'corge', b: 3, c: 'grault'}}
+    ]
+    let recommendedKey = getRecommendedKey(propContainers)
+    expect(recommendedKey).toBe('a')
+
+    propContainers = [
+        {properties: {a: 'foo', b: 1, c: 'baz'}},
+        {properties: {a: 'bar', b: 2, c: 'baz'}},
+        {properties: {a: 'qux', b: 3, c: 'garply'}},
+        {properties: {a: 'quux', b: 4, c: 'grault'}},
+        {properties: {a: 'corge', b: 5, c: 'grault'}}
+    ]
+    recommendedKey = getRecommendedKey(propContainers)
+    expect(recommendedKey).toBe('b')    
+
+    propContainers = [
+        {properties: {a: 'fooby', b: 1, c: 'bay'}},
+        {properties: {a: 'barby', b: 1, c: 'baz'}},
+        {properties: {a: 'quxby', b: 3, c: 'gar'}},
+        {properties: {a: 'quuxby', b: 3, c: 'gru'}},
+        {properties: {a: 'corgeby', b: 5, c: 'gra'}}
+    ]
+    recommendedKey = getRecommendedKey(propContainers)
+    expect(recommendedKey).toBe('c')   
+    
+    propContainers = [
+        {properties: {a: 'fooby', b: 1, c: 'bay'}},
+        {properties: {a: 'barby', b: null, c: 'baz'}},
+        {properties: {a: 'quxby', b: 3, c: 'gar'}},
+        {properties: {a: 'quuxby', b: null, c: 'gru'}},
+        {properties: {a: 'corgeby', b: 5, c: 'gra'}}
+    ]
+    recommendedKey = getRecommendedKey(propContainers)
+    expect(recommendedKey).toBe('c')    
 });

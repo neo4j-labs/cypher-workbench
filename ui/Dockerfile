@@ -3,7 +3,7 @@ FROM node:18.12.1 as react-build
 RUN mkdir -p /app
 WORKDIR /app
 COPY . ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # stage 2 - production environment
