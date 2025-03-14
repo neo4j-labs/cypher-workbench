@@ -104,7 +104,7 @@ const Sizes = {
   RightTitleBarWidth: "30px",
   FloatingBarRightMargin: "120px",
   DefaultRightDrawerWidth: "800px",
-  MaxRightDrawerWidth: "1200px",
+  MaxRightDrawerWidth: "2400px",
   MinRightDrawerWidth: "400px",
   RightDrawerWidthIncrement: "100px",
   MainAreaPadding: "8px",
@@ -2438,7 +2438,9 @@ export default class Scenarios extends Component {
         const highlightDataModel = result.dataModel;
         var dataModelCanvas = this.getDataModelCanvas();
         dataModelCanvas.highlightSubgraph(highlightDataModel, HighlightClasses.HighlightNode, HighlightClasses.HighlightRel);
-        var diff = diffDataModels(selectedDataModel, highlightDataModel);
+        var diff = diffDataModels(selectedDataModel, highlightDataModel, {
+          allowRelationshipAnonStartEndToMatch: true
+        });
   
         if (diff.anyDifference()) {
           if (diff.nodeLabelDiff.inBnotA.length > 0 || diff.relationshipTypeDiff.inBnotA.length > 0) {

@@ -5,7 +5,7 @@ export const ValidationTerms = {
     NoData: 'No Data'
 }
 
-const sleep = async (howLong) => {
+export const sleep = async (howLong) => {
     return await new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve();

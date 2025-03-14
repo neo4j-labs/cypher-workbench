@@ -27,6 +27,7 @@ export const enhanceDataModelWithConstraintsAndIndexes = async (dataModel, setSt
         if (constraintsResponse && constraintsResponse.results && constraintsResponse.results.rows) {
             var descriptionArray = constraintsResponse.results.rows.map(row => row['description']);
             var constraintDataModels = descriptionArray
+                // TODO: switch this to processConstraintRow
                 .map(description => parseConstraintDescription(description))
                 .filter(dataModel => dataModel);    // get rid of nulls
 

@@ -38,6 +38,7 @@ import Divider from './components/divider';
 import { findObjectsContainingAllKeys, findValues } from '../../dataModel/graphUtil';
 import { Integer } from 'neo4j-driver';
 import GeneralTextDialog from '../../components/common/GeneralTextDialog';
+import ExportDataImporterDialog from '../../components/common/ExportDataImporterDialog';
 import { getDataType } from '../../dataModel/graphUtil';
 import DataTypes from '../../dataModel/DataTypes';
 import { InjectLimit } from '../../dataModel/cypherSubQuery';
@@ -48,6 +49,7 @@ import { getValidationIcon } from '../common/validation/ValidationSection';
 import { ValidationStatus } from '../common/validation/ValidationStatus';
 import { DividerTitleWidthOrHeight } from './components/divider';
 import { currentlyConnectedToNeo, connectionIsProxied } from '../../common/Cypher';
+import { runAndExportData } from './export/runAndExportData';
 
 const REMOTE_GRAPH_DOC_TYPE = 'CypherDebug';
 const CYPHER_RETURN = '\nRETURN *';
@@ -80,6 +82,14 @@ export default class CypherDebug extends Component {
 
     setParamText = (e) => {
       this.setState({ paramDialog: { ...this.state.paramDialog, text: e.target.value }});
+    }
+
+    closeExportAsDialog = () => {
+      this.setState({ exportAsDialog: { ...this.state.exportAsDialog, open: false }});
+    }
+
+    setExportAsText = (e) => {
+      this.setState({ exportAsDialog: { ...this.state.exportAsDialog, text: e.target.value }});
     }
 
     convertValueToJson = (value) => {
@@ -178,7 +188,13 @@ export default class CypherDebug extends Component {
           setText: this.setParamText,
           onPaste: this.onParamPaste,
           buttons: []
-        }
+        },
+        exportAsDialog: {
+          open: false,
+          handleClose: this.closeExportAsDialog,
+          setText: this.setExportAsText
+      },
+
     }
 
     executeCypher = new ExecuteCypher();
@@ -235,6 +251,7 @@ export default class CypherDebug extends Component {
         this.ewDividerRef = React.createRef();
         this.nsDividerRef = React.createRef();
         this.paramDialogRef = React.createRef();
+        this.exportAsDialogRef = React.createRef();
 
         this.communicationHelper = new CommunicationHelper({
             graphDocContainer: this,
@@ -292,11 +309,125 @@ export default class CypherDebug extends Component {
       this.setCanvasWidthState(newCanvasWidth);
     }
 
+    handleRunAndExportData = (params) => {
+      this.clearState(() => {
+        this.handleRunAndExportDataAction(params)
+      })    
+    }
+
+    handleRunAndExportDataAction = async ({ prefix, skipItems, skipProperties, dataModel }) => {
+
+      let { cypherQuery, cypherParameters } = this.state;
+      let cypherQueries = [];
+      if (cypherQuery) {
+        cypherQueries = cypherQuery.split(';')
+          .map(x => x.trim())
+          .filter(x => x)
+          .map(x => {
+            let lastLine = this.getLastLine(x).trim().toUpperCase();          
+            if (!lastLine.match(/LIMIT\s+\d+$/)) {
+              x = this.prepCypherBeforeAddingLimit(x);
+              x += this.getLimitClause();
+            }
+            return x;
+        })
+      }
+      if (cypherQueries.length === 0) {
+        this.setState({
+          headers: ['status', 'about'],
+          numRows: 1,
+          rows: [
+            { 
+              status: 'Please enter a Cypher query',
+              about: ''
+            }
+          ]
+        })
+        return;
+      }
+
+      await runAndExportData(cypherQueries, cypherParameters, {
+        prefix: prefix,
+        skipItems,
+        skipProperties, 
+        dataModel,
+        executeCypherAsPromise: this.executeCypher.runQueryAsPromise,
+        checkIfUserHasCancelledFunction: () => {
+          let { userRequestedStop } = this.state;
+          // console.log('userRequestedStop: ', userRequestedStop)
+          return userRequestedStop;
+        },
+        statusFunction: async (result) => {
+          return await new Promise ((resolve, reject) => {
+            let {
+              about, status,
+              isError, errorMessage
+            } = result;
+  
+            let resultTableRows = this.state.rows;
+        
+            let resultRow = {}
+            if (isError) {
+              resultRow = {
+                status: errorMessage,
+                about: about
+              }
+            } else {
+              resultRow = {
+                status: status,
+                about: about
+              }
+            }
+
+            let updatedRows = resultTableRows.slice();
+            updatedRows.push(resultRow);
+            let stateUpdate = {
+              headers: ['status', 'about'],
+              numRows: updatedRows.length,
+              rows: updatedRows
+            };
+
+            this.setState(stateUpdate, () => {
+              // ok to go to next query
+              resolve();
+            })
+          })
+        }
+      })
+    }
+
+    getMenus = () => {
+      var menus = [];
+  
+      var exportMenuItems = [
+        { id: "runAndExportData", text: `Run and Export Data` },
+      ];
+    
+      var exportMenu = {
+        id: "reveal-export",
+        text: "Export",
+        handler: (menu, menuItem) => {
+          switch (menuItem.id) {
+            case "runAndExportData":
+              this.showExportAsDialog();
+              break;
+            default:
+              break;
+          }
+        },
+        menuItems: exportMenuItems,
+      };
+
+      menus.push(exportMenu);
+    
+      return menus;
+    };
+
     tabActivated = () => {
         const { codeDebugHeight } = this.state;
         const { setTitle, setMenus } = this.props;
         setTitle("Reveal");  // Cypher Debugger
-        setMenus([]);
+        setMenus(this.getMenus());
 
         this.setState({
           internalTabActivated: true
@@ -420,6 +551,17 @@ export default class CypherDebug extends Component {
             this.paramDialogRef.current.focusTextBox();
         });
     }      
+
+    showExportAsDialog = () => {
+        this.setState({
+          exportAsDialog: {
+                ...this.state.exportAsDialog,
+                open: true
+            }
+        }, () => {
+            this.exportAsDialogRef.current.focusTextBox();
+        });
+    }
 
     setCypherQuery = (value) => {
         this.setState({
@@ -1238,7 +1380,7 @@ export default class CypherDebug extends Component {
         codeDebugWidth, canvasWidth, resultTableHeight,
         rows, headers,
         isError, errorMessage,
-        readonly, paramDialog,
+        readonly, paramDialog, exportAsDialog,
         showQueryResults, isBusy,
         isExplanationAvailable, explanation, validationIcon,
         resultsTableIsCollapsed, graphVisualizationIsCollapsed
@@ -1397,7 +1539,12 @@ export default class CypherDebug extends Component {
                     title={paramDialog.title} placeholder={paramDialog.placeholder}
                     text={paramDialog.text} setText={paramDialog.setText}
                     pasteHandler={paramDialog.onPaste}
-                    buttons={paramDialog.buttons} rows={15} />            
+                    buttons={paramDialog.buttons} rows={15} />         
+            <ExportDataImporterDialog maxWidth={'md'} 
+                    open={exportAsDialog.open} 
+                    onClose={exportAsDialog.handleClose}
+                    ref={this.exportAsDialogRef}
+                    handleRunAndExportData={this.handleRunAndExportData}/>
           </div>
       )
     }

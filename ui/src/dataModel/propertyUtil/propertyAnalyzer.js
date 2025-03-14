@@ -113,6 +113,40 @@ export const getRecommendedLabel = (propertyContainers, limit) => {
     return recommendedLabel;
 }
 
+export const getRecommendedKey = (propertyContainers) => {
+    let propertyValueMap = getPropertyValueMap(propertyContainers);
+    let analysisArray = Object.keys(propertyValueMap).map(key => {
+        let values = propertyValueMap[key];
+        let analysis = analyzeValues(key, values);
+        return analysis;
+    })
+
+    let recommendedKey = '';
+    let numberKeys = analysisArray
+        .filter(x => x.getTopDataType() === 'number')
+        .filter(x => x.percentUnique === 1 && x.numberOfEmpties === 0 && x.totalSize === propertyContainers.length)
+
+    if (numberKeys.length > 0) {
+        recommendedKey = numberKeys[0].key;
+    } else { 
+        let stringKeys = analysisArray
+            .filter(x => x.getTopDataType() === 'string')
+            .filter(x => x.percentUnique === 1 && x.numberOfEmpties === 0 && x.totalSize === propertyContainers.length)
+
+        if (stringKeys.length > 0) {
+            let sortedArray = sortArray({array: stringKeys, key: 'averageStringLength', desc: false});
+            recommendedKey = sortedArray[0].key;
+        }
+    }
+
+    if (!recommendedKey) {
+        let sortedArray = sortArray({array: analysisArray, key: 'percentUnique', desc: true});
+        recommendedKey = sortedArray[0].key;
+    }
+
+    return recommendedKey;
+}
+
 export const analyzeValues = (key, values) => {
 
     const analysis = new ValueMapAnalysis(key);

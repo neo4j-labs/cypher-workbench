@@ -15,6 +15,23 @@ const getFirstMatch = (regexResult) => {
     return null;
 }
 
+// TODO
+/*
+export const processConstraintRow = (constraintRow) => {
+    // id	name	type	entityType	labelsOrTypes	properties	ownedIndex	propertyType
+    if (constraintRow.entityType === 'NODE') {
+
+    }
+
+    var dataModel = DataModel();
+
+    return dataModel;
+}
+
+export const processIndexRow = (indexRow) => {
+    // id	name	state	populationPercent	type	entityType	labelsOrTypes	properties	indexProvider	owningConstraint	lastRead	readCount
+}*/
+
 export const parseConstraintDescription = (desc) => {
     var dataModel = DataModel();
     if (desc && desc.match) {

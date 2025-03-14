@@ -148,10 +148,10 @@ export default class PropertyDialog extends Component {
                     </OutlinedStyledButton>
               }
               {showActions &&
-                    <OutlinedStyledButton style={{float:'left'}} onClick={this.toggleDescription}>
-                        <span style={{fontSize:'0.8em', marginRight:'0.5em'}} className='fa fa-file-alt'/> 
-                            {`${(showDescriptions) ? 'Hide' : 'Show'} Descriptions`}
-                    </OutlinedStyledButton>
+                <OutlinedStyledButton style={{float:'left'}} onClick={this.toggleDescription}>
+                    <span style={{fontSize:'0.8em', marginRight:'0.5em'}} className='fa fa-file-alt'/> 
+                        {`${(showDescriptions) ? 'Hide' : 'Show'} Descriptions`}
+                </OutlinedStyledButton>
               }
               <StyledButton style={{float:'right'}} onClick={props.onClose} color="primary">
                 Close
