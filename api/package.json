@@ -1,6 +1,6 @@
 {
   "name": "workbench-api",
-  "version": "0.0.1",
+  "version": "1.8.0",
   "description": "API app for cypher workbench",
   "main": "src/index.js",
   "scripts": {
