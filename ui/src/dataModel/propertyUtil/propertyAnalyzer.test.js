@@ -1,4 +1,5 @@
 
+import { getDataType } from '../graphUtil';
 import { 
     analyzeValues, 
     getPropertyValueMap, 
@@ -7,6 +8,7 @@ import {
     isInteger,
     sortArray 
 } from './propertyAnalyzer';
+import DataTypes from '../DataTypes';
 
 test('isInteger', () => {
     expect(isInteger(1)).toBe(true);
@@ -168,4 +170,16 @@ test('get recommended key', () => {
     ]
     recommendedKey = getRecommendedKey(propContainers)
     expect(recommendedKey).toBe('c')    
+});
+
+test('determine date and time data types', () => {
+    let dateVal = {year: 2019, month: 6, day: 21};
+    let timeVal = {hour: 10, minute: 20, second: 30};
+    let dateTimeVal = {
+        year: 2019, month: 6, day: 21,
+        hour: 10, minute: 20, second: 30
+    }
+    expect(getDataType(dateVal)).toBe(DataTypes.Date);
+    expect(getDataType(timeVal)).toBe(DataTypes.Time);
+    expect(getDataType(dateTimeVal)).toBe(DataTypes.DateTime);
 });

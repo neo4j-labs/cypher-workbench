@@ -217,7 +217,7 @@ test('text export', () => {
     var importModelObject = JSON.parse(modelJson);
     dataModel.fromSaveObject(importModelObject.dataModel);
     
-    let dataImporterModel = workbenchDataModelToImporterGraphModel(dataModel);
+    let { dataImporterModel } = workbenchDataModelToImporterGraphModel(dataModel);
     // console.log(dataImporterModel);
     // console.log(JSON.stringify(dataImporterModel, null, 2));
 

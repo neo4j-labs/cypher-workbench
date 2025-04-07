@@ -3,7 +3,7 @@
 
 const getPrimaryKeyProperties = (nodeLabel : NodeLabel) : Property[] => {
     if (nodeLabel && nodeLabel.properties) {
-        return nodeLabel.properties.filter(prop => prop.primaryKey === true)
+        return nodeLabel.properties.filter(prop => prop.nodeKey === true)
     } else {
         return [];
     }
@@ -144,7 +144,8 @@ export class Property {
     public token : string;
     public type: Type;
     public nullable: boolean;
-    public primaryKey: boolean;
+    public nodeKey: boolean;
+    public uniqueConstraint: boolean;
 
     constructor(properties = {}) {
         const {
@@ -152,13 +153,15 @@ export class Property {
             token,
             type,
             nullable,
-            primaryKey
+            nodeKey,
+            uniqueConstraint
         } = properties;
         this.$id = id;
         this.token = token;
         this.type = type;
         this.nullable = nullable;
-        this.primaryKey = primaryKey;
+        this.nodeKey = nodeKey;
+        this.uniqueConstraint = uniqueConstraint;
     }     
 }
 
@@ -333,14 +336,128 @@ export class GraphSchemaExtensionsRepresentation {
     }
 }
 
-export class GraphMappingRepresentation {
-    public dataSourceSchema = {
-        type: null,
-        tableSchemas: []
-    };
+export class TableSchemaField {
+    public name : string;
+    public sample: string;
+    public recommendedType: Type;
 
-    public nodeMappings = [];
-    public relationshipMappings = [];
+    constructor(properties = {}) {
+        const {
+            name,
+            sample, 
+            recommendedType
+        } = properties;
+
+        this.name = name;
+        this.sample = sample;
+        this.recommendedType = recommendedType;
+    }
+}
+
+export class TableSchema {
+    public name : string;
+    public expanded: boolean;
+    public fields: TableSchemaField[] = [];
+
+    constructor(properties = {}) {
+        const {
+            name,
+            expanded,
+            fields
+        } = properties;
+
+        this.name = name;
+        this.expanded = expanded;
+        this.fields = fields;
+    }
+}
+
+export class DataSourceSchema {
+    public type : string;
+    public tableSchemas : TableSchema[] = [];
+
+    constructor(properties = {}) {
+        const {
+            type,
+            tableSchemas
+        } = properties;
+        this.type = type;
+        this.tableSchemas = tableSchemas;
+    }
+}
+
+export class PropertyMapping {
+    public fieldName : string;
+    public property: PropertyRef;
+
+    constructor(properties = {}) {
+        const {
+            fieldName,
+            property
+        } = properties;
+        this.fieldName = fieldName;
+        this.property = property;
+    }    
+}
+
+export class NodeMapping {
+    public node : NodeRef;
+    public tableName : string;
+    public propertyMappings : PropertyMapping[] = [];
+
+    constructor(properties = {}) {
+        const {
+            node,
+            tableName,
+            propertyMappings
+        } = properties;
+
+        this.node = node;
+        this.tableName = tableName;
+        this.propertyMappings = propertyMappings;
+    }        
+}
+
+export class RelationshipEndpointField {
+    public fieldName : string;
+
+    constructor (properties = {}) {
+        const {
+            fieldName
+        } = properties;
+
+        this.fieldName = fieldName;
+    }
+}
+
+export class RelationshipMapping {
+    public relationship : RelationshipRef;
+    public tableName : string;
+    public propertyMappings : PropertyMapping[] = [];
+    public fromMapping : RelationshipEndpointField;
+    public toMapping : RelationshipEndpointField;
+
+    constructor(properties = {}) {
+        const {
+            relationship,
+            tableName,
+            propertyMappings,
+            fromMapping,
+            toMapping
+        } = properties;
+        this.relationship = relationship;
+        this.tableName = tableName;
+        this.propertyMappings = propertyMappings;
+        this.fromMapping = fromMapping;
+        this.toMapping = toMapping;
+    }            
+}
+
+export class GraphMappingRepresentation {
+
+    public dataSourceSchema : DataSourceSchema;
+    public nodeMappings : NodeMapping[] = [];
+    public relationshipMappings : RelationshipMapping[] = [];
 
     constructor(properties = {}) {
         const {

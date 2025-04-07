@@ -8,6 +8,7 @@ import {
 import { getCurrentConnectionInfo } from '../../../common/Cypher';
 import { track } from '../../../common/util/tracking';
 import { TOOL_NAMES } from '../../../common/LicensedFeatures';
+import { RevealMetrics } from '../CypherDebug';
 
 export const Sizes = {
     ToolbarHeight: '40px'
@@ -21,7 +22,7 @@ let ActivityRecordTime = 10 * 1000; // 10 seconds
 let recordActivity = () => {
     if (activity.length > 0) {
         let activityCopy = activity.slice();
-        track("REVEAL_TOOL_CLICK", { 
+        track(RevealMetrics.ToolClick, { 
             toolName: TOOL_NAMES.CYPHER_DEBUG,
             clicks: activityCopy                 
         });

@@ -159,6 +159,13 @@ export const getExportData = (metadata, dataModel) => {
     return exportData;
 }
 
+export const getExportFileNamePublic = (title, defaultName, extension, fileNamePostfix) => {
+    fileNamePostfix = (fileNamePostfix) ? fileNamePostfix : '';
+    var fileName = title.replace(/[^A-Za-z0-9_]/g,'_')
+    fileName = (fileName) ? `${fileName}${fileNamePostfix}.${extension}` : `${defaultName}.${extension}`;
+    return fileName;
+}
+
   
 export default class Model extends Component {
 
@@ -1372,7 +1379,7 @@ export default class Model extends Component {
                         if (!this.isAModelSelected()) {
                             alert(NO_ACTIVE_MODEL_MESSAGE, ALERT_TYPES.WARNING);
                         } else {                        
-                            let dataImporterModel = workbenchDataModelToImporterGraphModel(dataModel);
+                            let { dataImporterModel } = workbenchDataModelToImporterGraphModel(dataModel);
                             let dataImporterModelJson = JSON.stringify(dataImporterModel, null, 2);
 
                             fileName = this.getExportFileName('cw_model', 'json', '_export_for_data_importer');
@@ -1908,11 +1915,8 @@ export default class Model extends Component {
     }
 
     getExportFileName (defaultName, extension, fileNamePostfix) {
-        fileNamePostfix = (fileNamePostfix) ? fileNamePostfix : '';
         var title = this.getTitle();
-        var fileName = title.replace(/[^A-Za-z0-9_]/g,'_')
-        fileName = (fileName) ? `${fileName}${fileNamePostfix}.${extension}` : `${defaultName}.${extension}`;
-        return fileName;
+        return getExportFileNamePublic(title, defaultName, extension, fileNamePostfix)        
     }
 
     showExportModel () {

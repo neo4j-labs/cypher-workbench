@@ -90,6 +90,21 @@ const ConvertToApocMetaDataTypes = {
     // TODO: add more types
 }
 
+const objectHasKeys = (obj, requiredKeys) => {
+    if (typeof(obj) === 'object') {
+        let keys = Object.keys(obj);
+        return requiredKeys.every(x => keys.includes(x))
+    } else {
+        return false;
+    }
+}
+
+export const isDate = (value) => objectHasKeys(value, ['day', 'month', 'year'])
+
+export const isTime = (value) => objectHasKeys(value, ['second', 'minute', 'hour'])
+
+export const isDateTime = (value) => isTime(value) && isDate(value);
+
 const JavascriptValueToDataType = [
     {
         typeCheck: (value) => typeof(value) === 'boolean',
@@ -112,36 +127,51 @@ const JavascriptValueToDataType = [
         datatype: DataTypes.Float
     },
     {
-        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
-                                        && getDataType(value[0]) === DataTypes.String,
-        datatype: DataTypes.StringArray,
-        arrayCheck: true
+        typeCheck: (value) => isDateTime(value),
+        datatype: DataTypes.DateTime
     },
     {
-        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
-                                        && getDataType(value[0], true) === DataTypes.Integer,
-        datatype: DataTypes.IntegerArray,
-        arrayCheck: true
+        typeCheck: (value) => isDate(value),
+        datatype: DataTypes.Date
     },
     {
-        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
-                                        && getDataType(value[0], true) === DataTypes.Float,
-        datatype: DataTypes.FloatArray,
-        arrayCheck: true
-    },
-    {
-        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
-                                        && getDataType(value[0], true) === DataTypes.Boolean,
-        datatype: DataTypes.BooleanArray,
-        arrayCheck: true
+        typeCheck: (value) => isTime(value),
+        datatype: DataTypes.Time
     }
     // TODO: add more types
 ];
 
+const JavascriptValueToDataArrayType = [
+    {
+        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
+                                        && getDataType(value[0]) === DataTypes.String,
+        datatype: DataTypes.StringArray
+    },
+    {
+        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
+                                        && getDataType(value[0], true) === DataTypes.Integer,
+        datatype: DataTypes.IntegerArray
+    },
+    {
+        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
+                                        && getDataType(value[0], true) === DataTypes.Float,
+        datatype: DataTypes.FloatArray
+    },
+    {
+        typeCheck: (value) => typeof(value) === 'object' && value instanceof Array 
+                                        && getDataType(value[0], true) === DataTypes.Boolean,
+        datatype: DataTypes.BooleanArray
+    }
+];
+
+const JavascriptValueToDataTypeAll = JavascriptValueToDataType.concat(JavascriptValueToDataArrayType);
+
 export function getDataType (value, ignoreArrayCheck) {
-    var thingsToCheck = JavascriptValueToDataType.slice();
+    var thingsToCheck = null;
     if (ignoreArrayCheck) {
-        thingsToCheck = thingsToCheck.filter(x => !x.arrayCheck);
+        thingsToCheck = JavascriptValueToDataType;
+    } else {
+        thingsToCheck = JavascriptValueToDataTypeAll;
     }
     var match = thingsToCheck.find(x => x.typeCheck(value));
     return (match) ? match.datatype : DataTypes.String;

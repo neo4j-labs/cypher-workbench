@@ -1,3 +1,5 @@
+import DataTypes from "../DataTypes";
+import { getDataType } from "../graphUtil";
 
 export const isInteger = (value) => {
     if (typeof(value) === 'number') {
@@ -20,7 +22,12 @@ export class ValueMapAnalysis {
     totalStringLength = 0;
     averageStringLength = 0;
 
+    // for Javascript types
     frequencyOfDataTypes = {};
+
+    // for Neo4j types
+    frequencyOfNeoDataTypes = {};
+
     frequencyOfValues = {};
 
     constructor (key) {
@@ -36,6 +43,21 @@ export class ValueMapAnalysis {
             if (value > max) {
                 max = value;
                 maxDataType = dataType;
+            }
+        })
+
+        return maxDataType;
+    }
+
+    getTopNeoDataType = () => {
+        let max = 0;
+        let maxDataType = undefined;
+
+        Object.keys(this.frequencyOfNeoDataTypes).forEach(neoDataType => {
+            let value = this.frequencyOfNeoDataTypes[neoDataType]
+            if (value > max) {
+                max = value;
+                maxDataType = neoDataType;
             }
         })
 
@@ -58,7 +80,8 @@ export const sortArray = ({array, key, desc = false}) => {
 
 export class ValueAndType {
     value = undefined;
-    type = 'string'
+    type = 'string';
+    neoDataType = DataTypes.String;
 }
 
 export const getPropertyValueMap = (propertyContainers, limit) => {
@@ -113,14 +136,7 @@ export const getRecommendedLabel = (propertyContainers, limit) => {
     return recommendedLabel;
 }
 
-export const getRecommendedKey = (propertyContainers) => {
-    let propertyValueMap = getPropertyValueMap(propertyContainers);
-    let analysisArray = Object.keys(propertyValueMap).map(key => {
-        let values = propertyValueMap[key];
-        let analysis = analyzeValues(key, values);
-        return analysis;
-    })
-
+export const getRecommendedKeyFromValueAnalysis = (analysisArray, propertyContainers) => {
     let recommendedKey = '';
     let numberKeys = analysisArray
         .filter(x => x.getTopDataType() === 'number')
@@ -147,6 +163,17 @@ export const getRecommendedKey = (propertyContainers) => {
     return recommendedKey;
 }
 
+export const getRecommendedKey = (propertyContainers) => {
+    let propertyValueMap = getPropertyValueMap(propertyContainers);
+    let analysisArray = Object.keys(propertyValueMap).map(key => {
+        let values = propertyValueMap[key];
+        let analysis = analyzeValues(key, values);
+        return analysis;
+    })
+
+    return getRecommendedKeyFromValueAnalysis(analysisArray, propertyContainers);
+}
+
 export const analyzeValues = (key, values) => {
 
     const analysis = new ValueMapAnalysis(key);
@@ -163,6 +190,9 @@ export const analyzeValues = (key, values) => {
     valuesAndTypes.forEach(valuesAndType => {
         let dataTypeCount = analysis.frequencyOfDataTypes[valuesAndType.type];
         analysis.frequencyOfDataTypes[valuesAndType.type] = (dataTypeCount === undefined) ? 1 : dataTypeCount + 1;
+
+        let neoDataTypeCount = analysis.frequencyOfNeoDataTypes[valuesAndType.neoDataType];
+        analysis.frequencyOfNeoDataTypes[valuesAndType.neoDataType] = (neoDataTypeCount === undefined) ? 1 : neoDataTypeCount + 1;
 
         let valueCount = analysis.frequencyOfValues[valuesAndType.value];
         analysis.frequencyOfValues[valuesAndType.value] = (valueCount === undefined) ? 1 : valueCount + 1;
@@ -188,6 +218,7 @@ export const getTypeAndValue = (value) => {
     const valueAndType = new ValueAndType();
     valueAndType.value = value;
     valueAndType.type = typeof(value);
+    valueAndType.neoDataType = getDataType(value);
     return valueAndType;
 }
 

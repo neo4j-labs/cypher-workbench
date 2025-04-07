@@ -50,6 +50,8 @@ import { ValidationStatus } from '../common/validation/ValidationStatus';
 import { DividerTitleWidthOrHeight } from './components/divider';
 import { currentlyConnectedToNeo, connectionIsProxied } from '../../common/Cypher';
 import { runAndExportData } from './export/runAndExportData';
+import { track } from '../../common/util/tracking';
+import { TOOL_NAMES } from '../../common/LicensedFeatures';
 
 const REMOTE_GRAPH_DOC_TYPE = 'CypherDebug';
 const CYPHER_RETURN = '\nRETURN *';
@@ -72,6 +74,11 @@ const Sizes = {
   MarginRight: '1px',
   ResultTableMarginBottom: '11px',
   MainToolbarHeight: '64px'
+}
+
+export const RevealMetrics = {
+  ToolClick: "REVEAL_TOOL_CLICK",
+  RunAndExportData: "REVEAL_RUN_AND_EXPORT_DATA"
 }
 
 export default class CypherDebug extends Component {
@@ -315,8 +322,9 @@ export default class CypherDebug extends Component {
       })    
     }
 
-    handleRunAndExportDataAction = async ({ prefix, skipItems, skipProperties, dataModel }) => {
-
+    handleRunAndExportDataAction = async ({ prefix, skipItems, skipProperties, dataModel, dataModelText, 
+        exportToZip, exportWorkbenchModel }) => {
+      
       let { cypherQuery, cypherParameters } = this.state;
       let cypherQueries = [];
       if (cypherQuery) {
@@ -346,11 +354,24 @@ export default class CypherDebug extends Component {
         return;
       }
 
+      track(RevealMetrics.RunAndExportData, { 
+          toolName: TOOL_NAMES.CYPHER_DEBUG,
+          numQueries: cypherQueries.length,
+          exportToZip,
+          exportWorkbenchModel,
+          dataModelSet: (dataModel) ? true : false,
+          skipItemsSet: (skipItems) ? true : false,
+          skipPropertiesSet: (skipProperties) ? true : false
+      });
+      
       await runAndExportData(cypherQueries, cypherParameters, {
         prefix: prefix,
         skipItems,
         skipProperties, 
         dataModel,
+        dataModelText,
+        exportToZip,
+        exportWorkbenchModel,
         executeCypherAsPromise: this.executeCypher.runQueryAsPromise,
         checkIfUserHasCancelledFunction: () => {
           let { userRequestedStop } = this.state;
@@ -390,6 +411,10 @@ export default class CypherDebug extends Component {
             this.setState(stateUpdate, () => {
               // ok to go to next query
               resolve();
+
+              if (this.miniResultsTableRef.current) {
+                this.miniResultsTableRef.current.goToBottom();
+              }
             })
           })
         }
