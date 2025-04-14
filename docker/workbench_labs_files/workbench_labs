@@ -25,7 +25,7 @@ then
 elif [ "$1" = "stop" ]
 then
     echo "Stopping Cypher Workbench services"
-    docker-compose --project-name cypher-workbench stop
+    docker compose --project-name cypher-workbench stop
 elif [ "$1" = "status" ]
 then
     echo "Cypher Workbench status"
