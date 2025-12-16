@@ -30,7 +30,7 @@ services:
 
       # other settings
       - NEO4J_ENCRYPTED=ENCRYPTION_OFF # do not change this setting unless you are trying to access a bolt:// connection that is secure and you are not using bolt+s or bolt+ssc
-      - GRAPHQL_LISTEN_PORT=4000  # listen port within docker container, can be exposed externally by 'ports' section above
+      - GRAPHQL_LISTEN_PORT=${GRAPHQL_PORT}  # listen port within docker container, can be exposed externally by 'ports' section above
       - ENCRYPTION_KEY=workbenchEncryptionKey # if you change this make sure it matches the REACT_APP_ENCRYPTION_KEY value in env-config.js
       - SEGMENT_WRITE_KEY=
       - ALGO=RS256

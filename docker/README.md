@@ -1,5 +1,171 @@
 
-This file explains the docker build concepts and packaging process for building Cypher Workbench Basic.
+This file explains the docker build concepts and packaging process for building Cypher Workbench Labs.
+
+# Building
+
+There are several goals to the build process:
+
+* Create a Local build, by putting in the proper .env and env-config.js files that correspond to the docker images
+* Create an easily deployable file containing all info needed to re-create the required docker images
+* Do a build in separate folder other than the api and ui folders
+
+The `.env` file corresponds to the `cypher-workbench-api` image and the `env-config.js` corresponds to the `cypher-workbench-ui` image.
+
+> Build instructions are for Mac/Linux. Windows instructions have not been created.
+
+## Doing a build
+
+Before doing a build, you must ensure the WORKBENCH_VERSION environment variable is set. You can run this command to set it:
+
+```
+    source ./getVersion.sh
+```
+
+This will read the ../ui/src/version.js file and use the value to set the WORKBENCH_VERSION environment variable.
+
+To perform a build, run the following command:
+
+```
+    ./build_labs.sh
+```
+
+Running this will do the following:
+
+* Run `./build_labs.sh` in the api folder
+* Run `./build_labs.sh` in the ui folder
+* Package up the resulting docker images using `docker save`
+* Create an overall `.tar` file that contains all files including the docker-compose file and the `workbench_labs` shell script
+
+## Docker images
+
+In both the `./api` and `./ui` folders, the `build_labs.sh` file will copy the source code from the parent level api and ui folders, then will perform an npm install, an appropriate build, and package everything into a docker image.
+
+The commands that create the docker images are:
+
+```
+docker build -f Dockerfile.ui ./ui/docker_context -t cypher-workbench-ui:${WORKBENCH_VERSION}_labs
+
+docker build -f Dockerfile.api ./api -t cypher-workbench-api:${WORKBENCH_VERSION}_labs
+```
+
+The build script uses `docker save` to tar-gzip these docker images into the workbenchDocker.tar.gz file.
+
+## Build artifacts
+
+The build will create `./build` folder and copy the following files into it:
+
+* docker-compose-labs.yml
+* workbenchDocker.tar.gz
+* workbench_labs
+* envConfig.sh
+* makeEnv.sh
+* makeEnvConfig.sh
+
+Once these files are there, they are tar-ed into a file called `cypherWorkbenchLabs.tar`. The `cypherWorkbenchLabs.tar` file is the only thing that needs to be shared with someone to perform a local install.
+
+# Installation
+
+## Unpacking
+
+Unpacking involves creating a directory to run in (e.g. cypher_workbench), placing the `cypherWorkbenchLabs.tar` file in that directory, and un-tarring it.
+
+This will expand into the 4 files mentioned under Build artifacts.
+
+Once the 4 files are there you can run:
+
+```
+    ./workbench_labs unpack
+```
+
+## Database Setup
+
+Follow the instructions in the main project README.md file in these sections
+
+* Setup a Neo4j database
+* Cypher initialization scripts
+
+To setup a Neo4j database to use with Cypher Workbench. 
+
+> Do not proceed without doing the steps above
+
+Since you are doing the Docker install, you can skip these sections
+
+* Build and run the API
+* Build and run the UI
+
+Don't try to login yet until you finish configuration and start the docker containers.
+
+## Configuring
+
+After unpacking, you need to modify the `docker-compose.yml` file and set the values to connect to your Neo4j database.
+
+Change these settings to the Neo4j instance you set up to use with Cypher Workbench:
+
+```
+    - NEO4J_URI=bolt://host.docker.internal:7687
+    - NEO4J_USER=neo4j
+    - NEO4J_PASSWORD=password
+    - NEO4J_DATABASE=neo4j
+```
+
+Note that if you are running the database on the same machine as the API docker image, you should use `host.docker.internal` instead of `localhost`.
+
+### Advanced Configuration
+If you need to change the hostnames or ports, you can do so in the `envConfig.sh` file. You'll see these settings:
+
+How the React UI is exposed:
+* WORKBENCH_PROTOCOL=http
+* WORKBENCH_HOST=localhost
+* WORKBENCH_PORT_EXTERNAL=80
+* WORKBENCH_PORT_INTERNAL=80
+
+How the GraphQL API is exposed:
+* GRAPHQL_PROTOCOL=http
+* GRAPHQL_HOST=cypher-workbench-api
+* GRAPHQL_PORT=4000
+
+If you change something and it doesn't work, you'll have to trace the configs through the workbench_labs `start` command which ends up creating artifacts like `.env` for the API and `env-config.js` for the UI. Also look at the notes in the `docker-compose.yml` file for advice/clues. 
+
+
+## Running
+
+To start, you can use the following command:
+
+```
+    ./workbench_labs start
+```
+
+This will call docker-compose to start up the docker images.    
+
+## Logging in
+
+To login, goto:
+
+http://localhost/login
+
+And enter:
+
+* Username: admin
+* Password: neo4j
+
+And click `Continue`. These settings presume you haven't changed any of the default config values, so if you have changed something, please update the values appropriately.
+
+
+## Stopping
+
+To stop, you can use the following command:
+
+```
+    ./workbench_labs stop
+```
+
+## Checking Docker container status
+
+To check status, you can use the following command:
+
+```
+    ./workbench_labs status
+```
 
 # Concepts
 
@@ -7,7 +173,7 @@ Cypher Workbench is a GRANDStack application. Architecturally, GRANDStack applic
 
 ## Networking concerns
 
-Standard Neo4j ports are 7474, 7473, and 7687. The node.js GraphQL server typically runs on port 4000, and the React UI typically runs on port 3000, but for our deployment, the React UI is being hosted on nginx under port 80.   
+The node.js GraphQL server typically runs on port 4000, and the React UI typically runs on port 3000, but for our deployment, the React UI is being hosted on nginx under port 80.   
 
 Our goal is to let the individual docker images talk with one another, but not conflict with ports on the host machine if at all possible.
 
@@ -39,196 +205,52 @@ Browser -> Web UI -> GraphQL Services -> Neo4j
 To clarify where things are running we need to be more specific:
 
 1. When fetching pages:
-   * Browser (host) -> React UI web pages (docker)
+   * Browser (host) -> Nginx / React UI web pages (docker)
 
 2. When React executes network calls from within the browser:  
-   * Browser/React (host) -> GraphQL Services (docker) -> Neo4j (docker)
+   * Browser/React (host) -> Nginx / GraphQL Services (docker) -> Neo4j (your instance)
 
-For (1), we need to expose nginx port 80 (running inside docker) as another port which does not conflict with host ports. We have chosen 37080, but this can be changed in docker-compose.yml if desired.
+For (1), we need to expose nginx port `WORKBENCH_PORT_INTERNAL` (running inside docker) as another port `WORKBENCH_PORT_EXTERNAL` which does not conflict with host ports. These are currently set to 80 in `envConfig.sh`. Change the `WORKBENCH_PORT_EXTERNAL` to something like 37080 if you have a port conflict.
 
 ```
  cypher-workbench-ui:
   ports:
-    - "37080:80"
+    - ${WORKBENCH_PORT_EXTERNAL}:${WORKBENCH_PORT_INTERNAL}
+    #- "80:80"  # these are the default values
 ```
 
-The browser can go to http://localhost:37080 to access the web pages hosted by the nginx web server.
+The browser can go to http://localhost:`WORKBENCH_PORT_EXTERNAL` (e.g. http://localhost:80) to access the web pages hosted by the nginx web server.
 
-This is captured in the .env for the React build:
-
-```
-    REACT_APP_BASE_URL=http://localhost:37080
-```
-
-For (2), the browser has loaded the React UI into the browser, and the React UI needs to make service calls to the GraphQL service endpoints. Since the browser is running in the host, we need to connect to the GraphQL service endpoint through a port exposed to the host. I have chosen port 37400 as seen here:
+This is captured in the `env-config.js` for the React build:
 
 ```
- cypher-workbench-api:
-  ports:
-    - "37400:4000"
+    REACT_APP_BASE_URL=http://localhost:80
 ```
 
-This is captured in the .env for the React build:
+For (2), the browser has loaded the React UI into the browser, and the React UI needs to make service calls to the GraphQL service endpoints. Since the browser is running in the host, we need to connect to the GraphQL service endpoint through a port exposed to the host. This is configured in the `env-config.js` using the template:
 
 ```
-    REACT_APP_GRAPHQL_URI= http://localhost:37400/graphql
+REACT_APP_GRAPHQL_URI: "${WORKBENCH_PROTOCOL}://${WORKBENCH_HOST}:${WORKBENCH_PORT}/graphql
 ```
 
-Continuing with (2), we need GraphQL node.js services (docker) to talk to Neo4j (docker).
-
-* What not to do:
-  * If we were to configure our .env file to connect to http://localhost:7687 or even http://localhost:37687 (if we exposed it as 37687:7687) intuitively it seems like it would work. But it does not work, because from the perspective of the GraphQL node.js process, localhost is the container it is running in, and it does not refer to the host machine.
-    * If you do need to connect to the actual localhost, which is the machine running the docker container, then you use `host.docker.internal`. For instance, to connect to the Neo4j db running on the localhost machine, and not part of the docker-compose configuration, use: `http://host.docker.internal:7687`.
-
-* What to do:
-  * We need to rely on the internal network docker created for us called `cypher-workbench`. Within this network, the Neo4j database is known as the host `cypher-workbench-neo`. This name is picked up from the docker-compose file. We let `cypher-workbench-api` (the GraphQL service) know about `cypher-workbench-neo` using the `links:` section as defined below.
+Which connects back to the nginx server hosting the React app. The nginx server has a proxy for the `/graphql` route:
 
 ```
- cypher-workbench-neo:
-   ports:
-    - "37474:7474"
-    - "37687:7687"
- cypher-workbench-api:
-   links:
-    - cypher-workbench-neo
+    location /graphql {
+        proxy_pass ${GRAPHQL_PROTOCOL}://${GRAPHQL_HOST}:${GRAPHQL_PORT}/graphql;
+    }
 ```
 
-  * In the docker-compose file we are exposing ports 7474 and 7687 to the host as 37474 and 37687, respectively. However, within the `cypher-workbench` internal network, we use the internal ports, not the exposed host ports. Therefore, you can see in the .env for the api build:
+Which corresponds to these settings in the `docker-compose.yml` file:
 
 ```
-    NEO4J_URI=bolt://cypher-workbench-neo:7687
+    - HOST_NAME=${GRAPHQL_HOST}
+    - HOST_PROTOCOL=${GRAPHQL_PROTOCOL}
+    - GRAPHQL_LISTEN_PORT=${GRAPHQL_PORT} 
 ```
 
-  * We are using `cypher-workbench-neo` and 7687 to talk to Neo4j.
 
-NOTE: We have exposed the Neo4j ports externally for access to the database from the Neo4j browser.
 
-# Building
 
-There are several goals to the build process:
 
-* Create a Basic build, by taking away enterprise features
-* Create a Local build, by putting in the proper .env files that correspond to the docker images
-* Create an easily deployable file containing all info needed to re-create the required docker images and the seed database
-* Do a build in separate folder, other than the api and ui folders, since files need to be deleted to create the Basic build
 
-## Doing a build
-
-Before doing a build, you must ensure the WORKBENCH_VERSION environment variable is set. You can run this command to set it:
-
-```
-    source ./getVersion.sh
-```
-
-This will read the ../ui/src/version.js file and use the value to set the WORKBENCH_VERSION environment variable.
-
-To perform a build, run the following command:
-
-```
-    ./build_basic.sh
-```
-
-Running this will do the following:
-
-* Run ./build_basic.sh in the api folder
-* Run ./build_basic.sh in the ui folder
-* Package up the resulting docker images using `docker save`
-* Package up the seed database located in the `seedDatabase` directory
-* Create an overall .tar file that contains all files including the docker-compose file and the 'workbench' shell script
-
-## Basic build
-
-As part of the ./build_basic.sh script, a command `node build_basic.js` is run. This command will search through all of the source directories looking for `build_basic.txt` files. Any `build_basic.txt` files it encounters are run as shell scripts. Typically, these files will delete files that are Enterprise version only, and swap in a stubbed out Basic version of the file.
-
-## Local build
-
-When running ./build_basic.sh in the api and the ui folder, we copy in the special api.env and ui.env files. These files not only contain the proper network settings, but also specify:
-
-```
-    REACT_APP_AUTH_METHOD=local (ui.env) - and -
-    AUTH_METHOD=local (api.env)
-```
-
-This enables local authentication, turning off the auth0 authentication. The .env parameters needed by auth0 are not even included in the local build.     
-
-## Docker images
-
-In both the ./api and ./ui folders, the build_basic.sh file will copy the source code from the parent level api and ui folders, then will perform an npm install, an appropriate build, and package everything into a docker image.
-
-The commands that create the docker images are:
-
-* docker build -f Dockerfile.ui ./ui/docker_context -t cypher-workbench-ui:${WORKBENCH_VERSION}_basic
-* docker build -f Dockerfile.api ./api -t cypher-workbench-api:${WORKBENCH_VERSION}_basic
-
-The build script uses `docker save` to tar-gzip these docker images into the workbenchDocker.tar.gz file.
-
-## Seed database
-
-The seedDatabase folder contains the following directories:
-
-* database/neo4j/data
-* database/neo4j/logs
-* database/neo4j/plugins
-
-These directories are specified in the docker-compose file as `volumes` for the Neo4j docker image. The contents of each folder are as follows:
-
-* database/neo4j/data
-  * External to project: a seed database was created with the following items:
-    * All Constraints and Indexes required by Cypher Workbench
-    * A single node which has the SecurityOrganization and DefaultPublic labels, and is named Neo4jLocal
-  * The data folder of the external seed database was copied to database/neo4j/data
-* database/neo4j/logs
-  * this folder is empty and is mounted for troubleshooting purposes
-* database/neo4j/plugins
-  * this folder contains the apoc plugin jar
-
-During build, this directory gets tar-gzipped as seedDatabase.tar.gz and is packaged as part of the overall build.
-
-## Build artifacts
-
-The build will create ./build folder and copy the following files into it:
-
-* docker-compose.yml
-* seedDatabase.tar.gz
-* workbenchDocker.tar.gz
-* workbench
-
-Once these files are there, they are tar-ed into a file called cypherWorkbenchBasic.tar. The cypherWorkbenchBasic.tar file is the only thing that needs to be shared with someone to perform a local install.
-
-# Unpacking and Running
-
-## Unpacking
-
-Unpacking involves creating a directory to run in (e.g. cypher_workbench), placing the cypherWorkbenchBasic.tar file in that directory, and un-tarring it.
-
-This will expand into the 4 files mentioned under Build artifacts.
-
-Once the 4 files are there you can run:
-
-```
-    ./workbench unpack
-```
-
-This will expand the seed database into the `database` folder and the use `docker load` to load the docker images into the local directory.
-
-## Running
-
-To start, you can use the following command:
-
-```
-    ./workbench start
-```
-
-This will call docker-compose to start up the docker images. When running it is assumed that the seed database has been unzipped under the `database` folder so that the volume mounts specified in docker-compose.yml will work.   
-
-To stop, you can use the following command:
-
-```
-    ./workbench stop
-```
-
-To check status, you can use the following command:
-
-```
-    ./workbench status
-```

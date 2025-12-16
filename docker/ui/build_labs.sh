@@ -19,7 +19,7 @@ then
     mv ../keep/node_modules .
 else
     echo ">>> Doing npm install"
-    npm install
+    npm install --legacy-peer-deps
 fi
 echo ">>> Copying .env file"
 cp ../ui.env ./.env
