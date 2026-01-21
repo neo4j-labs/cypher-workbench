@@ -20,12 +20,12 @@ then
     source ./makeEnv.sh
     ./makeEnvConfig.sh
     ./makeNginxConf.sh
-    docker-compose --project-name cypher-workbench up -d --remove-orphans
+    docker compose --project-name cypher-workbench up -d --remove-orphans
     echo "Cypher Workbench should be available at $WORKBENCH_PROTOCOL://$WORKBENCH_HOST:$WORKBENCH_PORT_EXTERNAL in a few minutes"
 elif [ "$1" = "stop" ]
 then
     echo "Stopping Cypher Workbench services"
-    docker-compose --project-name cypher-workbench stop
+    docker compose --project-name cypher-workbench stop
 elif [ "$1" = "status" ]
 then
     echo "Cypher Workbench status"
