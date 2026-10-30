@@ -1,5 +1,5 @@
 # stage 1 - build environment
-FROM node:18.12.1 as react-build
+FROM node:22.23.4 as react-build
 RUN mkdir -p /app
 WORKDIR /app
 COPY . ./
